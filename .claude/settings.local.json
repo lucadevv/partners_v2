@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(/Users/pc/fvm/default/bin/flutter pub:*)",
+      "Bash(/Users/pc/fvm/default/bin/flutter test:*)",
+      "Bash(/Users/pc/fvm/default/bin/flutter analyze:*)"
+    ]
+  }
+}

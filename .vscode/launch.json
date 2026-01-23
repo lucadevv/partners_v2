@@ -8,19 +8,29 @@
         {
             "name": "partners",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "flutterMode": "debug",
+            "args": [
+                "--dart-define-from-file=.env.json"
+            ]
         },
         {
             "name": "partners (profile mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "flutterMode": "profile",
+            "args": [
+                "--dart-define-from-file=.env.json"
+            ]
         },
         {
             "name": "partners (release mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
+            "flutterMode": "release",
+            "args": [
+                "--dart-define-from-file=.env.json"
+            ]
         }
     ]
 }

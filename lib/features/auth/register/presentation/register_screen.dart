@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:auto_route/auto_route.dart' as auto_route;
-import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_comercio.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
 import 'package:partners/features/auth/register/domain/entities/register_entity.dart';
@@ -18,6 +17,7 @@ import 'package:partners/features/auth/register/presentation/widgets/ruc_selecto
     show RucSelectorWidget, TipoRuc;
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/tipo_documento_selector_widget.dart';
+import 'package:partners/core/utils/validations/ruc_validator.dart';
 
 TipoComercio _mapRucToTipoComercio(TipoRuc ruc) {
   return switch (ruc) {
@@ -44,19 +44,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _formNotifier = RegisterFormNotifier();
     _formNotifier.initializeDocumentListeners();
-    
+
     // Configurar callback para validación automática del documento principal
     _formNotifier.onDocumentValidated = (numero, tipoDocumento, tipoComercio) {
       if (tipoComercio != null) {
+        // El número ya viene extraído del RUC completo
         // Para RUC 10 y 15, usar DNI por defecto
         // Para RUC 20, no se requiere tipo de documento para el RUC del negocio
-        final tipoDoc = (tipoComercio == TipoComercio.ruc10 || tipoComercio == TipoComercio.ruc15)
+        final tipoDoc =
+            (tipoComercio == TipoComercio.ruc10 ||
+                tipoComercio == TipoComercio.ruc15)
             ? (tipoDocumento ?? TipoDocumento.dni)
             : null;
         final entity = RegisterEntity(
           tipoComercio: tipoComercio,
           tipoDocumento: tipoDoc,
-          numeroDocumento: numero,
+          numeroDocumento: numero, // Este ya es el documento extraído del RUC
         );
         context.read<RegisterCubit>().validateComerce(entity: entity);
       }
@@ -85,9 +88,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleContinue() {
     final registerState = context.read<RegisterCubit>().state;
-    
+
     // Si el estado es success y el formulario está completo, navegar directamente
-    if (registerState.status == RegisterStatus.success && _formNotifier.isFormComplete()) {
+    if (registerState.status == RegisterStatus.success &&
+        _formNotifier.isFormComplete()) {
       // Navegar a ValidationScreen
       if (!mounted) return;
       context.router.push(const ValidationRoute());
@@ -103,14 +107,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     // Construir la entidad y validar
+    final rucCompleto = _formNotifier.numeroDocumentoController.text.trim();
+    final tipoComercio = _formNotifier.tipoComercio;
+
+    // Extraer el documento del RUC completo
+    String? numeroDocumento;
+    if (tipoComercio != null) {
+      numeroDocumento = RucValidator.extractDocumento(
+        rucCompleto,
+        tipoComercio,
+      );
+    }
+
     final entity = RegisterEntity(
-      tipoComercio: _formNotifier.tipoComercio,
+      tipoComercio: tipoComercio,
       // Para RUC 10 y 15, usar DNI por defecto
       // Para RUC 20, no se requiere tipo de documento para el RUC del negocio
-      tipoDocumento: _selectedRuc == TipoRuc.ruc10 || _selectedRuc == TipoRuc.ruc15
+      tipoDocumento:
+          _selectedRuc == TipoRuc.ruc10 || _selectedRuc == TipoRuc.ruc15
           ? TipoDocumento.dni
           : null,
-      numeroDocumento: _formNotifier.numeroDocumentoController.text.trim(),
+      numeroDocumento: numeroDocumento,
       // Campos adicionales para RUC 20
       tipoDocumentoRepresentante: _selectedRuc == TipoRuc.ruc20
           ? _formNotifier.tipoDocumentoRepresentante
@@ -129,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: RegisterHeaderWidget(),
       body: BlocListener<RegisterCubit, RegisterState>(
-            listenWhen: (previous, current) {
+        listenWhen: (previous, current) {
           // Solo escuchar cuando el estado cambia a success
           return current.status == RegisterStatus.success &&
               previous.status != RegisterStatus.success;
@@ -198,26 +215,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   setState(() {
                                     _selectedRuc = tipo;
                                   });
-                                  _formNotifier.setTipoComercio(_mapRucToTipoComercio(tipo));
+                                  _formNotifier.setTipoComercio(
+                                    _mapRucToTipoComercio(tipo),
+                                  );
                                   // Para RUC 10 y 15, establecer DNI por defecto
-                                  if (tipo == TipoRuc.ruc10 || tipo == TipoRuc.ruc15) {
-                                    _formNotifier.setTipoDocumento(TipoDocumento.dni);
+                                  if (tipo == TipoRuc.ruc10 ||
+                                      tipo == TipoRuc.ruc15) {
+                                    _formNotifier.setTipoDocumento(
+                                      TipoDocumento.dni,
+                                    );
                                   } else {
                                     _formNotifier.setTipoDocumento(null);
                                   }
                                 },
                               ),
-                              // Campo de Nro. de documento
+                              // Campo de RUC del negocio
                               RegisterFieldWidget(
-                                label: 'Nro. de documento',
-                                placeholder: _selectedRuc == TipoRuc.ruc20
-                                    ? 'Ingrese el RUC del negocio'
-                                    : 'Ingrese su DNI (8 dígitos)',
-                                controller: _formNotifier.numeroDocumentoController,
+                                label: _selectedRuc == TipoRuc.ruc20
+                                    ? 'RUC del negocio'
+                                    : 'RUC del negocio',
+                                placeholder: _selectedRuc == TipoRuc.ruc10
+                                    ? 'Ingrese el RUC del negocio (11 dígitos)'
+                                    : _selectedRuc == TipoRuc.ruc15
+                                    ? 'Ingrese el RUC del negocio (12-13 dígitos)'
+                                    : 'Ingrese el RUC del negocio (12-13 dígitos)',
+                                controller:
+                                    _formNotifier.numeroDocumentoController,
                                 keyboardType: TextInputType.number,
-                                maxLength: (_selectedRuc == TipoRuc.ruc10 || _selectedRuc == TipoRuc.ruc15) ? 8 : null,
-                                suffixIcon: _formNotifier.numeroDocumentoError != null
-                                    ? Icon(Icons.error_outline, color: Colors.red, size: 20)
+                                maxLength: _selectedRuc == TipoRuc.ruc10
+                                    ? 11
+                                    : (_selectedRuc == TipoRuc.ruc15 ||
+                                          _selectedRuc == TipoRuc.ruc20)
+                                    ? 13
+                                    : null,
+                                suffixIcon:
+                                    _formNotifier.numeroDocumentoError != null
+                                    ? Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 20,
+                                      )
                                     : null,
                               ),
                               // Mostrar error si existe
@@ -234,11 +271,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
 
                               // Campos condicionales según tipo de RUC
-                              if (_selectedRuc == TipoRuc.ruc10 || _selectedRuc == TipoRuc.ruc15) ...[
+                              if (_selectedRuc == TipoRuc.ruc10 ||
+                                  _selectedRuc == TipoRuc.ruc15) ...[
                                 // RUC 10 y 15: Nombres del registrante
                                 RegisterFieldWidget(
                                   label: 'Nombres del registrante',
-                                  placeholder: 'Su nombre completo aparecerá aquí',
+                                  placeholder:
+                                      'Su nombre completo aparecerá aquí',
                                   value: _formNotifier.nombresController.text,
                                   enabled: false,
                                 ),
@@ -247,39 +286,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 RegisterFieldWidget(
                                   label: 'Nombre de la empresa',
                                   placeholder: 'Su razón social aparecerá aquí',
-                                  value: _formNotifier.razonSocialController.text,
+                                  value:
+                                      _formNotifier.razonSocialController.text,
                                   enabled: false,
                                 ),
                                 // RUC 20: Tipo de documento del representante
                                 TipoDocumentoSelectorWidget(
-                                  selectedTipo: _formNotifier.tipoDocumentoRepresentante,
+                                  selectedTipo:
+                                      _formNotifier.tipoDocumentoRepresentante,
                                   onTipoSelected: (tipo) {
-                                    _formNotifier.setTipoDocumentoRepresentante(tipo);
+                                    _formNotifier.setTipoDocumentoRepresentante(
+                                      tipo,
+                                    );
                                   },
                                 ),
                                 // RUC 20: Nro. de documento del representante
                                 RegisterFieldWidget(
                                   label: 'Nro. de documento',
-                                  placeholder: _formNotifier.tipoDocumentoRepresentante == null
+                                  placeholder:
+                                      _formNotifier
+                                              .tipoDocumentoRepresentante ==
+                                          null
                                       ? 'Seleccione tipo de documento primero'
-                                      : (_formNotifier.tipoDocumentoRepresentante == TipoDocumento.dni
-                                          ? 'Ingrese DNI del representante (8 dígitos)'
-                                          : 'Ingrese CE del representante (9 dígitos)'),
-                                  controller: _formNotifier.numeroDocumentoRepresentanteController,
+                                      : (_formNotifier
+                                                    .tipoDocumentoRepresentante ==
+                                                TipoDocumento.dni
+                                            ? 'Ingrese DNI del representante (8 dígitos)'
+                                            : 'Ingrese CE del representante (9 dígitos)'),
+                                  controller: _formNotifier
+                                      .numeroDocumentoRepresentanteController,
                                   keyboardType: TextInputType.number,
-                                  maxLength: _formNotifier.tipoDocumentoRepresentante == TipoDocumento.dni
+                                  maxLength:
+                                      _formNotifier
+                                              .tipoDocumentoRepresentante ==
+                                          TipoDocumento.dni
                                       ? 8
-                                      : (_formNotifier.tipoDocumentoRepresentante == TipoDocumento.ce ? 9 : null),
-                                  suffixIcon: _formNotifier.numeroDocumentoRepresentanteError != null
-                                      ? Icon(Icons.error_outline, color: Colors.red, size: 20)
+                                      : (_formNotifier
+                                                    .tipoDocumentoRepresentante ==
+                                                TipoDocumento.ce
+                                            ? 9
+                                            : null),
+                                  suffixIcon:
+                                      _formNotifier
+                                              .numeroDocumentoRepresentanteError !=
+                                          null
+                                      ? Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red,
+                                          size: 20,
+                                        )
                                       : null,
                                 ),
                                 // Mostrar error si existe
-                                if (_formNotifier.numeroDocumentoRepresentanteError != null)
+                                if (_formNotifier
+                                        .numeroDocumentoRepresentanteError !=
+                                    null)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4),
                                     child: Text(
-                                      _formNotifier.numeroDocumentoRepresentanteError!,
+                                      _formNotifier
+                                          .numeroDocumentoRepresentanteError!,
                                       style: TextStyle(
                                         color: Colors.red,
                                         fontSize: 12,
@@ -289,7 +355,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 // RUC 20: Nombres del registrante
                                 RegisterFieldWidget(
                                   label: 'Nombres del registrante',
-                                  placeholder: 'Su nombre completo aparecerá aquí',
+                                  placeholder:
+                                      'Su nombre completo aparecerá aquí',
                                   value: _formNotifier.nombresController.text,
                                   enabled: false,
                                 ),
@@ -311,7 +378,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       final isFormComplete = _formNotifier.isFormComplete();
                       final isSuccess = state.status == RegisterStatus.success;
                       final isLoading = state.status == RegisterStatus.loading;
-                      
+
                       return ContinueButtonWidget(
                         onPressed: (isFormComplete && isSuccess && !isLoading)
                             ? _handleContinue

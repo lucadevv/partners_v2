@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:partners/core/utils/validations/dni_validator.dart';
+import 'package:partners/core/utils/validations/ruc_validator.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_comercio.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
 
@@ -141,39 +142,42 @@ class RegisterFormNotifier extends ChangeNotifier {
         return;
       }
 
-      // Para RUC 10 y 15, validar como DNI (8 dígitos)
-      if (_tipoComercio == TipoComercio.ruc10 || 
-          _tipoComercio == TipoComercio.ruc15) {
-        // Validar como DNI
-        if (!DniValidator.isValidDni(numero)) {
-          _numeroDocumentoError = 'El DNI debe tener 8 dígitos';
+      // Validar formato completo de RUC según tipo de comercio
+      if (_tipoComercio != null) {
+        // Para RUC 10 y 15, usar DNI por defecto
+        final tipoDoc = (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15)
+            ? TipoDocumento.dni
+            : null;
+        
+        // Validar formato completo de RUC
+        if (!RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc)) {
+          String errorMessage;
+          switch (_tipoComercio!) {
+            case TipoComercio.ruc10:
+              errorMessage = 'El RUC debe tener 11 dígitos y empezar con 10';
+              break;
+            case TipoComercio.ruc15:
+              errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 15';
+              break;
+            case TipoComercio.ruc20:
+              errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 20';
+              break;
+          }
+          _numeroDocumentoError = errorMessage;
           notifyListeners();
           return;
         }
+        
         // Si es válido, limpiar error y llamar callback
         _numeroDocumentoError = null;
         notifyListeners();
         
-        // Llamar callback para validar con backend (usando DNI por defecto)
-        if (onDocumentValidated != null && _tipoComercio != null) {
-          onDocumentValidated!(numero, TipoDocumento.dni, _tipoComercio);
-        }
-      } else if (_tipoComercio == TipoComercio.ruc20) {
-        // Para RUC 20, el documento principal es el RUC del negocio (no se valida formato específico)
-        // Solo validar que no esté vacío y tenga al menos algunos dígitos
-        if (numero.length < 8 || !RegExp(r'^\d+$').hasMatch(numero)) {
-          _numeroDocumentoError = 'Ingrese un RUC válido';
-          notifyListeners();
-          return;
-        }
+        // Extraer el documento del RUC para enviarlo al backend
+        final documentoExtraido = RucValidator.extractDocumento(numero, _tipoComercio!);
         
-        // Si es válido, limpiar error y llamar callback
-        _numeroDocumentoError = null;
-        notifyListeners();
-
-        // Llamar callback para validar con backend (sin tipo de documento para RUC del negocio)
-        if (onDocumentValidated != null && _tipoComercio != null) {
-          onDocumentValidated!(numero, null, _tipoComercio);
+        // Llamar callback para validar con backend
+        if (onDocumentValidated != null && _tipoComercio != null && documentoExtraido != null) {
+          onDocumentValidated!(documentoExtraido, tipoDoc, _tipoComercio);
         }
       }
     });
@@ -222,25 +226,38 @@ class RegisterFormNotifier extends ChangeNotifier {
     final numero = numeroDocumentoController.text.trim();
 
     if (numero.isEmpty) {
-      _numeroDocumentoError = 'Ingrese el número de documento';
+      _numeroDocumentoError = 'Ingrese el RUC del negocio';
       notifyListeners();
       return false;
     }
 
-    // Para RUC 10 y 15, validar como DNI
-    if (_tipoComercio == TipoComercio.ruc10 || 
-        _tipoComercio == TipoComercio.ruc15) {
-      if (!DniValidator.isValidDni(numero)) {
-        _numeroDocumentoError = 'El DNI debe tener 8 dígitos';
-        notifyListeners();
-        return false;
-      }
-    } else if (_tipoDocumento == TipoDocumento.dni && !DniValidator.isValidDni(numero)) {
-      _numeroDocumentoError = 'El DNI debe tener 8 dígitos';
+    // Validar formato completo de RUC según tipo de comercio
+    if (_tipoComercio == null) {
+      _numeroDocumentoError = 'Seleccione un tipo de RUC';
       notifyListeners();
       return false;
-    } else if (_tipoDocumento == TipoDocumento.ce && (numero.length != 9 || !RegExp(r'^\d+$').hasMatch(numero))) {
-      _numeroDocumentoError = 'El CE debe tener 9 dígitos';
+    }
+
+    // Para RUC 10 y 15, usar DNI por defecto
+    final tipoDoc = (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15)
+        ? TipoDocumento.dni
+        : null;
+
+    // Validar formato completo de RUC
+    if (!RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc)) {
+      String errorMessage;
+      switch (_tipoComercio!) {
+        case TipoComercio.ruc10:
+          errorMessage = 'El RUC debe tener 11 dígitos y empezar con 10';
+          break;
+        case TipoComercio.ruc15:
+          errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 15';
+          break;
+        case TipoComercio.ruc20:
+          errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 20';
+          break;
+      }
+      _numeroDocumentoError = errorMessage;
       notifyListeners();
       return false;
     }

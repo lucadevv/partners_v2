@@ -45,10 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- Permisos para cámara -->
+	<!-- Permisos para cámara (requerido para permission_handler y camera) -->
 	<key>NSCameraUsageDescription</key>
 	<string>La aplicación necesita acceso a la cámara para escanear documentos de identidad y validar tu información.</string>
-	<!-- Permisos para biblioteca de fotos -->
+	<!-- Permisos para biblioteca de fotos (requerido para image_picker) -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>La aplicación necesita acceso a tus fotos para seleccionar documentos de identidad.</string>
 	<!-- Permisos para agregar fotos (iOS 11+) -->

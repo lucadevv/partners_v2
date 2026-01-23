@@ -13,30 +13,31 @@ class BusinessValidationCubit extends Cubit<BusinessValidationState> {
     emit(state.copyWith(status: BusinessValidationStatus.loading));
 
     try {
-      // TODO: Llamar al use case para validar RUC
       await Future.delayed(const Duration(seconds: 1)); // Mock
 
       // Simular respuesta con razón social
-      emit(state.copyWith(
-        status: BusinessValidationStatus.success,
-        ruc: ruc,
-        razonSocial: 'MARKETRIX S.A.C.',
-        effect: const RucValidatedEffect(),
-      ));
+      emit(
+        state.copyWith(
+          status: BusinessValidationStatus.success,
+          ruc: ruc,
+          razonSocial: 'MARKETRIX S.A.C.',
+          effect: const RucValidatedEffect(),
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: BusinessValidationStatus.failure,
-        errorMessage: 'RUC no encontrado',
-      ));
+      emit(
+        state.copyWith(
+          status: BusinessValidationStatus.failure,
+          errorMessage: 'RUC no encontrado',
+        ),
+      );
     }
   }
 
   /// Confirmar y continuar
   void confirm() {
     if (state.razonSocial != null) {
-      emit(state.copyWith(
-        effect: const ValidationCompletedEffect(),
-      ));
+      emit(state.copyWith(effect: const ValidationCompletedEffect()));
     }
   }
 

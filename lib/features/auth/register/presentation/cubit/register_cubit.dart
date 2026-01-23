@@ -49,4 +49,8 @@ class RegisterCubit extends Cubit<RegisterState> with BaseCubitMixin {
       },
     );
   }
+
+  void reset() {
+    emit(RegisterState.initial());
+  }
 }

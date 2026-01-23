@@ -6,14 +6,12 @@ class OtpBottomSheet extends StatelessWidget {
   final String title;
   final VoidCallback onBack;
   final Function(String) onCodeCompleted;
-  final Widget? backgroundWidget;
 
   const OtpBottomSheet({
     super.key,
     required this.title,
     required this.onBack,
     required this.onCodeCompleted,
-    this.backgroundWidget,
   });
 
   static Future<String?> show({
@@ -25,49 +23,42 @@ class OtpBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
       builder: (context) => OtpBottomSheet(
         title: title,
         onBack: () => Navigator.of(context).pop(),
         onCodeCompleted: (code) {
           Navigator.of(context).pop(code);
         },
-        backgroundWidget: backgroundWidget,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Fondo oscuro con el widget de fondo (validation steps)
-        if (backgroundWidget != null)
-          Positioned.fill(
-            child: Container(
-              color: const Color(0xFF051858).withOpacity(0.8),
-              child: backgroundWidget,
-            ),
-          ),
-
-        // Bottom Sheet
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(50),
-                topRight: Radius.circular(50),
-              ),
-            ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 24,
-              children: [
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(50),
+          topRight: Radius.circular(50),
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: keyboardHeight + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 24,
+          children: [
                 // Header
                 Row(
                   children: [
@@ -144,9 +135,7 @@ class OtpBottomSheet extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

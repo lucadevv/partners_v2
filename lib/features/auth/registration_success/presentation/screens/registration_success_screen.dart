@@ -22,7 +22,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF10B981).withOpacity(0.2),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
                 ),
                 child: Icon(
                   Icons.check_circle,
@@ -49,7 +49,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.normal,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
               60.spaceh,
@@ -60,7 +60,9 @@ class RegistrationSuccessScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF66CFFF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
                   padding: EdgeInsets.symmetric(vertical: 18),
                   minimumSize: Size(double.infinity, 56),
                 ),
@@ -68,7 +70,11 @@ class RegistrationSuccessScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 12,
                   children: [
-                    Icon(Icons.arrow_forward, color: const Color(0xFF051858), size: 20),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: const Color(0xFF051858),
+                      size: 20,
+                    ),
                     Text(
                       'Ir al inicio',
                       style: TextStyle(

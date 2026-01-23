@@ -88,7 +88,7 @@ class _RucBox extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.normal,
-                color: const Color(0xFF00114A).withOpacity(0.6),
+                color: const Color(0xFF00114A).withValues(alpha: 0.6),
               ),
             ),
             Text(

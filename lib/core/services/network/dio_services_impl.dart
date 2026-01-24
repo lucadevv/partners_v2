@@ -1,13 +1,6 @@
 import 'package:dio/dio.dart';
-
 import 'package:partners/core/services/network/api_services.dart';
 
-/// SOLID: Open/Closed Principle (OCP)
-///
-/// Esta clase está abierta para extensión (puede agregar nuevas funcionalidades)
-/// pero cerrada para modificación. Si necesitamos cambiar la implementación HTTP,
-/// podemos crear otra clase que implemente ApiServices sin modificar esta.
-/// La clase usa la abstracción ApiServices y puede ser reemplazada fácilmente.
 class DioApiServicesImpl implements ApiServices {
   final Dio _dio;
 
@@ -26,9 +19,6 @@ class DioApiServicesImpl implements ApiServices {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // if (_accessToken != null && _accessToken.isNotEmpty) {
-          //   options.headers['Authorization'] = 'Bearer $_accessToken';
-          // }
           return handler.next(options);
         },
         onError: (e, handler) async {

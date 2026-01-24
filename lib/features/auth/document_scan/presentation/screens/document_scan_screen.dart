@@ -484,6 +484,8 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
   }
 
   Future<void> _navigateToSuccessScreen(BuildContext context) async {
+    if (!mounted) return;
+    
     final state = _cubit.state;
     final ocrData = state.ocrData;
 
@@ -491,7 +493,7 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
       return;
     }
 
-    // Navegar usando Navigator directamente para poder pasar el cubit
+    final router = context.router;
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
@@ -502,7 +504,7 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     );
 
     if (result == true && mounted) {
-      context.router.pop(true);
+      router.pop(true);
     }
   }
 }

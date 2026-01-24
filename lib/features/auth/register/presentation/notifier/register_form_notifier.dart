@@ -145,12 +145,23 @@ class RegisterFormNotifier extends ChangeNotifier {
       // Validar formato completo de RUC según tipo de comercio
       if (_tipoComercio != null) {
         // Para RUC 10 y 15, usar DNI por defecto
+        // Para RUC 20, no se requiere tipoDocumento para el RUC del negocio
         final tipoDoc = (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15)
             ? TipoDocumento.dni
             : null;
         
         // Validar formato completo de RUC
-        if (!RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc)) {
+        // Para RUC 20, validar sin tipoDocumento (el documento puede ser DNI o CE)
+        bool isValid;
+        if (_tipoComercio == TipoComercio.ruc20) {
+          // Para RUC 20, validar como DNI por defecto (8 dígitos) o CE (9 dígitos)
+          isValid = RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: TipoDocumento.dni) ||
+                    RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: TipoDocumento.ce);
+        } else {
+          isValid = RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc);
+        }
+        
+        if (!isValid) {
           String errorMessage;
           switch (_tipoComercio!) {
             case TipoComercio.ruc10:
@@ -176,6 +187,7 @@ class RegisterFormNotifier extends ChangeNotifier {
         final documentoExtraido = RucValidator.extractDocumento(numero, _tipoComercio!);
         
         // Llamar callback para validar con backend
+        // Para RUC 20, pasar null como tipoDocumento ya que no se requiere para el RUC del negocio
         if (onDocumentValidated != null && _tipoComercio != null && documentoExtraido != null) {
           onDocumentValidated!(documentoExtraido, tipoDoc, _tipoComercio);
         }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/routes/app_routes.dart';
 import 'package:partners/core/theme/app_theme.dart';
+import 'package:partners/core/utils/logger/app_logger.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/login/domain/use_case/login_usecase.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart';
@@ -26,7 +27,10 @@ class _AppState extends State<App> {
   @override
   void initState() {
     super.initState();
+    _initializeApp();
+  }
 
+  void _initializeApp() {
     try {
       _appRouter = getIt<AppRouter>();
       _appRouter.config();
@@ -44,8 +48,8 @@ class _AppState extends State<App> {
         loginCubit: _loginCubit,
         authManager: getIt<AuthManager>(),
       );
-    } catch (e) {
-      // Error en inicialización
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al inicializar App', e, stackTrace, 'App');
     }
   }
 
@@ -75,7 +79,8 @@ class _AppState extends State<App> {
           debugShowCheckedModeBanner: false,
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al construir App', e, stackTrace, 'App');
       return MaterialApp(
         title: 'Partners',
         home: Scaffold(

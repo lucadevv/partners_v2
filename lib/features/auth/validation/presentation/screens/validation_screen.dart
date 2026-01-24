@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
-import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
@@ -39,16 +38,10 @@ class _ValidationScreenState extends State<ValidationScreen> {
   }
 
   void _handleValidationChange() {
-    // Cuando todos los pasos estén completos y esté en estado "completing"
     if (_notifier.allStepsCompleted && _notifier.isCompleting) {
-      // Esperar un poco para mostrar la animación de completado
       Future.delayed(const Duration(seconds: 2), () async {
         if (!mounted) return;
-
-        // Actualizar el flag isCompleteData
         await _tokenManager.setIsCompleteData(true);
-
-        // Navegar al dashboard (el guard ya no redirigirá a validación)
         if (mounted) {
           context.router.replaceAll([const DashboardRoute()]);
         }
@@ -57,23 +50,17 @@ class _ValidationScreenState extends State<ValidationScreen> {
   }
 
   void _handleStepTap(ValidationStep step) {
-    // Aquí se manejaría la navegación a los bottom sheets correspondientes
-    // Por ahora, simplemente completamos el step para demostración
     switch (step) {
       case ValidationStep.email:
-        // Navegar a bottom sheet de email
         _showEmailBottomSheet();
         break;
       case ValidationStep.whatsapp:
-        // Navegar a bottom sheet de whatsapp
         _showWhatsAppBottomSheet();
         break;
       case ValidationStep.password:
-        // Navegar a bottom sheet de password
         _showPasswordBottomSheet();
         break;
       case ValidationStep.document:
-        // Navegar a pantalla de escaneo de documento
         _showDocumentScan();
         break;
     }
@@ -82,7 +69,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
   void _showEmailBottomSheet() async {
     if (!mounted) return;
 
-    // Paso 1: Capturar email
     final email = await ValidationInputBottomSheet.show(
       context: context,
       title: 'Validando su email',
@@ -95,7 +81,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
     if (!mounted || email == null || email.isEmpty) return;
 
-    // Paso 2: Validar con OTP
     final code = await OtpBottomSheet.show(
       context: context,
       title: 'Validando su email',
@@ -105,8 +90,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
     if (!mounted) return;
 
     if (code != null && code.length == 5) {
-      // TODO: Validar código OTP con el cubit
-      // Por ahora, simplemente completamos el step
       _notifier.completeCurrentStep();
     }
   }
@@ -114,7 +97,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
   void _showWhatsAppBottomSheet() async {
     if (!mounted) return;
 
-    // Paso 1: Capturar número de WhatsApp
     final whatsapp = await ValidationInputBottomSheet.show(
       context: context,
       title: 'Validando su celular con WhatsApp',
@@ -127,7 +109,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
     if (!mounted || whatsapp == null || whatsapp.isEmpty) return;
 
-    // Paso 2: Validar con OTP
     final code = await OtpBottomSheet.show(
       context: context,
       title: 'Validando su WhatsApp',
@@ -137,7 +118,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
     if (!mounted) return;
 
     if (code != null && code.length == 5) {
-      // TODO: Validar código OTP con el cubit
       _notifier.completeCurrentStep();
     }
   }
@@ -145,7 +125,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
   void _showPasswordBottomSheet() async {
     if (!mounted) return;
 
-    // Capturar password (sin OTP)
     final password = await ValidationInputBottomSheet.show(
       context: context,
       title: 'Creando su contraseña segura',
@@ -158,61 +137,26 @@ class _ValidationScreenState extends State<ValidationScreen> {
     if (!mounted) return;
 
     if (password != null && password.isNotEmpty) {
-      // TODO: Guardar password con el cubit
       _notifier.completeCurrentStep();
     }
   }
 
   void _showDocumentScan() async {
-    // Navegar a la pantalla de escaneo de documento
     final result = await context.router.push(const DocumentScanRoute());
-
-    // Solo completar el step si el documento fue validado exitosamente
     if (result == true) {
       _notifier.completeCurrentStep();
     }
   }
 
-  Future<void> _handleLogout(BuildContext context) async {
-    // Mostrar diálogo de confirmación
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Está seguro que desea cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cerrar sesión'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final authManager = getIt<AuthManager>();
-      await authManager.logout();
-
-      if (context.mounted) {
-        context.router.replaceAll([const LoginRoute()]);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Verificar si viene de rutas privadas (no hay stack anterior = replaceAll fue usado)
-    // Si canPop() es false, significa que no hay rutas anteriores, por lo que viene de rutas privadas
     final canPop = context.router.canPop();
     final isFromPrivateRoutes = !canPop;
 
     return Scaffold(
       appBar: isFromPrivateRoutes
-          ? null // No mostrar AppBar cuando viene de rutas privadas
+          ? null
           : RegisterHeaderWidget(
               onBackPressed: () {
                 if (_notifier.currentStep != ValidationStep.email) {
@@ -288,16 +232,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
             status: _notifier.stepStatuses[ValidationStep.document]!,
             onTap: () => _handleStepTap(ValidationStep.document),
           ),
-          // ElevatedButton.icon(
-          //   onPressed: () => _handleLogout(context),
-          //   icon: const Icon(Icons.logout),
-          //   label: const Text('Cerrar sesión'),
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor: Colors.red,
-          //     foregroundColor: Colors.white,
-          //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          //   ),
-          // ),
         ],
       ),
     );

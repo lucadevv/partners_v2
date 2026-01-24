@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
-
-import 'app_exceptions.dart';
+import 'package:partners/core/utils/exeptions/app_exceptions.dart';
+import 'package:partners/core/utils/logger/app_logger.dart';
 
 class ExceptionHandler {
   static AppException handleException(dynamic error) {
@@ -131,13 +130,18 @@ class ExceptionHandler {
     return null;
   }
 
-  static void logException(AppException exception, {String? context}) {
-    debugPrint('${context ?? 'Exception'}: ${exception.message}');
+  static void logException(AppException exception, {String? tag}) {
+    AppLogger.error(
+      exception.message,
+      exception,
+      null,
+      tag ?? 'ExceptionHandler',
+    );
     if (exception.details != null) {
-      debugPrint('Details: ${exception.details}');
+      AppLogger.info('Details: ${exception.details}', tag);
     }
     if (exception.code != null) {
-      debugPrint('Code: ${exception.code}');
+      AppLogger.info('Code: ${exception.code}', tag);
     }
   }
 }

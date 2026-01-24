@@ -10,12 +10,6 @@ import 'package:partners/features/auth/register/presentation/cubit/register_cubi
 
 part 'orquestor_auth_state.dart';
 
-/// SOLID: Single Responsibility Principle (SRP)
-/// 
-/// Este cubit tiene una única responsabilidad: orquestar la carga de datos
-/// de los cubits de autenticación (registro y login).
-/// No carga datos directamente, solo coordina cuando los cubits deben cargar
-/// sus propios datos, manteniendo una separación clara de responsabilidades.
 class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
   final RegisterCubit _registerCubit;
   final LoginCubit _loginCubit;
@@ -43,7 +37,6 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     _loginSubscription = _loginCubit.stream.listen((loginState) async {
       emit(state.copyWith(loginState: loginState));
 
-      // Manejar efectos cuando el login es exitoso
       if (loginState.status == LoginStatus.success && loginState.responseEntity != null) {
         await _handleLoginSuccess(loginState.responseEntity!);
       }
@@ -51,14 +44,12 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
   }
 
   Future<void> _handleLoginSuccess(LoginResponseEntity response) async {
-    // Guardar tokens en AuthManager
     await _authManager.login(
       response.accessToken,
       response.refreshToken,
       isCompleteData: response.isCompleteData,
     );
 
-    // Emitir effect según el estado de datos completos
     if (response.isCompleteData) {
       emit(state.copyWith(effect: const NavigateToDashboardEffect()));
     } else {
@@ -86,26 +77,20 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     required String email,
     required String password,
   }) async {
-    // Reiniciar estado de login antes de iniciar
     _loginCubit.reset();
-    
-    // Llamar al login del cubit
     await _loginCubit.login(email: email, password: password);
   }
 
-  /// Limpia el effect actual
   void clearEffect() {
     if (state.effect != null) {
       emit(state.copyWith(effect: null));
     }
   }
 
-  /// Navega a la pantalla de éxito del documento
   void navigateToDocumentSuccess() {
     emit(state.copyWith(effect: const NavigateToDocumentSuccessEffect()));
   }
 
-  /// Reinicia el estado de login
   void resetLoginState() {
     _loginCubit.reset();
     emit(state.copyWith(
@@ -114,7 +99,6 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     ));
   }
 
-  /// Reinicia el estado de registro
   void resetRegisterState() {
     _registerCubit.reset();
     emit(state.copyWith(

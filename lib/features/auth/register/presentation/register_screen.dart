@@ -92,9 +92,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Si el estado es success y el formulario está completo, navegar directamente
     if (registerState.status == RegisterStatus.success &&
         _formNotifier.isFormComplete()) {
-      // Navegar a ValidationScreen
+      // Navegar según tipo de RUC
       if (!mounted) return;
-      context.router.push(const ValidationRoute());
+
+      // Si es RUC 20, navegar a BusinessValidationScreen
+      if (_selectedRuc == TipoRuc.ruc20) {
+        context.router.push(const BusinessValidationRoute());
+      } else {
+        // Para RUC 10 y 15, navegar directamente a ValidationScreen
+        context.router.push(const ValidationRoute());
+      }
       return;
     }
 

@@ -35,30 +35,27 @@ class RegisterEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        tipoComercio,
-        tipoDocumento,
-        numeroDocumento,
-        nombres,
-        apellidos,
-        email,
-        whatsapp,
-        password,
-        razonSocial,
-        tipoDocumentoRepresentante,
-        numeroDocumentoRepresentante,
-      ];
+    tipoComercio,
+    tipoDocumento,
+    numeroDocumento,
+    nombres,
+    apellidos,
+    email,
+    whatsapp,
+    password,
+    razonSocial,
+    tipoDocumentoRepresentante,
+    numeroDocumentoRepresentante,
+  ];
 
-  /// Valida la entidad
   List<RegisterValidationError> validate() {
     return RegisterEntityValidator.validate(this);
   }
 
-  /// Verifica si la entidad es válida
   bool isValid() {
     return RegisterEntityValidator.isValid(this);
   }
 
-  /// Copia la entidad con nuevos valores
   RegisterEntity copyWith({
     TipoComercio? tipoComercio,
     TipoDocumento? tipoDocumento,
@@ -82,8 +79,15 @@ class RegisterEntity extends Equatable {
       whatsapp: whatsapp ?? this.whatsapp,
       password: password ?? this.password,
       razonSocial: razonSocial ?? this.razonSocial,
-      tipoDocumentoRepresentante: tipoDocumentoRepresentante ?? this.tipoDocumentoRepresentante,
-      numeroDocumentoRepresentante: numeroDocumentoRepresentante ?? this.numeroDocumentoRepresentante,
+      tipoDocumentoRepresentante:
+          tipoDocumentoRepresentante ?? this.tipoDocumentoRepresentante,
+      numeroDocumentoRepresentante:
+          numeroDocumentoRepresentante ?? this.numeroDocumentoRepresentante,
     );
+  }
+
+  @override
+  toString() {
+    return 'RegisterEntity(tipoComercio: $tipoComercio\n, tipoDocumento: $tipoDocumento\n, numeroDocumento: $numeroDocumento\n, nombres: $nombres\n, apellidos: $apellidos\n, email: $email\n, whatsapp: $whatsapp\n, password: $password\n, razonSocial: $razonSocial\n, tipoDocumentoRepresentante: $tipoDocumentoRepresentante\n, numeroDocumentoRepresentante: $numeroDocumentoRepresentante\n)';
   }
 }

@@ -4,102 +4,162 @@ import 'package:partners/core/utils/validations/dni_validator.dart';
 import 'package:partners/core/utils/validations/ruc_validator.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_comercio.dart';
 import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
+import 'package:partners/features/auth/register/domain/entities/validate_ruc_entity.dart';
 
 /// ChangeNotifier para manejar las validaciones de UI del formulario de registro
+/// Separado por tipo de RUC (10, 15, 20)
 class RegisterFormNotifier extends ChangeNotifier {
-  // Timer para debouncer
+  // Timer para debouncer de validación de formato
   Timer? _documentDebounceTimer;
   Timer? _representanteDebounceTimer;
-  // Controllers
-  final TextEditingController numeroDocumentoController = TextEditingController();
+  
+  // Timer para debouncer de llamada a cubits
+  Timer? _commerceDebounceTimer;
+  Timer? _documentCubitDebounceTimer;
+
+  // Controllers compartidos
+  final TextEditingController numeroDocumentoController =
+      TextEditingController();
   final TextEditingController nombresController = TextEditingController();
   final TextEditingController apellidosController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController whatsappController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  // Controllers adicionales para RUC 20
+  // Controllers específicos para RUC 20
   final TextEditingController razonSocialController = TextEditingController();
-  final TextEditingController numeroDocumentoRepresentanteController = TextEditingController();
+  final TextEditingController numeroDocumentoRepresentanteController =
+      TextEditingController();
 
-  // Valores seleccionados
+  // Tipo de comercio actual
   TipoComercio? _tipoComercio;
-  TipoDocumento? _tipoDocumento;
+
+  // Estados de validación - RUC 10 y 15
+  String? _numeroDocumentoError;
+  bool _isNombresEnabled = false;
+  bool _isApellidosEnabled = false;
+
+  // Estados de validación - RUC 20
+  String? _numeroDocumentoRepresentanteError;
+  bool _isRazonSocialEnabled = false;
   TipoDocumento? _tipoDocumentoRepresentante;
 
-  // Estados de validación
-  String? _numeroDocumentoError;
+  // Estados de validación generales
   String? _emailError;
   String? _whatsappError;
   String? _passwordError;
   String? _confirmPasswordError;
-  String? _numeroDocumentoRepresentanteError;
-
-  // Callback para validar documento automáticamente
-  Function(String, TipoDocumento?, TipoComercio?)? onDocumentValidated;
-  Function(String, TipoDocumento?)? onRepresentanteDocumentValidated;
 
   // Estados de UI
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  bool _isNombresEnabled = false;
-  bool _isApellidosEnabled = false;
-  bool _isRazonSocialEnabled = false;
+
+  // Callbacks para llamar a los cubits
+  Function(ValidateRucEntity)? onValidateCommerce;
+  Function(TipoDocumento, String)? onValidateDocument;
 
   // Getters
   TipoComercio? get tipoComercio => _tipoComercio;
-  TipoDocumento? get tipoDocumento => _tipoDocumento;
   TipoDocumento? get tipoDocumentoRepresentante => _tipoDocumentoRepresentante;
   String? get numeroDocumentoError => _numeroDocumentoError;
+  String? get numeroDocumentoRepresentanteError =>
+      _numeroDocumentoRepresentanteError;
   String? get emailError => _emailError;
   String? get whatsappError => _whatsappError;
   String? get passwordError => _passwordError;
   String? get confirmPasswordError => _confirmPasswordError;
-  String? get numeroDocumentoRepresentanteError => _numeroDocumentoRepresentanteError;
   bool get isPasswordVisible => _isPasswordVisible;
   bool get isConfirmPasswordVisible => _isConfirmPasswordVisible;
   bool get isNombresEnabled => _isNombresEnabled;
   bool get isApellidosEnabled => _isApellidosEnabled;
   bool get isRazonSocialEnabled => _isRazonSocialEnabled;
 
-  // Setter para tipo de comercio
+  // ==================== MÉTODOS PARA CAMBIAR TIPO DE COMERCIO ====================
+
+  /// Establece el tipo de comercio y reinicia el formulario correspondiente
   void setTipoComercio(TipoComercio? tipo) {
+    if (_tipoComercio != tipo) {
     _tipoComercio = tipo;
+      _resetFormByTipo();
     notifyListeners();
-  }
-
-  // Setter para tipo de documento
-  void setTipoDocumento(TipoDocumento? tipo) {
-    _tipoDocumento = tipo;
-    // Si hay un número de documento y es RUC 20, validar nuevamente
-    if (numeroDocumentoController.text.isNotEmpty && 
-        (_tipoComercio == TipoComercio.ruc20)) {
-      _validateDocumentWithDebounce();
     }
-    notifyListeners();
   }
 
-  // Setter para tipo de documento del representante (RUC 20)
-  void setTipoDocumentoRepresentante(TipoDocumento? tipo) {
-    _tipoDocumentoRepresentante = tipo;
-    notifyListeners();
+  /// Reinicia el formulario según el tipo de comercio
+  void _resetFormByTipo() {
+    switch (_tipoComercio) {
+      case TipoComercio.ruc10:
+        _resetRuc10();
+        break;
+      case TipoComercio.ruc15:
+        _resetRuc15();
+        break;
+      case TipoComercio.ruc20:
+        _resetRuc20();
+        break;
+      case null:
+        _resetAll();
+        break;
+    }
   }
 
-  // Toggle password visibility
-  void togglePasswordVisibility() {
-    _isPasswordVisible = !_isPasswordVisible;
-    notifyListeners();
+  // ==================== MÉTODOS PARA RUC 10 ====================
+
+  /// Reinicia el formulario para RUC 10
+  void _resetRuc10() {
+    numeroDocumentoController.clear();
+    nombresController.clear();
+    apellidosController.clear();
+    _numeroDocumentoError = null;
+    _isNombresEnabled = false;
+    _isApellidosEnabled = false;
+    _documentDebounceTimer?.cancel();
+    _commerceDebounceTimer?.cancel();
   }
 
-  // Toggle confirm password visibility
-  void toggleConfirmPasswordVisibility() {
-    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+  /// Valida el RUC para RUC 10
+  void _validateRuc10() {
+    final ruc = numeroDocumentoController.text.trim();
+
+    if (ruc.isEmpty) {
+      _numeroDocumentoError = null;
+      notifyListeners();
+      return;
+    }
+
+    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc10,
+        tipoDocumento: TipoDocumento.dni)) {
+      _numeroDocumentoError = 'El RUC debe tener 11 dígitos y empezar con 10';
+      notifyListeners();
+      return;
+    }
+
+    _numeroDocumentoError = null;
     notifyListeners();
+
+    // Llamar al cubit con debouncer después de validar el formato
+    // Enviar el RUC completo
+    _callValidateCommerceWithDebounce(
+      ValidateRucEntity(
+        tipoComercio: TipoComercio.ruc10,
+        ruc: ruc,
+      ),
+    );
   }
 
-  // Habilitar campos de nombres y apellidos (para RUC 10 y 15)
-  void enableNombresApellidos(String nombres, String apellidos) {
+  /// Valida si el formulario RUC 10 está completo
+  bool isRuc10Complete() {
+    final ruc = numeroDocumentoController.text.trim();
+    final nombres = nombresController.text.trim();
+    final apellidos = apellidosController.text.trim();
+
+    return ruc.isNotEmpty && nombres.isNotEmpty && apellidos.isNotEmpty;
+  }
+
+  /// Habilita nombres y apellidos para RUC 10
+  void enableNombresApellidosRuc10(String nombres, String apellidos) {
     nombresController.text = nombres;
     apellidosController.text = apellidos;
     _isNombresEnabled = true;
@@ -107,107 +167,140 @@ class RegisterFormNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Habilitar razón social (para RUC 20)
-  void enableRazonSocial(String razonSocial) {
-    razonSocialController.text = razonSocial;
-    _isRazonSocialEnabled = true;
+  // ==================== MÉTODOS PARA RUC 15 ====================
+
+  /// Reinicia el formulario para RUC 15
+  void _resetRuc15() {
+    numeroDocumentoController.clear();
+    nombresController.clear();
+    apellidosController.clear();
+    _numeroDocumentoError = null;
+    _isNombresEnabled = false;
+    _isApellidosEnabled = false;
+    _documentDebounceTimer?.cancel();
+    _commerceDebounceTimer?.cancel();
+  }
+
+  /// Valida el RUC para RUC 15
+  void _validateRuc15() {
+    final ruc = numeroDocumentoController.text.trim();
+
+    if (ruc.isEmpty) {
+      _numeroDocumentoError = null;
+      notifyListeners();
+      return;
+    }
+
+    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc15,
+        tipoDocumento: TipoDocumento.dni)) {
+      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 15';
+      notifyListeners();
+      return;
+    }
+
+    _numeroDocumentoError = null;
+    notifyListeners();
+
+    // Llamar al cubit con debouncer después de validar el formato
+    // Enviar el RUC completo
+    _callValidateCommerceWithDebounce(
+      ValidateRucEntity(
+        tipoComercio: TipoComercio.ruc15,
+        ruc: ruc,
+      ),
+    );
+  }
+
+  /// Valida si el formulario RUC 15 está completo
+  bool isRuc15Complete() {
+    final ruc = numeroDocumentoController.text.trim();
+    final nombres = nombresController.text.trim();
+    final apellidos = apellidosController.text.trim();
+
+    return ruc.isNotEmpty && nombres.isNotEmpty && apellidos.isNotEmpty;
+  }
+
+  /// Habilita nombres y apellidos para RUC 15
+  void enableNombresApellidosRuc15(String nombres, String apellidos) {
+    nombresController.text = nombres;
+    apellidosController.text = apellidos;
+    _isNombresEnabled = true;
+    _isApellidosEnabled = true;
     notifyListeners();
   }
 
-  // Inicializar listeners para debouncer
-  void initializeDocumentListeners() {
-    numeroDocumentoController.addListener(_onDocumentChanged);
-    numeroDocumentoRepresentanteController.addListener(_onRepresentanteDocumentChanged);
-  }
+  // ==================== MÉTODOS PARA RUC 20 ====================
 
-  // Listener para cambios en el documento principal
-  void _onDocumentChanged() {
-    _validateDocumentWithDebounce();
-  }
-
-  // Listener para cambios en el documento del representante
-  void _onRepresentanteDocumentChanged() {
-    _validateRepresentanteDocumentWithDebounce();
-  }
-
-  // Validar documento con debouncer (1000ms)
-  void _validateDocumentWithDebounce() {
+  /// Reinicia el formulario para RUC 20
+  void _resetRuc20() {
+    numeroDocumentoController.clear();
+    razonSocialController.clear();
+    numeroDocumentoRepresentanteController.clear();
+    nombresController.clear();
+    apellidosController.clear();
+    _numeroDocumentoError = null;
+    _numeroDocumentoRepresentanteError = null;
+    _isRazonSocialEnabled = false;
+    _tipoDocumentoRepresentante = null;
+    _isNombresEnabled = false;
+    _isApellidosEnabled = false;
     _documentDebounceTimer?.cancel();
-    _documentDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
-      final numero = numeroDocumentoController.text.trim();
-      
-      if (numero.isEmpty) {
+    _representanteDebounceTimer?.cancel();
+    _commerceDebounceTimer?.cancel();
+    _documentCubitDebounceTimer?.cancel();
+  }
+
+  /// Establece el tipo de documento del representante para RUC 20
+  void setTipoDocumentoRepresentante(TipoDocumento? tipo) {
+    _tipoDocumentoRepresentante = tipo;
+    notifyListeners();
+  }
+
+  /// Valida el RUC del negocio para RUC 20
+  void _validateRuc20() {
+    final ruc = numeroDocumentoController.text.trim();
+
+    if (ruc.isEmpty) {
         _numeroDocumentoError = null;
         notifyListeners();
         return;
       }
 
-      // Validar formato completo de RUC según tipo de comercio
-      if (_tipoComercio != null) {
-        // Para RUC 10 y 15, usar DNI por defecto
-        // Para RUC 20, no se requiere tipoDocumento para el RUC del negocio
-        final tipoDoc = (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15)
-            ? TipoDocumento.dni
-            : null;
-        
-        // Validar formato completo de RUC
-        // Para RUC 20, validar sin tipoDocumento (el documento puede ser DNI o CE)
-        bool isValid;
-        if (_tipoComercio == TipoComercio.ruc20) {
-          // Para RUC 20, validar como DNI por defecto (8 dígitos) o CE (9 dígitos)
-          isValid = RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: TipoDocumento.dni) ||
-                    RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: TipoDocumento.ce);
-        } else {
-          isValid = RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc);
-        }
-        
+    // Para RUC 20, validar como DNI o CE
+    final isValid = RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
+            tipoDocumento: TipoDocumento.dni) ||
+        RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
+            tipoDocumento: TipoDocumento.ce);
+
         if (!isValid) {
-          String errorMessage;
-          switch (_tipoComercio!) {
-            case TipoComercio.ruc10:
-              errorMessage = 'El RUC debe tener 11 dígitos y empezar con 10';
-              break;
-            case TipoComercio.ruc15:
-              errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 15';
-              break;
-            case TipoComercio.ruc20:
-              errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 20';
-              break;
-          }
-          _numeroDocumentoError = errorMessage;
+      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 20';
           notifyListeners();
           return;
         }
-        
-        // Si es válido, limpiar error y llamar callback
+
         _numeroDocumentoError = null;
         notifyListeners();
-        
-        // Extraer el documento del RUC para enviarlo al backend
-        final documentoExtraido = RucValidator.extractDocumento(numero, _tipoComercio!);
-        
-        // Llamar callback para validar con backend
-        // Para RUC 20, pasar null como tipoDocumento ya que no se requiere para el RUC del negocio
-        if (onDocumentValidated != null && _tipoComercio != null && documentoExtraido != null) {
-          onDocumentValidated!(documentoExtraido, tipoDoc, _tipoComercio);
-        }
-      }
-    });
+
+    // Llamar al cubit con debouncer después de validar el formato
+    // Enviar el RUC completo
+    _callValidateCommerceWithDebounce(
+      ValidateRucEntity(
+        tipoComercio: TipoComercio.ruc20,
+        ruc: ruc,
+      ),
+    );
   }
 
-  // Validar documento del representante con debouncer (1000ms)
-  void _validateRepresentanteDocumentWithDebounce() {
-    _representanteDebounceTimer?.cancel();
-    _representanteDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
+  /// Valida el documento del representante para RUC 20
+  void _validateRepresentanteRuc20() {
       final numero = numeroDocumentoRepresentanteController.text.trim();
-      
+
       if (numero.isEmpty) {
         _numeroDocumentoRepresentanteError = null;
         notifyListeners();
         return;
       }
 
-      // Validar formato según tipo de documento
       if (_tipoDocumentoRepresentante == TipoDocumento.dni) {
         if (!DniValidator.isValidDni(numero)) {
           _numeroDocumentoRepresentanteError = 'El DNI debe tener 8 dígitos';
@@ -222,54 +315,168 @@ class RegisterFormNotifier extends ChangeNotifier {
         }
       }
 
-      // Si es válido, limpiar error y llamar callback
       _numeroDocumentoRepresentanteError = null;
       notifyListeners();
 
-      // Llamar callback para validar con backend
-      if (onRepresentanteDocumentValidated != null && _tipoDocumentoRepresentante != null) {
-        onRepresentanteDocumentValidated!(numero, _tipoDocumentoRepresentante);
+    // Llamar al cubit con debouncer después de validar el formato
+    if (_tipoDocumentoRepresentante != null) {
+      _callValidateDocumentWithDebounce(
+        _tipoDocumentoRepresentante!,
+        numero,
+      );
+    }
+  }
+
+  /// Valida si el formulario RUC 20 está completo
+  bool isRuc20Complete() {
+    final ruc = numeroDocumentoController.text.trim();
+    final razonSocial = razonSocialController.text.trim();
+    final tipoDocRep = _tipoDocumentoRepresentante;
+    final numeroDocRep = numeroDocumentoRepresentanteController.text.trim();
+    final nombresRep = nombresController.text.trim();
+    final apellidosRep = apellidosController.text.trim();
+
+    return ruc.isNotEmpty &&
+        razonSocial.isNotEmpty &&
+        tipoDocRep != null &&
+        numeroDocRep.isNotEmpty &&
+        nombresRep.isNotEmpty &&
+        apellidosRep.isNotEmpty;
+  }
+
+  /// Habilita razón social para RUC 20
+  void enableRazonSocialRuc20(String razonSocial) {
+    razonSocialController.text = razonSocial;
+    _isRazonSocialEnabled = true;
+    notifyListeners();
+  }
+
+  /// Habilita nombres y apellidos del representante para RUC 20
+  void enableNombresApellidosRuc20(String nombres, String apellidos) {
+    nombresController.text = nombres;
+    apellidosController.text = apellidos;
+    _isNombresEnabled = true;
+    _isApellidosEnabled = true;
+    notifyListeners();
+  }
+
+  // ==================== MÉTODOS COMPARTIDOS ====================
+
+  /// Inicializar listeners para debouncer
+  void initializeDocumentListeners() {
+    numeroDocumentoController.addListener(_onDocumentChanged);
+    numeroDocumentoRepresentanteController.addListener(
+      _onRepresentanteDocumentChanged,
+    );
+  }
+
+  /// Listener para cambios en el documento principal
+  void _onDocumentChanged() {
+    _validateDocumentWithDebounce();
+  }
+
+  /// Listener para cambios en el documento del representante
+  void _onRepresentanteDocumentChanged() {
+    _validateRepresentanteDocumentWithDebounce();
+  }
+
+  /// Valida documento con debouncer según el tipo de comercio
+  void _validateDocumentWithDebounce() {
+    _documentDebounceTimer?.cancel();
+    _documentDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
+      switch (_tipoComercio) {
+        case TipoComercio.ruc10:
+          _validateRuc10();
+          break;
+        case TipoComercio.ruc15:
+          _validateRuc15();
+          break;
+        case TipoComercio.ruc20:
+          _validateRuc20();
+          break;
+        case null:
+          break;
       }
     });
   }
 
-  // Validación de número de documento (para validación manual)
-  bool validateNumeroDocumento() {
-    final numero = numeroDocumentoController.text.trim();
+  /// Valida documento del representante con debouncer (solo RUC 20)
+  void _validateRepresentanteDocumentWithDebounce() {
+    if (_tipoComercio != TipoComercio.ruc20) return;
 
-    if (numero.isEmpty) {
+    _representanteDebounceTimer?.cancel();
+    _representanteDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
+      _validateRepresentanteRuc20();
+    });
+  }
+
+  /// Llama a validateComerce del cubit con debouncer
+  void _callValidateCommerceWithDebounce(ValidateRucEntity entity) {
+    _commerceDebounceTimer?.cancel();
+    _commerceDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (onValidateCommerce != null) {
+        onValidateCommerce!(entity);
+      }
+    });
+  }
+
+  /// Llama a validateDocument del cubit con debouncer
+  void _callValidateDocumentWithDebounce(TipoDocumento type, String number) {
+    _documentCubitDebounceTimer?.cancel();
+    _documentCubitDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (onValidateDocument != null) {
+        onValidateDocument!(type, number);
+      }
+    });
+  }
+
+  /// Verifica si el formulario está completo según el tipo de comercio
+  bool isFormComplete() {
+    switch (_tipoComercio) {
+      case TipoComercio.ruc10:
+        return isRuc10Complete();
+      case TipoComercio.ruc15:
+        return isRuc15Complete();
+      case TipoComercio.ruc20:
+        return isRuc20Complete();
+      case null:
+        return false;
+    }
+  }
+
+  /// Valida todo el formulario según el tipo de comercio
+  bool validateForm() {
+    switch (_tipoComercio) {
+      case TipoComercio.ruc10:
+        return _validateFormRuc10();
+      case TipoComercio.ruc15:
+        return _validateFormRuc15();
+      case TipoComercio.ruc20:
+        return _validateFormRuc20();
+      case null:
+        return false;
+    }
+  }
+
+  /// Valida formulario RUC 10
+  bool _validateFormRuc10() {
+    final ruc = numeroDocumentoController.text.trim();
+    if (ruc.isEmpty) {
       _numeroDocumentoError = 'Ingrese el RUC del negocio';
       notifyListeners();
       return false;
     }
 
-    // Validar formato completo de RUC según tipo de comercio
-    if (_tipoComercio == null) {
-      _numeroDocumentoError = 'Seleccione un tipo de RUC';
+    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc10,
+        tipoDocumento: TipoDocumento.dni)) {
+      _numeroDocumentoError = 'El RUC debe tener 11 dígitos y empezar con 10';
       notifyListeners();
       return false;
     }
 
-    // Para RUC 10 y 15, usar DNI por defecto
-    final tipoDoc = (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15)
-        ? TipoDocumento.dni
-        : null;
-
-    // Validar formato completo de RUC
-    if (!RucValidator.isValidRuc(numero, _tipoComercio!, tipoDocumento: tipoDoc)) {
-      String errorMessage;
-      switch (_tipoComercio!) {
-        case TipoComercio.ruc10:
-          errorMessage = 'El RUC debe tener 11 dígitos y empezar con 10';
-          break;
-        case TipoComercio.ruc15:
-          errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 15';
-          break;
-        case TipoComercio.ruc20:
-          errorMessage = 'El RUC debe tener 12-13 dígitos y empezar con 20';
-          break;
-      }
-      _numeroDocumentoError = errorMessage;
+    final nombres = nombresController.text.trim();
+    final apellidos = apellidosController.text.trim();
+    if (nombres.isEmpty || apellidos.isEmpty) {
       notifyListeners();
       return false;
     }
@@ -279,7 +486,107 @@ class RegisterFormNotifier extends ChangeNotifier {
     return true;
   }
 
-  // Validación de email
+  /// Valida formulario RUC 15
+  bool _validateFormRuc15() {
+    final ruc = numeroDocumentoController.text.trim();
+    if (ruc.isEmpty) {
+      _numeroDocumentoError = 'Ingrese el RUC del negocio';
+      notifyListeners();
+      return false;
+    }
+
+    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc15,
+        tipoDocumento: TipoDocumento.dni)) {
+      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 15';
+      notifyListeners();
+      return false;
+    }
+
+    final nombres = nombresController.text.trim();
+    final apellidos = apellidosController.text.trim();
+    if (nombres.isEmpty || apellidos.isEmpty) {
+      notifyListeners();
+      return false;
+    }
+
+    _numeroDocumentoError = null;
+    notifyListeners();
+    return true;
+  }
+
+  /// Valida formulario RUC 20
+  bool _validateFormRuc20() {
+    bool isValid = true;
+
+    final ruc = numeroDocumentoController.text.trim();
+    if (ruc.isEmpty) {
+      _numeroDocumentoError = 'Ingrese el RUC del negocio';
+      isValid = false;
+    } else {
+      final isValidRuc = RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
+              tipoDocumento: TipoDocumento.dni) ||
+          RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
+              tipoDocumento: TipoDocumento.ce);
+      if (!isValidRuc) {
+        _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 20';
+        isValid = false;
+      } else {
+        _numeroDocumentoError = null;
+      }
+    }
+
+    final razonSocial = razonSocialController.text.trim();
+    if (razonSocial.isEmpty) {
+      isValid = false;
+    }
+
+    if (_tipoDocumentoRepresentante == null) {
+      isValid = false;
+    }
+
+    final numeroRepresentante = numeroDocumentoRepresentanteController.text.trim();
+    if (numeroRepresentante.isEmpty) {
+      isValid = false;
+    } else if (_tipoDocumentoRepresentante != null) {
+      if (_tipoDocumentoRepresentante == TipoDocumento.dni) {
+        if (!DniValidator.isValidDni(numeroRepresentante)) {
+          _numeroDocumentoRepresentanteError = 'El DNI debe tener 8 dígitos';
+          isValid = false;
+        }
+      } else if (_tipoDocumentoRepresentante == TipoDocumento.ce) {
+        if (numeroRepresentante.length != 9 ||
+            !RegExp(r'^\d+$').hasMatch(numeroRepresentante)) {
+          _numeroDocumentoRepresentanteError = 'El CE debe tener 9 dígitos';
+          isValid = false;
+        }
+      }
+    }
+
+    final nombresRep = nombresController.text.trim();
+    final apellidosRep = apellidosController.text.trim();
+    if (nombresRep.isEmpty || apellidosRep.isEmpty) {
+      isValid = false;
+    }
+
+    notifyListeners();
+    return isValid;
+  }
+
+  // ==================== MÉTODOS GENERALES ====================
+
+  /// Toggle password visibility
+  void togglePasswordVisibility() {
+    _isPasswordVisible = !_isPasswordVisible;
+    notifyListeners();
+  }
+
+  /// Toggle confirm password visibility
+  void toggleConfirmPasswordVisibility() {
+    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+    notifyListeners();
+  }
+
+  /// Validación de email
   bool validateEmail() {
     final email = emailController.text.trim();
 
@@ -301,7 +608,7 @@ class RegisterFormNotifier extends ChangeNotifier {
     return true;
   }
 
-  // Validación de WhatsApp
+  /// Validación de WhatsApp
   bool validateWhatsapp() {
     final whatsapp = whatsappController.text.trim();
 
@@ -322,7 +629,7 @@ class RegisterFormNotifier extends ChangeNotifier {
     return true;
   }
 
-  // Validación de password
+  /// Validación de password
   bool validatePassword() {
     final password = passwordController.text;
 
@@ -343,7 +650,7 @@ class RegisterFormNotifier extends ChangeNotifier {
     return true;
   }
 
-  // Validación de confirmación de password
+  /// Validación de confirmación de password
   bool validateConfirmPassword() {
     final password = passwordController.text;
     final confirmPassword = confirmPasswordController.text;
@@ -365,102 +672,7 @@ class RegisterFormNotifier extends ChangeNotifier {
     return true;
   }
 
-  // Verificar si el formulario está completo (sin validar, solo verificar que tenga datos)
-  bool isFormComplete() {
-    // Verificar tipo de comercio
-    if (_tipoComercio == null) {
-      return false;
-    }
-
-    // Verificar número de documento principal
-    final numeroDocumento = numeroDocumentoController.text.trim();
-    if (numeroDocumento.isEmpty) {
-      return false;
-    }
-
-    // Para RUC 10 y 15: verificar que tenga nombres y apellidos
-    if (_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15) {
-      final nombres = nombresController.text.trim();
-      final apellidos = apellidosController.text.trim();
-      if (nombres.isEmpty || apellidos.isEmpty) {
-        return false;
-      }
-    }
-
-    // Para RUC 20: verificar razón social, documento del representante y nombres del representante
-    if (_tipoComercio == TipoComercio.ruc20) {
-      final razonSocial = razonSocialController.text.trim();
-      if (razonSocial.isEmpty) {
-        return false;
-      }
-
-      if (_tipoDocumentoRepresentante == null) {
-        return false;
-      }
-
-      final numeroRepresentante = numeroDocumentoRepresentanteController.text.trim();
-      if (numeroRepresentante.isEmpty) {
-        return false;
-      }
-
-      final nombresRepresentante = nombresController.text.trim();
-      final apellidosRepresentante = apellidosController.text.trim();
-      if (nombresRepresentante.isEmpty || apellidosRepresentante.isEmpty) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Validar todo el formulario
-  bool validateForm() {
-    bool isValid = true;
-
-    if (_tipoComercio == null) {
-      isValid = false;
-    }
-
-    // Para RUC 10 y 15, tipoDocumento debe ser DNI (ya se establece automáticamente)
-    // Para RUC 20, no se requiere tipoDocumento para el RUC del negocio
-    if ((_tipoComercio == TipoComercio.ruc10 || _tipoComercio == TipoComercio.ruc15) && _tipoDocumento == null) {
-      isValid = false;
-    }
-
-    if (!validateNumeroDocumento()) {
-      isValid = false;
-    }
-
-    // Para RUC 20, validar documento del representante
-    if (_tipoComercio == TipoComercio.ruc20) {
-      if (_tipoDocumentoRepresentante == null) {
-        isValid = false;
-      }
-
-      final numeroRepresentante = numeroDocumentoRepresentanteController.text.trim();
-      if (numeroRepresentante.isEmpty) {
-        isValid = false;
-      } else {
-        // Validar formato del documento del representante
-        if (_tipoDocumentoRepresentante == TipoDocumento.dni) {
-          if (!DniValidator.isValidDni(numeroRepresentante)) {
-            _numeroDocumentoRepresentanteError = 'El DNI debe tener 8 dígitos';
-            isValid = false;
-          }
-        } else if (_tipoDocumentoRepresentante == TipoDocumento.ce) {
-          if (numeroRepresentante.length != 9 || !RegExp(r'^\d+$').hasMatch(numeroRepresentante)) {
-            _numeroDocumentoRepresentanteError = 'El CE debe tener 9 dígitos';
-            isValid = false;
-          }
-        }
-      }
-    }
-
-    notifyListeners();
-    return isValid;
-  }
-
-  // Limpiar errores
+  /// Limpiar errores
   void clearErrors() {
     _numeroDocumentoError = null;
     _emailError = null;
@@ -471,8 +683,8 @@ class RegisterFormNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Reset completo
-  void reset() {
+  /// Reset completo
+  void _resetAll() {
     numeroDocumentoController.clear();
     nombresController.clear();
     apellidosController.clear();
@@ -484,7 +696,6 @@ class RegisterFormNotifier extends ChangeNotifier {
     numeroDocumentoRepresentanteController.clear();
 
     _tipoComercio = null;
-    _tipoDocumento = null;
     _tipoDocumentoRepresentante = null;
     _isPasswordVisible = false;
     _isConfirmPasswordVisible = false;
@@ -499,8 +710,12 @@ class RegisterFormNotifier extends ChangeNotifier {
   void dispose() {
     _documentDebounceTimer?.cancel();
     _representanteDebounceTimer?.cancel();
+    _commerceDebounceTimer?.cancel();
+    _documentCubitDebounceTimer?.cancel();
     numeroDocumentoController.removeListener(_onDocumentChanged);
-    numeroDocumentoRepresentanteController.removeListener(_onRepresentanteDocumentChanged);
+    numeroDocumentoRepresentanteController.removeListener(
+      _onRepresentanteDocumentChanged,
+    );
     numeroDocumentoController.dispose();
     nombresController.dispose();
     apellidosController.dispose();

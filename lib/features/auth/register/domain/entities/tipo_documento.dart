@@ -1,4 +1,1 @@
-enum TipoDocumento {
-  dni,
-  ce,
-}
+enum TipoDocumento { dni, ce }

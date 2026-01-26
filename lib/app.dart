@@ -8,6 +8,7 @@ import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/login/domain/use_case/login_usecase.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart';
 import 'package:partners/features/auth/register/domain/use_case/validate_commerce_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/validate_document_register_usecase.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 import 'package:partners/main.dart';
 
@@ -20,9 +21,6 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   late final AppRouter _appRouter;
-  late final RegisterCubit _registerCubit;
-  late final LoginCubit _loginCubit;
-  late final OrquestorAuthCubit _orquestorAuthCubit;
 
   @override
   void initState() {
@@ -34,31 +32,9 @@ class _AppState extends State<App> {
     try {
       _appRouter = getIt<AppRouter>();
       _appRouter.config();
-
-      _registerCubit = RegisterCubit(
-        validateCommerceUsecase: getIt<ValidateCommerceUsecase>(),
-      );
-
-      _loginCubit = LoginCubit(
-        loginUsecase: getIt<LoginUsecase>(),
-      );
-
-      _orquestorAuthCubit = OrquestorAuthCubit(
-        registerCubit: _registerCubit,
-        loginCubit: _loginCubit,
-        authManager: getIt<AuthManager>(),
-      );
     } catch (e, stackTrace) {
       AppLogger.error('Error al inicializar App', e, stackTrace, 'App');
     }
-  }
-
-  @override
-  void dispose() {
-    _registerCubit.close();
-    _loginCubit.close();
-    _orquestorAuthCubit.close();
-    super.dispose();
   }
 
   @override
@@ -68,15 +44,34 @@ class _AppState extends State<App> {
 
       return MultiBlocProvider(
         providers: [
-          BlocProvider.value(value: _registerCubit),
-          BlocProvider.value(value: _loginCubit),
-          BlocProvider.value(value: _orquestorAuthCubit),
+          BlocProvider(
+            create: (context) => RegisterCubit(
+              validateCommerceUsecase: getIt<ValidateCommerceUsecase>(),
+              validateDocumentUsecase:
+                  getIt<ValidateRegisterDocumentRegisterUsecase>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) =>
+                LoginCubit(loginUsecase: getIt<LoginUsecase>()),
+          ),
         ],
-        child: MaterialApp.router(
-          title: 'Partners',
-          theme: AppTheme.ligth(),
-          routerConfig: routerConfig,
-          debugShowCheckedModeBanner: false,
+        child: Builder(
+          builder: (context) {
+            return BlocProvider(
+              create: (context) => OrquestorAuthCubit(
+                registerCubit: context.read<RegisterCubit>(),
+                loginCubit: context.read<LoginCubit>(),
+                authManager: getIt<AuthManager>(),
+              ),
+              child: MaterialApp.router(
+                title: 'Partners',
+                theme: AppTheme.ligth(),
+                routerConfig: routerConfig,
+                debugShowCheckedModeBanner: false,
+              ),
+            );
+          },
         ),
       );
     } catch (e, stackTrace) {

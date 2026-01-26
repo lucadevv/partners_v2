@@ -11,26 +11,30 @@ class AppInjection {
   final String _baseUrl;
 
   AppInjection({required GetIt getIt, required String baseUrl})
-      : _getIt = getIt,
-        _baseUrl = baseUrl {
+    : _getIt = getIt,
+      _baseUrl = baseUrl {
     _init();
   }
 
   void _init() {
+    AuthInjection(getIt: _getIt);
+
     try {
       if (!_getIt.isRegistered<AppRouter>()) {
-        _getIt.registerLazySingleton<AppRouter>(
-          () {
-            try {
-              return AppRouter();
-            } catch (e, stackTrace) {
-              AppLogger.error('Error al crear AppRouter', e, stackTrace, 'AppInjection');
-              rethrow;
-            }
-          },
-        );
+        _getIt.registerLazySingleton<AppRouter>(() {
+          try {
+            return AppRouter();
+          } catch (e, stackTrace) {
+            AppLogger.error(
+              'Error al crear AppRouter',
+              e,
+              stackTrace,
+              'AppInjection',
+            );
+            rethrow;
+          }
+        });
       }
-
       if (!_getIt.isRegistered<ApiServices>()) {
         final validatedUrl = _baseUrl.isEmpty
             ? AppConfig.getValidatedBaseUrl()
@@ -40,7 +44,6 @@ class AppInjection {
         );
       }
 
-      AuthInjection(getIt: _getIt);
       AppLogger.info('AppInjection inicializado correctamente', 'AppInjection');
     } catch (e, stackTrace) {
       AppLogger.error('Error en AppInjection', e, stackTrace, 'AppInjection');

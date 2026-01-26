@@ -4,8 +4,6 @@ import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/main.dart';
 
-/// Guard para verificar si los datos del usuario están completos
-/// Si no están completos, redirige a la pantalla de validación
 class CompleteDataGuard extends AutoRouteGuard {
   final TokenManager _tokenManager;
 
@@ -27,9 +25,11 @@ class CompleteDataGuard extends AutoRouteGuard {
           'CompleteDataGuard: Datos incompletos. Redirigiendo a ValidationRoute.',
         );
       }
-      // Usar replaceAll para limpiar el stack y evitar que haya botón de regresar
-      router.replaceAll([const DashboardRoute(children: [ValidationRoute()])]);
-      resolver.next(false); // No continuar con la navegación original
+
+      router.replaceAll([
+        const DashboardRoute(children: [ValidationRoute()]),
+      ]);
+      resolver.next(false);
     } else {
       if (kDebugMode) {
         debugPrint('CompleteDataGuard: Datos completos. Permitiendo acceso.');

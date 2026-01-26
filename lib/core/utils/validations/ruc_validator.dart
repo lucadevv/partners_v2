@@ -51,7 +51,7 @@ class RucValidator {
 
       case TipoComercio.ruc15:
         // RUC 15: debe tener 12-13 dígitos, empezar con 15
-        if (rucLimpio.length < 12 || rucLimpio.length > 13) {
+        if (rucLimpio.length != 11) {
           return false;
         }
         if (!rucLimpio.startsWith('15')) {
@@ -70,7 +70,7 @@ class RucValidator {
 
       case TipoComercio.ruc20:
         // RUC 20: debe tener 12-13 dígitos, empezar con 20
-        if (rucLimpio.length < 12 || rucLimpio.length > 13) {
+        if (rucLimpio.length != 11) {
           return false;
         }
         if (!rucLimpio.startsWith('20')) {
@@ -112,14 +112,18 @@ class RucValidator {
 
       case TipoComercio.ruc15:
         // RUC 15: 15 + DNI/CE (8-9) + código (1) = 12-13
-        if (rucLimpio.length < 12 || rucLimpio.length > 13 || !rucLimpio.startsWith('15')) {
+        if (rucLimpio.length < 12 ||
+            rucLimpio.length > 13 ||
+            !rucLimpio.startsWith('15')) {
           return null;
         }
         return rucLimpio.substring(2, rucLimpio.length - 1); // DNI/CE
 
       case TipoComercio.ruc20:
         // RUC 20: 20 + DNI/CE (8-9) + código (1) = 12-13
-        if (rucLimpio.length < 12 || rucLimpio.length > 13 || !rucLimpio.startsWith('20')) {
+        if (rucLimpio.length < 12 ||
+            rucLimpio.length > 13 ||
+            !rucLimpio.startsWith('20')) {
           return null;
         }
         return rucLimpio.substring(2, rucLimpio.length - 1); // DNI/CE

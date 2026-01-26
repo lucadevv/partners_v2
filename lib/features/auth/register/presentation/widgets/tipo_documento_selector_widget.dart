@@ -122,7 +122,7 @@ class TipoDocumentoSelectorWidget extends StatelessWidget {
                 SizedBox(height: 24),
                 _buildOption(context, TipoDocumento.dni, 'DNI'),
                 SizedBox(height: 16),
-                _buildOption(context, TipoDocumento.ce, 'CE'),
+                // _buildOption(context, TipoDocumento.ce, 'CE'),
               ],
             ),
           ),

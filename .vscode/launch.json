@@ -11,7 +11,7 @@
             "type": "dart",
             "flutterMode": "debug",
             "args": [
-                "--dart-define-from-file=.env.json"
+                "--dart-define-from-file=env.json"
             ]
         },
         {
@@ -20,7 +20,7 @@
             "type": "dart",
             "flutterMode": "profile",
             "args": [
-                "--dart-define-from-file=.env.json"
+                "--dart-define-from-file=env.json"
             ]
         },
         {
@@ -29,7 +29,7 @@
             "type": "dart",
             "flutterMode": "release",
             "args": [
-                "--dart-define-from-file=.env.json"
+                "--dart-define-from-file=env.json"
             ]
         }
     ]

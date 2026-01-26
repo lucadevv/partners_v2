@@ -28,7 +28,7 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
     // Obtener la ruta actual
     final currentPath = context.router.currentPath;
     final isValidationRoute = currentPath.contains('/validation');
-    
+
     // Si estamos en la ruta de validación, mostrar solo el AutoRouter sin tabs
     if (isValidationRoute) {
       return Scaffold(
@@ -49,7 +49,9 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
       builder: (context, child, _) {
         final tabsRouter = AutoTabsRouter.of(context);
         final tabsPath = tabsRouter.currentPath;
-        final isVisible = visibleRoutes.any((route) => tabsPath.startsWith(route));
+        final isVisible = visibleRoutes.any(
+          (route) => tabsPath.startsWith(route),
+        );
 
         return Scaffold(
           backgroundColor: const Color(0XFFE3FFFC),

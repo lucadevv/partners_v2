@@ -6,7 +6,9 @@ class AppConfig {
 
   static String getValidatedBaseUrl() {
     if (baseUrl.isEmpty) {
-      throw Exception('base_url no está configurada. Use --dart-define=base_url=...');
+      throw Exception(
+        'base_url no está configurada. Use --dart-define=base_url=...',
+      );
     }
     return baseUrl;
   }

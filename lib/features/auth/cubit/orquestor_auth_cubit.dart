@@ -5,7 +5,8 @@ import 'package:equatable/equatable.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/features/auth/login/domain/entities/login_response_entity.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart';
-import 'package:partners/features/auth/register/domain/entities/register_entity.dart';
+
+import 'package:partners/features/auth/register/domain/entities/validate_ruc_entity.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 
 part 'orquestor_auth_state.dart';
@@ -22,10 +23,10 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     required RegisterCubit registerCubit,
     required LoginCubit loginCubit,
     required AuthManager authManager,
-  })  : _registerCubit = registerCubit,
-        _loginCubit = loginCubit,
-        _authManager = authManager,
-        super(OrquestorAuthState.initial()) {
+  }) : _registerCubit = registerCubit,
+       _loginCubit = loginCubit,
+       _authManager = authManager,
+       super(OrquestorAuthState.initial()) {
     _startListening();
   }
 
@@ -37,7 +38,8 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     _loginSubscription = _loginCubit.stream.listen((loginState) async {
       emit(state.copyWith(loginState: loginState));
 
-      if (loginState.status == LoginStatus.success && loginState.responseEntity != null) {
+      if (loginState.status == LoginStatus.success &&
+          loginState.responseEntity != null) {
         await _handleLoginSuccess(loginState.responseEntity!);
       }
     });
@@ -57,9 +59,7 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     }
   }
 
-  Future<void> validateComerce({
-    required RegisterEntity entity,
-  }) async {
+  Future<void> validateComerce({required ValidateRucEntity entity}) async {
     emit(state.copyWith(effect: const ValidateComerceEffect()));
 
     try {
@@ -73,10 +73,7 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     _loginCubit.reset();
     await _loginCubit.login(email: email, password: password);
   }
@@ -93,18 +90,12 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
 
   void resetLoginState() {
     _loginCubit.reset();
-    emit(state.copyWith(
-      loginState: LoginState.initial(),
-      effect: null,
-    ));
+    emit(state.copyWith(loginState: LoginState.initial(), effect: null));
   }
 
   void resetRegisterState() {
     _registerCubit.reset();
-    emit(state.copyWith(
-      registerState: RegisterState.initial(),
-      effect: null,
-    ));
+    emit(state.copyWith(registerState: RegisterState.initial(), effect: null));
   }
 
   @override

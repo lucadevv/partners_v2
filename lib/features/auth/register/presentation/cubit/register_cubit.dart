@@ -1,44 +1,42 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:partners/core/cubit/base_cubit_mixin.dart';
-import 'package:partners/features/auth/register/domain/entities/document_response_entity.dart';
-import 'package:partners/features/auth/register/domain/entities/register_response_entity.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
-import 'package:partners/features/auth/register/domain/entities/validate_ruc_entity.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_commerce_usecase.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_document_register_usecase.dart';
+import 'package:partners/core/services/database/flags/flags_factory.dart';
+import 'package:partners/core/services/database/flags/session_id_flug.dart';
+import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/register/domain/use_case/send_document_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/send_ruc_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/start_register_usecase.dart';
+import 'package:partners/features/auth/register/presentation/cubit/register_state.dart';
 
-part 'register_state.dart';
-
-class RegisterCubit extends Cubit<RegisterState> with BaseCubitMixin {
-  final ValidateCommerceUsecase _validateCommerceUsecase;
-  final ValidateRegisterDocumentRegisterUsecase _validateDocumentUsecase;
+class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
+  final SendDocumentUsecase _sendDocumentUsecase;
+  final SendRucUsecase _sendRucUsecase;
+  final StartRegisterUsecase _startRegisterUsecase;
+  final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
 
   RegisterCubit({
-    required ValidateCommerceUsecase validateCommerceUsecase,
-    required ValidateRegisterDocumentRegisterUsecase validateDocumentUsecase,
-  }) : _validateCommerceUsecase = validateCommerceUsecase,
-       _validateDocumentUsecase = validateDocumentUsecase,
-       super(RegisterState.initial());
+    required SendDocumentUsecase sendDocumentUsecase,
+    required SendRucUsecase sendRucUsecase,
+    required StartRegisterUsecase startRegisterUsecase,
+  }) : _sendDocumentUsecase = sendDocumentUsecase,
+       _sendRucUsecase = sendRucUsecase,
+       _startRegisterUsecase = startRegisterUsecase,
+       super(RegisterStateX.initial());
 
-  Future<void> validateComerce({required ValidateRucEntity entity}) async {
-    if (state.status == RegisterStatus.loading) {
+  Future<void> sendRuc({required String ruc, required RucType type}) async {
+    if (state.sendRucStatus == RegisterStatus.loading) {
       return;
     }
+    emit(state.copyWith(sendRucStatus: RegisterStatus.loading));
 
-    emit(state.copyWith(status: RegisterStatus.loading));
-
-    final response = await _validateCommerceUsecase.validateComerce(
-      entity: entity,
-    );
+    final response = await _sendRucUsecase.call(type: type, ruc: ruc);
 
     await response.fold(
       (failure) async {
         String errorMessage = getErrorMessage(failure);
-
         emit(
           state.copyWith(
-            status: RegisterStatus.failure,
+            sendRucStatus: RegisterStatus.failure,
             errorMessage: errorMessage,
           ),
         );
@@ -46,55 +44,86 @@ class RegisterCubit extends Cubit<RegisterState> with BaseCubitMixin {
       (responseEntity) async {
         emit(
           state.copyWith(
-            responseEntity: responseEntity,
-            status: RegisterStatus.success,
-            errorMessage: null,
+            sendRucStatus: RegisterStatus.success,
+            rucData: responseEntity,
+          ),
+        );
+
+        _sessionFlug.saveSessionId(responseEntity.sessionId);
+      },
+    );
+  }
+
+  Future<void> sendDocumendt({
+    required DocumentType type,
+    required String number,
+  }) async {
+    if (state.sendDocStatus == RegisterStatus.loading) {
+      return;
+    }
+    emit(state.copyWith(sendDocStatus: RegisterStatus.loading));
+    final String? sesionId = _sessionFlug.sessionId;
+    final response = await _sendDocumentUsecase.call(
+      type: type,
+      number: number,
+      sesionId: sesionId!,
+    );
+    await response.fold(
+      (failure) async {
+        String errorMessage = getErrorMessage(failure);
+        emit(
+          state.copyWith(
+            sendDocStatus: RegisterStatus.failure,
+            errorMessage: errorMessage,
+          ),
+        );
+      },
+      (responseEntity) async {
+        emit(
+          state.copyWith(
+            sendDocStatus: RegisterStatus.success,
+            docData: responseEntity,
           ),
         );
       },
     );
   }
 
-  Future<void> validateDocument({
-    required TipoDocumento type,
-    required String number,
-  }) async {
-    if (state.documentStatus == DocumentStatus.loading) {
+  Future<void> submitStart(RucType rucType) async {
+    if (state.sendStartStatus == RegisterStatus.loading) {
       return;
     }
+    emit(state.copyWith(sendStartStatus: RegisterStatus.loading));
 
-    emit(state.copyWith(documentStatus: DocumentStatus.loading));
+    final String? sesionId = _sessionFlug.sessionId;
 
-    final response = await _validateDocumentUsecase.validateDocument(
-      type: type,
-      number: number,
+    final response = await _startRegisterUsecase.call(
+      type: rucType,
+      sessionId: sesionId!,
     );
-
     await response.fold(
       (failure) async {
         String errorMessage = getErrorMessage(failure);
-        print('errorMessage validateDocument $errorMessage');
         emit(
           state.copyWith(
-            documentStatus: DocumentStatus.failure,
-            documentErrorMessage: errorMessage,
+            sendStartStatus: RegisterStatus.failure,
+            errorMessage: errorMessage,
           ),
         );
       },
       (responseEntity) async {
-        print("validateDocument success ${responseEntity.name}");
         emit(
           state.copyWith(
-            documentResponseEntity: responseEntity,
-            documentStatus: DocumentStatus.success,
-            documentErrorMessage: null,
+            sendStartStatus: RegisterStatus.success,
+            startRegisterResEntity: responseEntity,
           ),
         );
+        print("Start register ${responseEntity.nextStep}");
       },
     );
   }
 
   void reset() {
-    emit(RegisterState.initial());
+    emit(RegisterStateX.initial());
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:partners/core/utils/validations/email_validator.dart';
+
 import 'package:partners/core/utils/validations/phone_validator.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 
@@ -91,15 +91,15 @@ class _ValidationInputBottomSheetState
       return;
     }
 
-    // Validar email si es campo de email
-    if (widget.isEmail && !EmailValidator.isValidEmail(value)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor ingrese un correo electrónico válido'),
-        ),
-      );
-      return;
-    }
+    // // Validar email si es campo de email
+    // if (widget.isEmail && !EmailValidator.isValidEmail(value)) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Por favor ingrese un correo electrónico válido'),
+    //     ),
+    //   );
+    //   return;
+    // }
 
     // Validar celular peruano si es campo de teléfono
     if (widget.isPhone && !PhoneValidator.isValidPeruvianPhone(value)) {

@@ -1,145 +1,133 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:partners/core/cubit/base_cubit_mixin.dart';
+import 'package:partners/core/services/database/flags/flags_factory.dart';
+import 'package:partners/core/services/database/flags/session_id_flug.dart';
+import 'package:partners/core/utils/conts/prefers_keys.dart';
+import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
+import 'package:partners/features/auth/validation/domain/entities/validation_entity.dart';
+import 'package:partners/features/auth/validation/domain/factories/item_factory.dart';
+import 'package:partners/features/auth/validation/domain/use_case/get_validation_steps_usecase.dart';
 
 part 'validation_state.dart';
-part 'validation_effect.dart';
 
-/// Cubit para manejar la validación de cuenta (email, whatsapp, password, documento)
-class ValidationCubit extends Cubit<ValidationState> {
-  ValidationCubit() : super(const ValidationState());
+class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
+  final GetValidationStepsUsecase _getValidationStepsUsecase;
+  final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
 
-  /// Valida el email y envía OTP
-  Future<void> validateEmail(String email) async {
-    emit(state.copyWith(status: ValidationStatus.loading));
+  ValidationCubit({
+    required GetValidationStepsUsecase getValidationStepsUsecase,
+  }) : _getValidationStepsUsecase = getValidationStepsUsecase,
+       super(ValidationState.initial());
 
-    try {
-      // TODO: Llamar al use case para validar email
-      await Future.delayed(const Duration(seconds: 1)); // Mock
+  Future<void> loadValidationSteps() async {
+    emit(state.copyWith(stepsStatus: ValidationStatus.loading));
+    final String sessionId = await _sessionFlug.getFlag(PrefersKeys.sessionId);
+    final result = await _getValidationStepsUsecase(sessionId);
+    result.fold(
+      (failure) {
+        String errorMessage = getErrorMessage(failure);
+        emit(
+          state.copyWith(
+            stepsStatus: ValidationStatus.failure,
+            errorMessage: errorMessage,
+            validationItems: ItemFactory.getConfig(),
+          ),
+        );
+      },
+      (stepsEntity) {
+        // Usar directamente el next_step del backend
+        final nextStep = stepsEntity.nextStep;
 
-      // Simular envío de OTP
-      emit(state.copyWith(
-        status: ValidationStatus.otpSent,
-        validationType: ValidationType.email,
-        value: email,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ValidationStatus.failure,
-        errorMessage: 'Error al validar email',
-      ));
-    }
+        final updatedItems = ItemFactory.createWithState(
+          stepsEntity: stepsEntity,
+          nextStep: nextStep,
+        );
+
+        emit(
+          state.copyWith(
+            stepsStatus: ValidationStatus.success,
+            stepsEntity: stepsEntity,
+            validationItems: updatedItems,
+            nextStep: nextStep,
+          ),
+        );
+      },
+    );
   }
 
-  /// Verifica el código OTP del email
-  Future<void> verifyEmailOtp(String code) async {
-    emit(state.copyWith(status: ValidationStatus.loading));
-
-    try {
-      // TODO: Llamar al use case para verificar OTP
-      await Future.delayed(const Duration(seconds: 1)); // Mock
-
-      emit(state.copyWith(
-        status: ValidationStatus.stepCompleted,
-        completedSteps: {...state.completedSteps, ValidationType.email},
-        effect: const EmailCompletedEffect(),
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ValidationStatus.failure,
-        errorMessage: 'Código OTP inválido',
-      ));
-    }
+  void navigateToStep(ItemValidation item) {
+    // Solo permitir tap si el paso está en estado pending
+    if (item.state != ItemValidationState.pending) return;
+    print('object');
+    emit(state.copyWith(nextStep: item.nextStep ?? ''));
   }
 
-  /// Valida el WhatsApp y envía OTP
-  Future<void> validateWhatsApp(String phone) async {
-    emit(state.copyWith(status: ValidationStatus.loading));
+  void updateStepStatus({required String stepName, required bool isCompleted}) {
+    final currentEntity = state.stepsEntity;
 
-    try {
-      // TODO: Llamar al use case para validar WhatsApp
-      await Future.delayed(const Duration(seconds: 1)); // Mock
+    final updatedEntity = _updateStepInEntity(
+      currentEntity,
+      stepName,
+      isCompleted,
+    );
 
-      emit(state.copyWith(
-        status: ValidationStatus.otpSent,
-        validationType: ValidationType.whatsapp,
-        value: phone,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ValidationStatus.failure,
-        errorMessage: 'Error al validar WhatsApp',
-      ));
-    }
+    // Usar directamente el next_step del backend actualizado
+    final nextStep = updatedEntity.nextStep;
+
+    final updatedItems = ItemFactory.createWithState(
+      stepsEntity: updatedEntity,
+      nextStep: nextStep,
+    );
+
+    emit(
+      state.copyWith(
+        stepsEntity: updatedEntity,
+        validationItems: updatedItems,
+        nextStep: nextStep,
+      ),
+    );
   }
 
-  /// Verifica el código OTP del WhatsApp
-  Future<void> verifyWhatsAppOtp(String code) async {
-    emit(state.copyWith(status: ValidationStatus.loading));
+  StepsResEntity _updateStepInEntity(
+    StepsResEntity entity,
+    String stepName,
+    bool isCompleted,
+  ) {
+    final completedSteps = entity.completedSteps;
 
-    try {
-      // TODO: Llamar al use case para verificar OTP
-      await Future.delayed(const Duration(seconds: 1)); // Mock
-
-      emit(state.copyWith(
-        status: ValidationStatus.stepCompleted,
-        completedSteps: {...state.completedSteps, ValidationType.whatsapp},
-        effect: const WhatsAppCompletedEffect(),
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ValidationStatus.failure,
-        errorMessage: 'Código OTP inválido',
-      ));
-    }
+    return entity.copyWith(
+      completedSteps: completedSteps.copyWith(
+        emailVerification: stepName == 'email_verification'
+            ? isCompleted
+            : completedSteps.emailVerification,
+        whatsappVerification: stepName == 'whatsapp_verification'
+            ? isCompleted
+            : completedSteps.whatsappVerification,
+        passwordCreation: stepName == 'password_creation'
+            ? isCompleted
+            : completedSteps.passwordCreation,
+        businessVerification: stepName == 'business_verification'
+            ? isCompleted
+            : completedSteps.businessVerification,
+        identityVerification: stepName == 'identity_verification'
+            ? isCompleted
+            : completedSteps.identityVerification,
+      ),
+    );
   }
 
-  /// Guarda la contraseña
-  Future<void> savePassword(String password) async {
-    emit(state.copyWith(status: ValidationStatus.loading));
-
-    try {
-      // TODO: Llamar al use case para guardar password
-      await Future.delayed(const Duration(seconds: 1)); // Mock
-
-      emit(state.copyWith(
-        status: ValidationStatus.stepCompleted,
-        completedSteps: {...state.completedSteps, ValidationType.password},
-        effect: const PasswordCompletedEffect(),
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ValidationStatus.failure,
-        errorMessage: 'Error al guardar contraseña',
-      ));
-    }
-  }
-
-  /// Marca el documento como validado (se hace en otra pantalla)
-  void documentValidated() {
-    emit(state.copyWith(
-      status: ValidationStatus.stepCompleted,
-      completedSteps: {...state.completedSteps, ValidationType.document},
-      effect: const DocumentCompletedEffect(),
-    ));
-  }
-
-  /// Verifica si todas las validaciones están completadas
-  void checkAllCompleted() {
-    if (state.completedSteps.length == 4) {
-      emit(state.copyWith(
-        status: ValidationStatus.allCompleted,
-        effect: const AllValidationsCompletedEffect(),
-      ));
-    }
-  }
-
-  /// Limpia el effect después de procesarlo
-  void clearEffect() {
-    emit(state.copyWith(effect: null));
-  }
-
-  /// Reset del estado
   void reset() {
-    emit(const ValidationState());
+    emit(ValidationState.initial());
+  }
+
+  void setNextStep(String nextStep) {
+    final updatedItems = ItemFactory.createWithState(
+      stepsEntity: state.stepsEntity,
+      nextStep: nextStep,
+    );
+
+    emit(state.copyWith(nextStep: nextStep, validationItems: updatedItems));
   }
 }

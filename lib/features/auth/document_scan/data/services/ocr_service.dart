@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/core/utils/validations/ce_validator.dart';
 import 'package:partners/core/utils/validations/dni_validator.dart';
 import 'package:partners/features/auth/document_scan/domain/entities/document_ocr_entity.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
 
 /// Servicio para procesar imágenes con OCR usando ML Kit
 /// Basado en: https://github.com/flutter-ml/google_ml_kit_flutter
@@ -271,14 +271,14 @@ class OcrService {
       '   - Alfanuméricos de 8-12 caracteres: ${todosLosAlfanumericos.map((m) => m.group(0)).toList()}',
     );
 
-    TipoDocumento tipoDocumento;
+    DocumentType tipoDocumento;
     String numeroDocumento;
     String? digitoVerificador;
 
     if (dniMatch != null) {
       // Es un DNI
       debugPrint('✅ Detectado como DNI');
-      tipoDocumento = TipoDocumento.dni;
+      tipoDocumento = DocumentType.dni;
       final dniCompleto = dniMatch.group(0)!;
 
       // Validar que tenga 8 dígitos
@@ -300,7 +300,7 @@ class OcrService {
     } else if (ceMatch != null) {
       // Es un CE
       debugPrint('✅ Detectado como CE');
-      tipoDocumento = TipoDocumento.ce;
+      tipoDocumento = DocumentType.ce;
       final ceCompleto = ceMatch.group(0)!.toUpperCase();
 
       // Validar que tenga el formato correcto de CE

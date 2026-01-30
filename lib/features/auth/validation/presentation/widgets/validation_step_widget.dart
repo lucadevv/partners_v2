@@ -1,55 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:partners/features/auth/validation/presentation/notifier/validation_form_notifier.dart';
+import 'package:partners/core/extension/context_extension.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 class ValidationStepWidget extends StatelessWidget {
   final String text;
-  final StepStatus status;
   final VoidCallback? onTap;
+  final ItemValidationState state;
 
   const ValidationStepWidget({
     super.key,
     required this.text,
-    required this.status,
     this.onTap,
+    required this.state,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = status == StepStatus.completed;
-    final isActive = status == StepStatus.active;
-    final isPending = status == StepStatus.pending;
-
-    final colors = _getColors(isCompleted, isActive, isPending);
-    final icon = _getIcon(isCompleted, isActive);
+    // Solo permitir tap si el paso está en estado pending
+    final canTap = state == ItemValidationState.pending;
+    final chechBox = state == ItemValidationState.completed;
 
     return GestureDetector(
-      onTap: isActive ? onTap : null,
+      onTap: canTap ? onTap : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 23),
         decoration: BoxDecoration(
-          color: colors.backgroundColor,
+          color: _getStateColor(context),
           borderRadius: BorderRadius.circular(50),
-          border: colors.border != null
-              ? Border.all(color: colors.border!.color, width: colors.border!.width)
-              : null,
+          border: Border.all(color: _getStateBorderColor(context)!, width: 1),
         ),
         child: Row(
           children: [
-            if (icon != null) ...[
-              Icon(icon, color: colors.iconColor, size: 31),
-              const SizedBox(width: 25),
-            ],
+            Icon(
+              chechBox
+                  ? Icons.check_circle_outline_outlined
+                  : Icons.arrow_forward_outlined,
+              color: _getStateTextColor(context),
+              size: 31,
+            ),
+            const SizedBox(width: 25),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.normal,
-                  color: colors.textColor,
                   fontFamily: 'Figtree',
                   height: 1.22,
+                  color: _getStateTextColor(context),
                 ),
-                textAlign: isCompleted || isActive ? TextAlign.left : TextAlign.center,
+                textAlign: TextAlign.start,
               ),
             ),
           ],
@@ -58,46 +58,36 @@ class ValidationStepWidget extends StatelessWidget {
     );
   }
 
-  _StepColors _getColors(bool isCompleted, bool isActive, bool isPending) {
-    if (isCompleted) {
-      return _StepColors(
-        backgroundColor: const Color(0xFF051858),
-        textColor: Colors.white,
-        iconColor: Colors.white,
-      );
-    } else if (isActive) {
-      return _StepColors(
-        backgroundColor: const Color(0xFF66CFFF),
-        textColor: const Color(0xFF051858),
-        iconColor: const Color(0xFF051858),
-      );
-    } else {
-      return _StepColors(
-        backgroundColor: Colors.transparent,
-        textColor: const Color(0xFF051858),
-        iconColor: const Color(0xFF051858),
-        border: const BorderSide(color: Color(0xFF051858), width: 1.5),
-      );
+  Color? _getStateColor(BuildContext context) {
+    switch (state) {
+      case ItemValidationState.initial:
+        return context.appColor.surface;
+      case ItemValidationState.pending:
+        return context.appColor.secondary;
+      case ItemValidationState.completed:
+        return context.appColor.tertiary;
     }
   }
 
-  IconData? _getIcon(bool isCompleted, bool isActive) {
-    if (isCompleted) return Icons.check_circle_outline;
-    if (isActive) return Icons.arrow_forward;
-    return null;
+  Color? _getStateBorderColor(BuildContext context) {
+    switch (state) {
+      case ItemValidationState.initial:
+        return context.appColor.tertiary;
+      case ItemValidationState.pending:
+        return context.appColor.secondary;
+      case ItemValidationState.completed:
+        return context.appColor.tertiary;
+    }
   }
-}
 
-class _StepColors {
-  final Color backgroundColor;
-  final Color textColor;
-  final Color iconColor;
-  final BorderSide? border;
-
-  _StepColors({
-    required this.backgroundColor,
-    required this.textColor,
-    required this.iconColor,
-    this.border,
-  });
+  Color? _getStateTextColor(BuildContext context) {
+    switch (state) {
+      case ItemValidationState.initial:
+        return context.appColor.tertiary;
+      case ItemValidationState.pending:
+        return context.appColor.tertiary;
+      case ItemValidationState.completed:
+        return context.appColor.surface;
+    }
+  }
 }

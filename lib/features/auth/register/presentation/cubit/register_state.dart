@@ -1,62 +1,70 @@
-part of 'register_cubit.dart';
+import 'package:equatable/equatable.dart';
+import 'package:partners/features/auth/register/domain/entities/rep_legal_response_entity.dart';
+import 'package:partners/features/auth/register/domain/entities/register_response_entity.dart';
+import 'package:partners/features/auth/register/domain/entities/response/start_resgister_res_entity.dart';
+
+abstract class RegisterState extends Equatable {}
 
 enum RegisterStatus { initial, loading, success, failure }
-enum DocumentStatus { initial, loading, success, failure }
 
-class RegisterState extends Equatable {
-  final RegisterResponseEntity? responseEntity;
-  final RegisterStatus status;
+class RegisterStateX extends RegisterState {
+  final RegisterStatus sendRucStatus;
+  final RegisterStatus sendDocStatus;
+  final RegisterStatus sendStartStatus;
+
   final String? errorMessage;
+  final RegisterResponseEntity rucData;
+  final RepLegalResEntity docData;
+  final StartRegisterResEntity startRegisterResEntity;
 
-  // Campos para validación de documento
-  final DocumentResponseEntity? documentResponseEntity;
-  final DocumentStatus documentStatus;
-  final String? documentErrorMessage;
-
-  const RegisterState({
-    this.responseEntity,
-    required this.status,
+  RegisterStateX({
+    required this.sendRucStatus,
+    required this.sendDocStatus,
+    required this.sendStartStatus,
     this.errorMessage,
-    this.documentResponseEntity,
-    required this.documentStatus,
-    this.documentErrorMessage,
+    required this.rucData,
+    required this.docData,
+    required this.startRegisterResEntity,
   });
 
-  RegisterState copyWith({
-    RegisterResponseEntity? responseEntity,
-    RegisterStatus? status,
+  RegisterStateX copyWith({
+    RegisterStatus? sendRucStatus,
+    RegisterStatus? sendDocStatus,
+    RegisterStatus? sendStartStatus,
     String? errorMessage,
-    DocumentResponseEntity? documentResponseEntity,
-    DocumentStatus? documentStatus,
-    String? documentErrorMessage,
-  }) =>
-      RegisterState(
-        responseEntity: responseEntity ?? this.responseEntity,
-        status: status ?? this.status,
-        errorMessage: errorMessage ?? this.errorMessage,
-        documentResponseEntity:
-            documentResponseEntity ?? this.documentResponseEntity,
-        documentStatus: documentStatus ?? this.documentStatus,
-        documentErrorMessage:
-            documentErrorMessage ?? this.documentErrorMessage,
-      );
+    RegisterResponseEntity? rucData,
+    RepLegalResEntity? docData,
+    StartRegisterResEntity? startRegisterResEntity,
+  }) {
+    return RegisterStateX(
+      sendRucStatus: sendRucStatus ?? this.sendRucStatus,
+      sendDocStatus: sendDocStatus ?? this.sendDocStatus,
+      sendStartStatus: sendStartStatus ?? this.sendStartStatus,
+      errorMessage: errorMessage ?? this.errorMessage,
+      rucData: rucData ?? this.rucData,
+      docData: docData ?? this.docData,
+      startRegisterResEntity:
+          startRegisterResEntity ?? this.startRegisterResEntity,
+    );
+  }
 
-  factory RegisterState.initial() => const RegisterState(
-        responseEntity: null,
-        status: RegisterStatus.initial,
-        errorMessage: null,
-        documentResponseEntity: null,
-        documentStatus: DocumentStatus.initial,
-        documentErrorMessage: null,
-      );
-
+  factory RegisterStateX.initial() {
+    return RegisterStateX(
+      sendRucStatus: RegisterStatus.initial,
+      sendDocStatus: RegisterStatus.initial,
+      sendStartStatus: RegisterStatus.initial,
+      rucData: RegisterResponseEntity.empty(),
+      docData: RepLegalResEntity.empty(),
+      startRegisterResEntity: StartRegisterResEntity.empty(),
+    );
+  }
   @override
   List<Object?> get props => [
-        responseEntity,
-        status,
-        errorMessage,
-        documentResponseEntity,
-        documentStatus,
-        documentErrorMessage,
-      ];
+    sendRucStatus,
+    sendDocStatus,
+    sendStartStatus,
+    errorMessage,
+    rucData,
+    docData,
+  ];
 }

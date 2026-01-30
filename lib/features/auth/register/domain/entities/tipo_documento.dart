@@ -1,1 +1,0 @@
-enum TipoDocumento { dni, ce }

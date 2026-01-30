@@ -2,9 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/document_scan/domain/entities/document_ocr_entity.dart';
 import 'package:partners/features/auth/document_scan/presentation/cubit/document_scan_cubit.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
 
 @RoutePage()
 class DocumentSuccessScreen extends StatelessWidget {
@@ -160,7 +160,7 @@ class DocumentSuccessScreen extends StatelessWidget {
           20.spaceh,
           _buildInfoRow(
             'Tipo de documento',
-            ocrData.tipoDocumento == TipoDocumento.dni
+            ocrData.tipoDocumento == DocumentType.dni
                 ? 'DNI'
                 : 'Carné de Extranjería',
           ),

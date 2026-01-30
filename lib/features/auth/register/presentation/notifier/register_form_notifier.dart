@@ -1,730 +1,173 @@
+// --- PRESENTACIÓN: CHANGE NOTIFIER ---
 import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:partners/core/utils/validations/dni_validator.dart';
-import 'package:partners/core/utils/validations/ruc_validator.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_comercio.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
-import 'package:partners/features/auth/register/domain/entities/validate_ruc_entity.dart';
+import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/register/domain/entities/validators/doc_validator.dart';
+import 'package:partners/features/auth/register/domain/entities/validators/ruc_validator.dart';
+import 'package:partners/features/auth/register/domain/factory/doc_config_factory.dart';
+import 'package:partners/features/auth/register/domain/factory/name_config_factory.dart';
+import 'package:partners/features/auth/register/domain/factory/rep_config_factory.dart';
+import 'package:partners/features/auth/register/domain/factory/ruc_config_factory.dart';
+import 'package:partners/features/auth/register/domain/forms/doc_form_config.dart';
+import 'package:partners/features/auth/register/domain/forms/form_config.dart';
+import 'package:partners/features/auth/register/domain/forms/name_form_config.dart';
+import 'package:partners/features/auth/register/domain/forms/rep_doc_form_config.dart';
+import 'package:partners/features/auth/register/domain/forms/ruc_form_config.dart';
+import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
+import 'package:partners/features/auth/register/presentation/cubit/register_state.dart';
 
-/// ChangeNotifier para manejar las validaciones de UI del formulario de registro
-/// Separado por tipo de RUC (10, 15, 20)
 class RegisterFormNotifier extends ChangeNotifier {
-  // Timer para debouncer de validación de formato
-  Timer? _documentDebounceTimer;
-  Timer? _representanteDebounceTimer;
-  
-  // Timer para debouncer de llamada a cubits
-  Timer? _commerceDebounceTimer;
-  Timer? _documentCubitDebounceTimer;
+  final RegisterCubit _cubit;
 
-  // Controllers compartidos
-  final TextEditingController numeroDocumentoController =
+  // 1. SELECTORES
+  RucType _selectedRuc = RucType.ruc10;
+  DocumentType? _selectedDocType;
+
+  // 2. FLAGS DE ÉXITO (Para controlar el botón)
+  bool _isRucValid = false;
+  bool _isDocValid = false;
+
+  // 3. ERRORES
+  String? _rucError;
+  String? _docError;
+
+  // 4. DEBOUNCERS (Timers)
+  Timer? _rucDebounce;
+  Timer? _docDebounce;
+
+  // 5. CONTROLLERS
+  final TextEditingController rucController = TextEditingController();
+  final TextEditingController nameSocialRazonController =
       TextEditingController();
-  final TextEditingController nombresController = TextEditingController();
-  final TextEditingController apellidosController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController whatsappController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController docRepController = TextEditingController();
+  final TextEditingController nameRepContoller = TextEditingController();
 
-  // Controllers específicos para RUC 20
-  final TextEditingController razonSocialController = TextEditingController();
-  final TextEditingController numeroDocumentoRepresentanteController =
-      TextEditingController();
+  RegisterFormNotifier({required RegisterCubit cubit}) : _cubit = cubit;
 
-  // Tipo de comercio actual
-  TipoComercio? _tipoComercio;
+  // --- FACTORIES ---
+  RucFormConfig get rucConfig => RucConfigFactory.getConfig(_selectedRuc);
+  NameFormConfig get nameConfig => NameConfigFactory.getConfig(_selectedRuc);
+  DocFormConfig get docConfig => DocConfigFactory.getConfig(_selectedDocType);
+  RepDocFormConfig get repConfig =>
+      RepConfigFactory.getDocConfig(_selectedDocType);
+  FieldDefinition get repNameConfig => RepConfigFactory.getNameConfig();
 
-  // Estados de validación - RUC 10 y 15
-  String? _numeroDocumentoError;
-  bool _isNombresEnabled = false;
-  bool _isApellidosEnabled = false;
+  // --- GETTERS PÚBLICOS ---
+  RucType get selectedRuc => _selectedRuc;
+  DocumentType? get selectedDocType => _selectedDocType;
+  String? get rucError => _rucError;
+  String? get docError => _docError;
 
-  // Estados de validación - RUC 20
-  String? _numeroDocumentoRepresentanteError;
-  bool _isRazonSocialEnabled = false;
-  TipoDocumento? _tipoDocumentoRepresentante;
-
-  // Estados de validación generales
-  String? _emailError;
-  String? _whatsappError;
-  String? _passwordError;
-  String? _confirmPasswordError;
-
-  // Estados de UI
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
-
-  // Callbacks para llamar a los cubits
-  Function(ValidateRucEntity)? onValidateCommerce;
-  Function(TipoDocumento, String)? onValidateDocument;
-
-  // Getters
-  TipoComercio? get tipoComercio => _tipoComercio;
-  TipoDocumento? get tipoDocumentoRepresentante => _tipoDocumentoRepresentante;
-  String? get numeroDocumentoError => _numeroDocumentoError;
-  String? get numeroDocumentoRepresentanteError =>
-      _numeroDocumentoRepresentanteError;
-  String? get emailError => _emailError;
-  String? get whatsappError => _whatsappError;
-  String? get passwordError => _passwordError;
-  String? get confirmPasswordError => _confirmPasswordError;
-  bool get isPasswordVisible => _isPasswordVisible;
-  bool get isConfirmPasswordVisible => _isConfirmPasswordVisible;
-  bool get isNombresEnabled => _isNombresEnabled;
-  bool get isApellidosEnabled => _isApellidosEnabled;
-  bool get isRazonSocialEnabled => _isRazonSocialEnabled;
-
-  // ==================== MÉTODOS PARA CAMBIAR TIPO DE COMERCIO ====================
-
-  /// Establece el tipo de comercio y reinicia el formulario correspondiente
-  void setTipoComercio(TipoComercio? tipo) {
-    if (_tipoComercio != tipo) {
-    _tipoComercio = tipo;
-      _resetFormByTipo();
-    notifyListeners();
+  // IMPORTANTE: Getter para saber si el formulario está completo
+  bool get isFormComplete {
+    if (_selectedRuc == RucType.ruc20) {
+      return _cubit.state.sendRucStatus == RegisterStatus.success &&
+          _cubit.state.sendDocStatus == RegisterStatus.success &&
+          _isRucValid &&
+          _isDocValid;
     }
+    return _cubit.state.sendRucStatus == RegisterStatus.success && _isRucValid;
   }
 
-  /// Reinicia el formulario según el tipo de comercio
-  void _resetFormByTipo() {
-    switch (_tipoComercio) {
-      case TipoComercio.ruc10:
-        _resetRuc10();
-        break;
-      case TipoComercio.ruc15:
-        _resetRuc15();
-        break;
-      case TipoComercio.ruc20:
-        _resetRuc20();
-        break;
-      case null:
-        _resetAll();
-        break;
-    }
-  }
+  // --- ACCIONES ---
 
-  // ==================== MÉTODOS PARA RUC 10 ====================
+  void changeRucType(RucType tipo) {
+    // RESET TOTAL AL CAMBIAR DE TIPO
+    _cubit.reset();
+    _selectedRuc = tipo;
+    _rucError = null;
+    _isRucValid = false; // Reset flag
 
-  /// Reinicia el formulario para RUC 10
-  void _resetRuc10() {
-    numeroDocumentoController.clear();
-    nombresController.clear();
-    apellidosController.clear();
-    _numeroDocumentoError = null;
-    _isNombresEnabled = false;
-    _isApellidosEnabled = false;
-    _documentDebounceTimer?.cancel();
-    _commerceDebounceTimer?.cancel();
-  }
-
-  /// Valida el RUC para RUC 10
-  void _validateRuc10() {
-    final ruc = numeroDocumentoController.text.trim();
-
-    if (ruc.isEmpty) {
-      _numeroDocumentoError = null;
-      notifyListeners();
-      return;
+    // Limpiar datos de representante si cambio a tipo que no lo necesita
+    if (tipo != RucType.ruc20) {
+      _docError = null;
+      _isDocValid = false;
     }
 
-    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc10,
-        tipoDocumento: TipoDocumento.dni)) {
-      _numeroDocumentoError = 'El RUC debe tener 11 dígitos y empezar con 10';
-      notifyListeners();
-      return;
-    }
+    // Limpiar Controllers para evitar confusiones
+    rucController.clear();
+    nameSocialRazonController.clear();
+    docRepController.clear();
+    nameRepContoller.clear();
 
-    _numeroDocumentoError = null;
-    notifyListeners();
-
-    // Llamar al cubit con debouncer después de validar el formato
-    // Enviar el RUC completo
-    _callValidateCommerceWithDebounce(
-      ValidateRucEntity(
-        tipoComercio: TipoComercio.ruc10,
-        ruc: ruc,
-      ),
-    );
-  }
-
-  /// Valida si el formulario RUC 10 está completo
-  bool isRuc10Complete() {
-    final ruc = numeroDocumentoController.text.trim();
-    final nombres = nombresController.text.trim();
-    final apellidos = apellidosController.text.trim();
-
-    return ruc.isNotEmpty && nombres.isNotEmpty && apellidos.isNotEmpty;
-  }
-
-  /// Habilita nombres y apellidos para RUC 10
-  void enableNombresApellidosRuc10(String nombres, String apellidos) {
-    nombresController.text = nombres;
-    apellidosController.text = apellidos;
-    _isNombresEnabled = true;
-    _isApellidosEnabled = true;
     notifyListeners();
   }
 
-  // ==================== MÉTODOS PARA RUC 15 ====================
+  void changeDocType(DocumentType tipo) {
+    _selectedDocType = tipo;
+    _docError = null;
+    _isDocValid = false; // Reset flag porque cambió el doc
+    docRepController.clear();
+    nameRepContoller.clear();
 
-  /// Reinicia el formulario para RUC 15
-  void _resetRuc15() {
-    numeroDocumentoController.clear();
-    nombresController.clear();
-    apellidosController.clear();
-    _numeroDocumentoError = null;
-    _isNombresEnabled = false;
-    _isApellidosEnabled = false;
-    _documentDebounceTimer?.cancel();
-    _commerceDebounceTimer?.cancel();
-  }
-
-  /// Valida el RUC para RUC 15
-  void _validateRuc15() {
-    final ruc = numeroDocumentoController.text.trim();
-
-    if (ruc.isEmpty) {
-      _numeroDocumentoError = null;
-      notifyListeners();
-      return;
-    }
-
-    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc15,
-        tipoDocumento: TipoDocumento.dni)) {
-      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 15';
-      notifyListeners();
-      return;
-    }
-
-    _numeroDocumentoError = null;
-    notifyListeners();
-
-    // Llamar al cubit con debouncer después de validar el formato
-    // Enviar el RUC completo
-    _callValidateCommerceWithDebounce(
-      ValidateRucEntity(
-        tipoComercio: TipoComercio.ruc15,
-        ruc: ruc,
-      ),
-    );
-  }
-
-  /// Valida si el formulario RUC 15 está completo
-  bool isRuc15Complete() {
-    final ruc = numeroDocumentoController.text.trim();
-    final nombres = nombresController.text.trim();
-    final apellidos = apellidosController.text.trim();
-
-    return ruc.isNotEmpty && nombres.isNotEmpty && apellidos.isNotEmpty;
-  }
-
-  /// Habilita nombres y apellidos para RUC 15
-  void enableNombresApellidosRuc15(String nombres, String apellidos) {
-    nombresController.text = nombres;
-    apellidosController.text = apellidos;
-    _isNombresEnabled = true;
-    _isApellidosEnabled = true;
     notifyListeners();
   }
 
-  // ==================== MÉTODOS PARA RUC 20 ====================
+  // --- VALIDACIÓN ASÍNCRONA CON DEBOUNCER Y MOCK DE API ---
 
-  /// Reinicia el formulario para RUC 20
-  void _resetRuc20() {
-    numeroDocumentoController.clear();
-    razonSocialController.clear();
-    numeroDocumentoRepresentanteController.clear();
-    nombresController.clear();
-    apellidosController.clear();
-    _numeroDocumentoError = null;
-    _numeroDocumentoRepresentanteError = null;
-    _isRazonSocialEnabled = false;
-    _tipoDocumentoRepresentante = null;
-    _isNombresEnabled = false;
-    _isApellidosEnabled = false;
-    _documentDebounceTimer?.cancel();
-    _representanteDebounceTimer?.cancel();
-    _commerceDebounceTimer?.cancel();
-    _documentCubitDebounceTimer?.cancel();
-  }
+  void validateRuc(String value) {
+    if (_rucDebounce?.isActive ?? false) _rucDebounce!.cancel();
 
-  /// Establece el tipo de documento del representante para RUC 20
-  void setTipoDocumentoRepresentante(TipoDocumento? tipo) {
-    _tipoDocumentoRepresentante = tipo;
-    notifyListeners();
-  }
-
-  /// Valida el RUC del negocio para RUC 20
-  void _validateRuc20() {
-    final ruc = numeroDocumentoController.text.trim();
-
-    if (ruc.isEmpty) {
-        _numeroDocumentoError = null;
-        notifyListeners();
-        return;
-      }
-
-    // Para RUC 20, validar como DNI o CE
-    final isValid = RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
-            tipoDocumento: TipoDocumento.dni) ||
-        RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
-            tipoDocumento: TipoDocumento.ce);
-
-        if (!isValid) {
-      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 20';
-          notifyListeners();
-          return;
-        }
-
-        _numeroDocumentoError = null;
-        notifyListeners();
-
-    // Llamar al cubit con debouncer después de validar el formato
-    // Enviar el RUC completo
-    _callValidateCommerceWithDebounce(
-      ValidateRucEntity(
-        tipoComercio: TipoComercio.ruc20,
-        ruc: ruc,
-      ),
-    );
-  }
-
-  /// Valida el documento del representante para RUC 20
-  void _validateRepresentanteRuc20() {
-      final numero = numeroDocumentoRepresentanteController.text.trim();
-
-      if (numero.isEmpty) {
-        _numeroDocumentoRepresentanteError = null;
-        notifyListeners();
-        return;
-      }
-
-      if (_tipoDocumentoRepresentante == TipoDocumento.dni) {
-        if (!DniValidator.isValidDni(numero)) {
-          _numeroDocumentoRepresentanteError = 'El DNI debe tener 8 dígitos';
-          notifyListeners();
-          return;
-        }
-      } else if (_tipoDocumentoRepresentante == TipoDocumento.ce) {
-        if (numero.length != 9 || !RegExp(r'^\d+$').hasMatch(numero)) {
-          _numeroDocumentoRepresentanteError = 'El CE debe tener 9 dígitos';
-          notifyListeners();
-          return;
-        }
-      }
-
-      _numeroDocumentoRepresentanteError = null;
-      notifyListeners();
-
-    // Llamar al cubit con debouncer después de validar el formato
-    if (_tipoDocumentoRepresentante != null) {
-      _callValidateDocumentWithDebounce(
-        _tipoDocumentoRepresentante!,
-        numero,
+    _rucDebounce = Timer(Duration(milliseconds: 800), () async {
+      final RucStrategy strategy = RucConfigFactory.getValidatorStrategy(
+        _selectedRuc,
       );
-    }
-  }
 
-  /// Valida si el formulario RUC 20 está completo
-  bool isRuc20Complete() {
-    final ruc = numeroDocumentoController.text.trim();
-    final razonSocial = razonSocialController.text.trim();
-    final tipoDocRep = _tipoDocumentoRepresentante;
-    final numeroDocRep = numeroDocumentoRepresentanteController.text.trim();
-    final nombresRep = nombresController.text.trim();
-    final apellidosRep = apellidosController.text.trim();
-
-    return ruc.isNotEmpty &&
-        razonSocial.isNotEmpty &&
-        tipoDocRep != null &&
-        numeroDocRep.isNotEmpty &&
-        nombresRep.isNotEmpty &&
-        apellidosRep.isNotEmpty;
-  }
-
-  /// Habilita razón social para RUC 20
-  void enableRazonSocialRuc20(String razonSocial) {
-    razonSocialController.text = razonSocial;
-    _isRazonSocialEnabled = true;
-    notifyListeners();
-  }
-
-  /// Habilita nombres y apellidos del representante para RUC 20
-  void enableNombresApellidosRuc20(String nombres, String apellidos) {
-    nombresController.text = nombres;
-    apellidosController.text = apellidos;
-    _isNombresEnabled = true;
-    _isApellidosEnabled = true;
-    notifyListeners();
-  }
-
-  // ==================== MÉTODOS COMPARTIDOS ====================
-
-  /// Inicializar listeners para debouncer
-  void initializeDocumentListeners() {
-    numeroDocumentoController.addListener(_onDocumentChanged);
-    numeroDocumentoRepresentanteController.addListener(
-      _onRepresentanteDocumentChanged,
-    );
-  }
-
-  /// Listener para cambios en el documento principal
-  void _onDocumentChanged() {
-    _validateDocumentWithDebounce();
-  }
-
-  /// Listener para cambios en el documento del representante
-  void _onRepresentanteDocumentChanged() {
-    _validateRepresentanteDocumentWithDebounce();
-  }
-
-  /// Valida documento con debouncer según el tipo de comercio
-  void _validateDocumentWithDebounce() {
-    _documentDebounceTimer?.cancel();
-    _documentDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
-      switch (_tipoComercio) {
-        case TipoComercio.ruc10:
-          _validateRuc10();
-          break;
-        case TipoComercio.ruc15:
-          _validateRuc15();
-          break;
-        case TipoComercio.ruc20:
-          _validateRuc20();
-          break;
-        case null:
-          break;
-      }
-    });
-  }
-
-  /// Valida documento del representante con debouncer (solo RUC 20)
-  void _validateRepresentanteDocumentWithDebounce() {
-    if (_tipoComercio != TipoComercio.ruc20) return;
-
-    _representanteDebounceTimer?.cancel();
-    _representanteDebounceTimer = Timer(const Duration(milliseconds: 1000), () {
-      _validateRepresentanteRuc20();
-    });
-  }
-
-  /// Llama a validateComerce del cubit con debouncer
-  void _callValidateCommerceWithDebounce(ValidateRucEntity entity) {
-    _commerceDebounceTimer?.cancel();
-    _commerceDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (onValidateCommerce != null) {
-        onValidateCommerce!(entity);
-      }
-    });
-  }
-
-  /// Llama a validateDocument del cubit con debouncer
-  void _callValidateDocumentWithDebounce(TipoDocumento type, String number) {
-    _documentCubitDebounceTimer?.cancel();
-    _documentCubitDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (onValidateDocument != null) {
-        onValidateDocument!(type, number);
-      }
-    });
-  }
-
-  /// Verifica si el formulario está completo según el tipo de comercio
-  bool isFormComplete() {
-    switch (_tipoComercio) {
-      case TipoComercio.ruc10:
-        return isRuc10Complete();
-      case TipoComercio.ruc15:
-        return isRuc15Complete();
-      case TipoComercio.ruc20:
-        return isRuc20Complete();
-      case null:
-        return false;
-    }
-  }
-
-  /// Valida todo el formulario según el tipo de comercio
-  bool validateForm() {
-    switch (_tipoComercio) {
-      case TipoComercio.ruc10:
-        return _validateFormRuc10();
-      case TipoComercio.ruc15:
-        return _validateFormRuc15();
-      case TipoComercio.ruc20:
-        return _validateFormRuc20();
-      case null:
-        return false;
-    }
-  }
-
-  /// Valida formulario RUC 10
-  bool _validateFormRuc10() {
-    final ruc = numeroDocumentoController.text.trim();
-    if (ruc.isEmpty) {
-      _numeroDocumentoError = 'Ingrese el RUC del negocio';
-      notifyListeners();
-      return false;
-    }
-
-    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc10,
-        tipoDocumento: TipoDocumento.dni)) {
-      _numeroDocumentoError = 'El RUC debe tener 11 dígitos y empezar con 10';
-      notifyListeners();
-      return false;
-    }
-
-    final nombres = nombresController.text.trim();
-    final apellidos = apellidosController.text.trim();
-    if (nombres.isEmpty || apellidos.isEmpty) {
-      notifyListeners();
-      return false;
-    }
-
-    _numeroDocumentoError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Valida formulario RUC 15
-  bool _validateFormRuc15() {
-    final ruc = numeroDocumentoController.text.trim();
-    if (ruc.isEmpty) {
-      _numeroDocumentoError = 'Ingrese el RUC del negocio';
-      notifyListeners();
-      return false;
-    }
-
-    if (!RucValidator.isValidRuc(ruc, TipoComercio.ruc15,
-        tipoDocumento: TipoDocumento.dni)) {
-      _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 15';
-      notifyListeners();
-      return false;
-    }
-
-    final nombres = nombresController.text.trim();
-    final apellidos = apellidosController.text.trim();
-    if (nombres.isEmpty || apellidos.isEmpty) {
-      notifyListeners();
-      return false;
-    }
-
-    _numeroDocumentoError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Valida formulario RUC 20
-  bool _validateFormRuc20() {
-    bool isValid = true;
-
-    final ruc = numeroDocumentoController.text.trim();
-    if (ruc.isEmpty) {
-      _numeroDocumentoError = 'Ingrese el RUC del negocio';
-      isValid = false;
-    } else {
-      final isValidRuc = RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
-              tipoDocumento: TipoDocumento.dni) ||
-          RucValidator.isValidRuc(ruc, TipoComercio.ruc20,
-              tipoDocumento: TipoDocumento.ce);
-      if (!isValidRuc) {
-        _numeroDocumentoError = 'El RUC debe tener 12-13 dígitos y empezar con 20';
-        isValid = false;
+      if (!strategy.validate(value)) {
+        _rucError = strategy.getErrorMessage();
+        _isRucValid = false;
+        nameSocialRazonController.clear();
       } else {
-        _numeroDocumentoError = null;
+        _rucError = null;
+        _cubit.sendRuc(ruc: value, type: _selectedRuc);
       }
-    }
+      notifyListeners();
+    });
+  }
 
-    final razonSocial = razonSocialController.text.trim();
-    if (razonSocial.isEmpty) {
-      isValid = false;
-    }
+  void validateRepDoc(String value) {
+    // Solo validamos si ya seleccionó tipo de documento
+    if (_selectedDocType == null) return;
 
-    if (_tipoDocumentoRepresentante == null) {
-      isValid = false;
-    }
+    if (_docDebounce?.isActive ?? false) _docDebounce!.cancel();
 
-    final numeroRepresentante = numeroDocumentoRepresentanteController.text.trim();
-    if (numeroRepresentante.isEmpty) {
-      isValid = false;
-    } else if (_tipoDocumentoRepresentante != null) {
-      if (_tipoDocumentoRepresentante == TipoDocumento.dni) {
-        if (!DniValidator.isValidDni(numeroRepresentante)) {
-          _numeroDocumentoRepresentanteError = 'El DNI debe tener 8 dígitos';
-          isValid = false;
-        }
-      } else if (_tipoDocumentoRepresentante == TipoDocumento.ce) {
-        if (numeroRepresentante.length != 9 ||
-            !RegExp(r'^\d+$').hasMatch(numeroRepresentante)) {
-          _numeroDocumentoRepresentanteError = 'El CE debe tener 9 dígitos';
-          isValid = false;
-        }
+    _docDebounce = Timer(Duration(milliseconds: 800), () async {
+      final DocValidatorStrategy strategy =
+          DocConfigFactory.getValidatorStrategy(_selectedDocType!);
+      if (!strategy.validate(value)) {
+        _docError = strategy.getErrorMessage();
+        _isDocValid = false;
+        nameRepContoller.clear();
+      } else {
+        _docError = null;
+        _cubit.sendDocumendt(type: _selectedDocType!, number: value);
       }
-    }
-
-    final nombresRep = nombresController.text.trim();
-    final apellidosRep = apellidosController.text.trim();
-    if (nombresRep.isEmpty || apellidosRep.isEmpty) {
-      isValid = false;
-    }
-
-    notifyListeners();
-    return isValid;
+      notifyListeners();
+    });
   }
 
-  // ==================== MÉTODOS GENERALES ====================
-
-  /// Toggle password visibility
-  void togglePasswordVisibility() {
-    _isPasswordVisible = !_isPasswordVisible;
+  // Change Notifier
+  void updateFromRucResponse(String socialReason) {
+    nameSocialRazonController.text = socialReason;
+    _isRucValid = true;
     notifyListeners();
   }
 
-  /// Toggle confirm password visibility
-  void toggleConfirmPasswordVisibility() {
-    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+  void updateFromDocResponse(String representativeName) {
+    nameRepContoller.text = representativeName;
+    _isDocValid = true;
     notifyListeners();
-  }
-
-  /// Validación de email
-  bool validateEmail() {
-    final email = emailController.text.trim();
-
-    if (email.isEmpty) {
-      _emailError = 'Ingrese su correo electrónico';
-      notifyListeners();
-      return false;
-    }
-
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(email)) {
-      _emailError = 'Ingrese un correo válido';
-      notifyListeners();
-      return false;
-    }
-
-    _emailError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Validación de WhatsApp
-  bool validateWhatsapp() {
-    final whatsapp = whatsappController.text.trim();
-
-    if (whatsapp.isEmpty) {
-      _whatsappError = 'Ingrese su número de WhatsApp';
-      notifyListeners();
-      return false;
-    }
-
-    if (whatsapp.length != 9) {
-      _whatsappError = 'El número debe tener 9 dígitos';
-      notifyListeners();
-      return false;
-    }
-
-    _whatsappError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Validación de password
-  bool validatePassword() {
-    final password = passwordController.text;
-
-    if (password.isEmpty) {
-      _passwordError = 'Ingrese su contraseña';
-      notifyListeners();
-      return false;
-    }
-
-    if (password.length < 8) {
-      _passwordError = 'La contraseña debe tener al menos 8 caracteres';
-      notifyListeners();
-      return false;
-    }
-
-    _passwordError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Validación de confirmación de password
-  bool validateConfirmPassword() {
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
-
-    if (confirmPassword.isEmpty) {
-      _confirmPasswordError = 'Confirme su contraseña';
-      notifyListeners();
-      return false;
-    }
-
-    if (password != confirmPassword) {
-      _confirmPasswordError = 'Las contraseñas no coinciden';
-      notifyListeners();
-      return false;
-    }
-
-    _confirmPasswordError = null;
-    notifyListeners();
-    return true;
-  }
-
-  /// Limpiar errores
-  void clearErrors() {
-    _numeroDocumentoError = null;
-    _emailError = null;
-    _whatsappError = null;
-    _passwordError = null;
-    _confirmPasswordError = null;
-    _numeroDocumentoRepresentanteError = null;
-    notifyListeners();
-  }
-
-  /// Reset completo
-  void _resetAll() {
-    numeroDocumentoController.clear();
-    nombresController.clear();
-    apellidosController.clear();
-    emailController.clear();
-    whatsappController.clear();
-    passwordController.clear();
-    confirmPasswordController.clear();
-    razonSocialController.clear();
-    numeroDocumentoRepresentanteController.clear();
-
-    _tipoComercio = null;
-    _tipoDocumentoRepresentante = null;
-    _isPasswordVisible = false;
-    _isConfirmPasswordVisible = false;
-    _isNombresEnabled = false;
-    _isApellidosEnabled = false;
-    _isRazonSocialEnabled = false;
-
-    clearErrors();
   }
 
   @override
   void dispose() {
-    _documentDebounceTimer?.cancel();
-    _representanteDebounceTimer?.cancel();
-    _commerceDebounceTimer?.cancel();
-    _documentCubitDebounceTimer?.cancel();
-    numeroDocumentoController.removeListener(_onDocumentChanged);
-    numeroDocumentoRepresentanteController.removeListener(
-      _onRepresentanteDocumentChanged,
-    );
-    numeroDocumentoController.dispose();
-    nombresController.dispose();
-    apellidosController.dispose();
-    emailController.dispose();
-    whatsappController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
-    razonSocialController.dispose();
-    numeroDocumentoRepresentanteController.dispose();
+    _rucDebounce?.cancel();
+    _docDebounce?.cancel();
+    rucController.dispose();
+    nameSocialRazonController.dispose();
+    docRepController.dispose();
+    nameRepContoller.dispose();
     super.dispose();
   }
 }

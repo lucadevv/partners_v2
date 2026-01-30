@@ -180,35 +180,10 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
         body: MultiBlocListener(
           listeners: [
             BlocListener<DocumentScanCubit, DocumentScanState>(
-              listener: (context, state) {
-                if (state.effect is DocumentValidatedEffect) {
-                  _cubit.clearEffect();
-                  _realtimeOcr.stop();
-                  // Usar el orquestador para manejar la navegación
-                  context
-                      .read<OrquestorAuthCubit>()
-                      .navigateToDocumentSuccess();
-                }
-
-                if (state.status == DocumentScanStatus.captured) {
-                  _realtimeOcr.stop();
-                }
-
-                if (state.status == DocumentScanStatus.failure &&
-                    state.errorMessage != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
-                }
-              },
+              listener: (context, state) {},
             ),
             BlocListener<OrquestorAuthCubit, OrquestorAuthState>(
-              listener: (context, state) {
-                if (state.effect is NavigateToDocumentSuccessEffect) {
-                  context.read<OrquestorAuthCubit>().clearEffect();
-                  if (mounted) _navigateToSuccessScreen(context);
-                }
-              },
+              listener: (context, state) {},
             ),
           ],
           child: BlocBuilder<DocumentScanCubit, DocumentScanState>(
@@ -485,7 +460,7 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
 
   Future<void> _navigateToSuccessScreen(BuildContext context) async {
     if (!mounted) return;
-    
+
     final state = _cubit.state;
     final ocrData = state.ocrData;
 

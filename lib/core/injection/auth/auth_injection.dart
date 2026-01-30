@@ -1,7 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:partners/core/managers/auth/auth_manager.dart';
-import 'package:partners/core/managers/auth/auth_manager_impl.dart';
-import 'package:partners/core/managers/auth/storage/token_manager.dart';
+
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/features/auth/document_scan/data/datasource/document_scan_datasource.dart';
 import 'package:partners/features/auth/document_scan/data/datasource/provider_memory/mock_document_scan_datasource_impl.dart';
@@ -18,9 +16,9 @@ import 'package:partners/features/auth/register/data/datasource/ntw/ntw_register
 import 'package:partners/features/auth/register/data/datasource/register_datasource.dart';
 import 'package:partners/features/auth/register/data/repository/register_repository_impl.dart';
 import 'package:partners/features/auth/register/domain/repository/register_repository.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_commerce_usecase.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_document_register_usecase.dart'
-    hide ValidateDocumentUsecase;
+import 'package:partners/features/auth/register/domain/use_case/send_document_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/send_ruc_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/start_register_usecase.dart';
 import 'package:partners/main.dart';
 
 class AuthInjection {
@@ -31,17 +29,6 @@ class AuthInjection {
   }
 
   void _init() {
-    // Auth Managers
-    if (!_getIt.isRegistered<TokenManager>()) {
-      _getIt.registerLazySingleton<TokenManager>(() => TokenManager());
-    }
-
-    if (!_getIt.isRegistered<AuthManager>()) {
-      _getIt.registerLazySingleton<AuthManager>(
-        () => AuthManagerImpl(_getIt<TokenManager>()),
-      );
-    }
-
     // Register
     if (!_getIt.isRegistered<RegisterDatasource>()) {
       _getIt.registerLazySingleton<RegisterDatasource>(
@@ -51,22 +38,24 @@ class AuthInjection {
 
     if (!_getIt.isRegistered<RegisterRepository>()) {
       _getIt.registerLazySingleton<RegisterRepository>(
-        () => RegisterRepositoryImpl(
-          registerDatasource: _getIt<RegisterDatasource>(),
-        ),
-      );
-    }
-    if (!_getIt.isRegistered<ValidateCommerceUsecase>()) {
-      _getIt.registerLazySingleton<ValidateCommerceUsecase>(
-        () => ValidateCommerceUsecase(repository: _getIt<RegisterRepository>()),
+        () => RegisterRepositoryImpl(datasource: getIt<RegisterDatasource>()),
       );
     }
 
-    if (!_getIt.isRegistered<ValidateRegisterDocumentRegisterUsecase>()) {
-      _getIt.registerLazySingleton<ValidateRegisterDocumentRegisterUsecase>(
-        () => ValidateRegisterDocumentRegisterUsecase(
-          repository: _getIt<RegisterRepository>(),
-        ),
+    if (!_getIt.isRegistered<SendDocumentUsecase>()) {
+      _getIt.registerLazySingleton<SendDocumentUsecase>(
+        () => SendDocumentUsecase(repository: getIt<RegisterRepository>()),
+      );
+    }
+
+    if (!_getIt.isRegistered<SendRucUsecase>()) {
+      _getIt.registerLazySingleton<SendRucUsecase>(
+        () => SendRucUsecase(repository: getIt<RegisterRepository>()),
+      );
+    }
+    if (!_getIt.isRegistered<StartRegisterUsecase>()) {
+      _getIt.registerLazySingleton<StartRegisterUsecase>(
+        () => StartRegisterUsecase(repository: getIt<RegisterRepository>()),
       );
     }
 

@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 /// Entidad que contiene toda la información extraída del OCR del documento
 class DocumentOcrEntity extends Equatable {
   /// Tipo de documento detectado (DNI o CE)
-  final TipoDocumento tipoDocumento;
+  final DocumentType tipoDocumento;
 
   /// Número de documento extraído (limpio, sin espacios ni caracteres especiales)
   final String numeroDocumento;
@@ -44,20 +44,20 @@ class DocumentOcrEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        tipoDocumento,
-        numeroDocumento,
-        nombres,
-        apellidos,
-        fechaNacimiento,
-        digitoVerificador,
-        textoCompleto,
-        imagePath,
-        confianza,
-      ];
+    tipoDocumento,
+    numeroDocumento,
+    nombres,
+    apellidos,
+    fechaNacimiento,
+    digitoVerificador,
+    textoCompleto,
+    imagePath,
+    confianza,
+  ];
 
   /// Crea una copia de la entidad con nuevos valores
   DocumentOcrEntity copyWith({
-    TipoDocumento? tipoDocumento,
+    DocumentType? tipoDocumento,
     String? numeroDocumento,
     String? nombres,
     String? apellidos,

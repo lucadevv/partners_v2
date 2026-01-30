@@ -7,71 +7,60 @@ import 'package:partners/core/utils/logger/app_logger.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/login/domain/use_case/login_usecase.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_commerce_usecase.dart';
-import 'package:partners/features/auth/register/domain/use_case/validate_document_register_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/send_document_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/send_ruc_usecase.dart';
+import 'package:partners/features/auth/register/domain/use_case/start_register_usecase.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
+import 'package:partners/features/auth/validation/domain/use_case/get_validation_steps_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/resend_email_code_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/send_email_validation_usecase.dart';
+import 'package:partners/features/auth/validation/presentation/cubit/email/email_validation_cubit.dart';
+import 'package:partners/features/auth/validation/presentation/cubit/validation_cubit.dart';
 import 'package:partners/main.dart';
 
-class App extends StatefulWidget {
+class App extends StatelessWidget {
   const App({super.key});
-
-  @override
-  State<App> createState() => _AppState();
-}
-
-class _AppState extends State<App> {
-  late final AppRouter _appRouter;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeApp();
-  }
-
-  void _initializeApp() {
-    try {
-      _appRouter = getIt<AppRouter>();
-      _appRouter.config();
-    } catch (e, stackTrace) {
-      AppLogger.error('Error al inicializar App', e, stackTrace, 'App');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     try {
-      final routerConfig = _appRouter.config();
-
       return MultiBlocProvider(
         providers: [
           BlocProvider(
             create: (context) => RegisterCubit(
-              validateCommerceUsecase: getIt<ValidateCommerceUsecase>(),
-              validateDocumentUsecase:
-                  getIt<ValidateRegisterDocumentRegisterUsecase>(),
+              sendDocumentUsecase: getIt<SendDocumentUsecase>(),
+              sendRucUsecase: getIt<SendRucUsecase>(),
+              startRegisterUsecase: getIt<StartRegisterUsecase>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => ValidationCubit(
+              getValidationStepsUsecase: getIt<GetValidationStepsUsecase>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => EmailValidationCubit(
+              sendEmailValidationUsecase: getIt<SendEmailValidationUsecase>(),
+              resendEmailCodeUsecase: getIt<ResendEmailCodeUsecase>(),
             ),
           ),
           BlocProvider(
             create: (context) =>
                 LoginCubit(loginUsecase: getIt<LoginUsecase>()),
           ),
+          BlocProvider(
+            create: (context) => OrquestorAuthCubit(
+              authManager: getIt<AuthManager>(),
+              registerCubit: BlocProvider.of<RegisterCubit>(context),
+              loginCubit: BlocProvider.of<LoginCubit>(context),
+            ),
+          ),
         ],
-        child: Builder(
-          builder: (context) {
-            return BlocProvider(
-              create: (context) => OrquestorAuthCubit(
-                registerCubit: context.read<RegisterCubit>(),
-                loginCubit: context.read<LoginCubit>(),
-                authManager: getIt<AuthManager>(),
-              ),
-              child: MaterialApp.router(
-                title: 'Partners',
-                theme: AppTheme.ligth(),
-                routerConfig: routerConfig,
-                debugShowCheckedModeBanner: false,
-              ),
-            );
-          },
+        child: MaterialApp.router(
+          title: 'Partners',
+          theme: AppTheme.ligth(),
+          routerConfig: getIt<AppRouter>().config(),
+          debugShowCheckedModeBanner: false,
         ),
       );
     } catch (e, stackTrace) {

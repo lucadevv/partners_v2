@@ -1,63 +1,57 @@
 part of 'validation_cubit.dart';
 
-enum ValidationStatus {
-  initial,
-  loading,
-  otpSent,
-  stepCompleted,
-  allCompleted,
-  failure,
-}
-
-enum ValidationType {
-  email,
-  whatsapp,
-  password,
-  document,
-}
+enum ValidationStatus { initial, loading, success, failure }
 
 class ValidationState extends Equatable {
-  final ValidationStatus status;
-  final ValidationType? validationType;
-  final String? value;
-  final Set<ValidationType> completedSteps;
+  final ValidationStatus stepsStatus;
   final String? errorMessage;
-  final ValidationEffect? effect;
+  final StepsResEntity stepsEntity;
+  final List<ItemValidation> validationItems;
+  final String nextStep;
 
   const ValidationState({
-    this.status = ValidationStatus.initial,
-    this.validationType,
-    this.value,
-    this.completedSteps = const {},
+    required this.stepsStatus,
     this.errorMessage,
-    this.effect,
+    required this.stepsEntity,
+    this.validationItems = const [],
+    this.nextStep = '',
   });
 
   ValidationState copyWith({
-    ValidationStatus? status,
-    ValidationType? validationType,
-    String? value,
-    Set<ValidationType>? completedSteps,
+    ValidationStatus? stepsStatus,
     String? errorMessage,
-    ValidationEffect? effect,
+    StepsResEntity? stepsEntity,
+    List<ItemValidation>? validationItems,
+    String? nextStep,
   }) {
     return ValidationState(
-      status: status ?? this.status,
-      validationType: validationType ?? this.validationType,
-      value: value ?? this.value,
-      completedSteps: completedSteps ?? this.completedSteps,
-      errorMessage: errorMessage,
-      effect: effect,
+      stepsStatus: stepsStatus ?? this.stepsStatus,
+      errorMessage: errorMessage ?? this.errorMessage,
+      stepsEntity: stepsEntity ?? this.stepsEntity,
+      validationItems: validationItems ?? this.validationItems,
+      nextStep: nextStep ?? this.nextStep,
     );
   }
 
+  factory ValidationState.initial() {
+    return ValidationState(
+      stepsStatus: ValidationStatus.initial,
+      errorMessage: null,
+      stepsEntity: StepsResEntity.empty(),
+      validationItems: ItemFactory.getConfig(),
+    );
+  }
+
+  bool get isLoading => stepsStatus == ValidationStatus.loading;
+  bool get hasError => stepsStatus == ValidationStatus.failure;
+  bool get isSuccess => stepsStatus == ValidationStatus.success;
+
   @override
   List<Object?> get props => [
-        status,
-        validationType,
-        value,
-        completedSteps,
-        errorMessage,
-        effect,
-      ];
+    stepsStatus,
+    errorMessage,
+    stepsEntity,
+    validationItems,
+    nextStep,
+  ];
 }

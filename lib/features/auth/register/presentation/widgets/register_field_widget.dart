@@ -11,6 +11,11 @@ class RegisterFieldWidget extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
   final int? maxLength;
+  final String? errorText;
+  final Function(String)? onChanged;
+  final bool? readOnly;
+  final Widget? prefix;
+  final Widget? suffix;
 
   const RegisterFieldWidget({
     super.key,
@@ -23,16 +28,22 @@ class RegisterFieldWidget extends StatelessWidget {
     this.keyboardType,
     this.suffixIcon,
     this.maxLength,
+    this.errorText,
+    this.onChanged,
+    this.readOnly = false,
+    this.prefix,
+    this.suffix,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool hasValue = value != null && value!.isNotEmpty;
-    final Color backgroundColor = enabled ? Colors.white : const Color(0xFFF3F4F6);
+    final Color backgroundColor = enabled
+        ? Colors.white
+        : const Color(0xFFF3F4F6);
     final Color labelColor = enabled
         ? const Color(0xFF6B7280)
         : const Color(0xFF9CA3AF);
-    final Color textColor = hasValue
+    final Color textColor = enabled
         ? const Color(0xFF051858)
         : const Color(0xFF9CA3AF);
 
@@ -60,48 +71,42 @@ class RegisterFieldWidget extends StatelessWidget {
                 color: labelColor,
               ),
             ),
-            if (controller != null && enabled)
-              TextField(
-                controller: controller,
-                keyboardType: keyboardType,
-                maxLength: maxLength,
-                style: TextStyle(
+            // if (controller != null && enabled)
+            TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLength: maxLength,
+
+              onChanged: (value) => onChanged?.call(value),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.normal,
+                color: textColor,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                fillColor: backgroundColor,
+                prefix: prefix != null
+                    ? SizedBox(height: 16, width: 16, child: prefix)
+                    : null,
+                suffix: suffix != null
+                    ? SizedBox(height: 16, width: 16, child: suffix)
+                    : null,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                hintText: placeholder,
+                errorText: errorText,
+                hintStyle: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.normal,
-                  color: const Color(0xFF051858),
+                  color: const Color(0xFF9CA3AF),
                 ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: placeholder,
-                  hintStyle: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.normal,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                  suffixIcon: suffixIcon,
-                  counterText: '', // Ocultar contador
-                ),
-                onTap: onTap,
-                readOnly: onTap != null,
-              )
-            else
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      hasValue ? value! : (placeholder ?? ''),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
-                        color: textColor,
-                      ),
-                    ),
-                  ),
-                  if (suffixIcon != null) suffixIcon!,
-                ],
+                suffixIcon: suffixIcon,
+                counterText: '', // Ocultar contador
               ),
+              onTap: onTap,
+              readOnly: readOnly!,
+            ),
           ],
         ),
       ),

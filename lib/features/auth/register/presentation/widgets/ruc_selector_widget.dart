@@ -1,71 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:partners/core/extension/sizedbox_extension.dart';
+import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/register/presentation/notifier/register_form_notifier.dart';
 
-enum TipoRuc { ruc10, ruc15, ruc20 }
-
-/// Widget selector de tipo de RUC (10, 15, 20) - Diseño de partners2.pen
 class RucSelectorWidget extends StatelessWidget {
-  final TipoRuc? selectedTipo;
-  final Function(TipoRuc) onTipoSelected;
+  final RegisterFormNotifier formNotifier;
+  final RucType type;
+  final String label;
 
   const RucSelectorWidget({
     super.key,
-    required this.selectedTipo,
-    required this.onTipoSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _RucBox(
-            label: 'Tipo de comercio',
-            value: 'RUC 10',
-            isSelected: selectedTipo == TipoRuc.ruc10,
-            onTap: () => onTipoSelected(TipoRuc.ruc10),
-          ),
-        ),
-        12.spacew,
-        Expanded(
-          child: _RucBox(
-            label: 'Tipo de comercio',
-            value: 'RUC 15',
-            isSelected: selectedTipo == TipoRuc.ruc15,
-            onTap: () => onTipoSelected(TipoRuc.ruc15),
-          ),
-        ),
-        12.spacew,
-        Expanded(
-          child: _RucBox(
-            label: 'Tipo de comercio',
-            value: 'RUC 20',
-            isSelected: selectedTipo == TipoRuc.ruc20,
-            onTap: () => onTipoSelected(TipoRuc.ruc20),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RucBox extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RucBox({
+    required this.formNotifier,
+    required this.type,
     required this.label,
-    required this.value,
-    required this.isSelected,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isSelected = formNotifier.selectedRuc == type;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => formNotifier.changeRucType(type),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
@@ -79,12 +32,12 @@ class _RucBox extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           spacing: 4,
           children: [
             Text(
-              label,
+              "Tipo de comercio",
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.normal,
@@ -92,12 +45,13 @@ class _RucBox extends StatelessWidget {
               ),
             ),
             Text(
-              value,
+              label,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF051858),
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

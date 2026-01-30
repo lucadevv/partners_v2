@@ -6,5 +6,7 @@ class RegisterMapper {
       RegisterResponseEntity(
         isExists: model.isExists ?? false,
         socialReason: model.data?.socialReason ?? '',
+        ruc: model.data?.ruc ?? '',
+        sessionId: model.sessionId ?? '',
       );
 }

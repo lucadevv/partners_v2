@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:partners/features/auth/register/domain/entities/register_entity.dart';
+
 import 'package:partners/features/auth/register/domain/entities/register_response_entity.dart';
 
 part 'orquestador_auth_state.dart';
@@ -22,19 +22,19 @@ class OrquestadorAuthCubit extends Cubit<OrquestadorAuthState> {
   }
 
   /// Guarda los datos del registro y avanza a validaciones
-  void completeRegistration(
-    RegisterEntity entity,
-    RegisterResponseEntity response,
-  ) {
-    emit(
-      state.copyWith(
-        currentStep: AuthStep.validations,
-        registerData: entity,
-        registerResponse: response,
-        effect: const NavigateToValidationsEffect(),
-      ),
-    );
-  }
+  // void completeRegistration(
+  //   RegisterEntity entity,
+  //   RegisterResponseEntity response,
+  // ) {
+  //   emit(
+  //     state.copyWith(
+  //       currentStep: AuthStep.validations,
+  //       registerData: entity,
+  //       registerResponse: response,
+  //       effect: const NavigateToValidationsEffect(),
+  //     ),
+  //   );
+  // }
 
   /// Marca el email como validado
   void emailValidated(String email) {
@@ -72,21 +72,21 @@ class OrquestadorAuthCubit extends Cubit<OrquestadorAuthState> {
 
   /// Guarda el documento escaneado y avanza según tipo de RUC
   void documentScanned(String imagePath) {
-    final validations = Map<String, dynamic>.from(state.validations);
-    validations['documentImage'] = imagePath;
+    // final validations = Map<String, dynamic>.from(state.validations);
+    // validations['documentImage'] = imagePath;
 
-    // Si es RUC 20, ir a validación de negocio
-    final bool isRuc20 = state.registerData?.tipoComercio?.name == 'ruc20';
+    // // Si es RUC 20, ir a validación de negocio
+    // final bool isRuc20 = state.registerData?.tipoComercio?.name == 'ruc20';
 
-    emit(
-      state.copyWith(
-        currentStep: isRuc20 ? AuthStep.businessValidation : AuthStep.success,
-        validations: validations,
-        effect: isRuc20
-            ? const NavigateToBusinessValidationEffect()
-            : const NavigateToSuccessEffect(),
-      ),
-    );
+    // emit(
+    //   state.copyWith(
+    //     currentStep: isRuc20 ? AuthStep.businessValidation : AuthStep.success,
+    //     validations: validations,
+    //     effect: isRuc20
+    //         ? const NavigateToBusinessValidationEffect()
+    //         : const NavigateToSuccessEffect(),
+    //   ),
+    // );
   }
 
   /// Valida el negocio (solo para RUC 20)
@@ -156,10 +156,10 @@ class OrquestadorAuthCubit extends Cubit<OrquestadorAuthState> {
         return AuthStep.validations;
       case AuthStep.businessValidation:
         return AuthStep.documentScan;
-      case AuthStep.success:
-        return state.registerData?.tipoComercio?.name == 'ruc20'
-            ? AuthStep.businessValidation
-            : AuthStep.documentScan;
+      // case AuthStep.success:
+      //   return state.registerData?.tipoComercio?.name == 'ruc20'
+      //       ? AuthStep.businessValidation
+      //       : AuthStep.documentScan;
       default:
         return null;
     }

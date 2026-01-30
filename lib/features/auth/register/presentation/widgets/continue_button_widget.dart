@@ -8,9 +8,9 @@ class ContinueButtonWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 36,
-      right: 24,
-      left: 24,
+      bottom: 30,
+      right: 0,
+      left: 0,
       child: ElevatedButton(
         onPressed: onPressed,
         child: Row(

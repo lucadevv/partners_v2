@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:partners/features/auth/register/domain/entities/tipo_documento.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 /// Widget selector de tipo de documento para representante legal (RUC 20)
-class TipoDocumentoSelectorWidget extends StatelessWidget {
-  final TipoDocumento? selectedTipo;
-  final Function(TipoDocumento) onTipoSelected;
+class DocumentTypeSelectorWidget extends StatelessWidget {
+  final DocumentType? selectType;
+  final Function(DocumentType) onTypeSelected;
 
-  const TipoDocumentoSelectorWidget({
+  const DocumentTypeSelectorWidget({
     super.key,
-    required this.selectedTipo,
-    required this.onTipoSelected,
+    required this.selectType,
+    required this.onTypeSelected,
   });
 
   @override
@@ -40,7 +40,7 @@ class TipoDocumentoSelectorWidget extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _getLabelForTipo(selectedTipo),
+                    _getLabelForTipo(selectType),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.normal,
@@ -61,15 +61,13 @@ class TipoDocumentoSelectorWidget extends StatelessWidget {
     );
   }
 
-  String _getLabelForTipo(TipoDocumento? tipo) {
-    if (tipo == null) {
+  String _getLabelForTipo(DocumentType? type) {
+    if (type == null) {
       return 'Seleccione tipo de documento';
     }
-    return switch (tipo) {
-      TipoDocumento.dni => 'DNI del representante legal',
-      TipoDocumento.ce => 'CE del representante legal',
-      // ignore: unreachable_switch_case
-      _ => 'Seleccione tipo de documento',
+    return switch (type) {
+      DocumentType.dni => 'DNI del representante legal',
+      DocumentType.ce => 'CE del representante legal',
     };
   }
 
@@ -120,9 +118,9 @@ class TipoDocumentoSelectorWidget extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 24),
-                _buildOption(context, TipoDocumento.dni, 'DNI'),
+                _buildOption(context, DocumentType.dni, 'DNI'),
                 SizedBox(height: 16),
-                // _buildOption(context, TipoDocumento.ce, 'CE'),
+                _buildOption(context, DocumentType.ce, 'CE'),
               ],
             ),
           ),
@@ -131,12 +129,12 @@ class TipoDocumentoSelectorWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOption(BuildContext context, TipoDocumento tipo, String label) {
-    final bool isSelected = selectedTipo == tipo;
+  Widget _buildOption(BuildContext context, DocumentType tipo, String label) {
+    final bool isSelected = selectType == tipo;
 
     return GestureDetector(
       onTap: () {
-        onTipoSelected(tipo);
+        onTypeSelected(tipo);
         Navigator.of(context).pop();
       },
       child: Row(

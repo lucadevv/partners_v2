@@ -11,7 +11,6 @@ enum AuthStep {
 
 class OrquestadorAuthState extends Equatable {
   final AuthStep currentStep;
-  final RegisterEntity? registerData;
   final RegisterResponseEntity? registerResponse;
   final Map<String, dynamic> validations;
   final bool isCompleted;
@@ -21,7 +20,7 @@ class OrquestadorAuthState extends Equatable {
 
   const OrquestadorAuthState({
     this.currentStep = AuthStep.initial,
-    this.registerData,
+
     this.registerResponse,
     this.validations = const {},
     this.isCompleted = false,
@@ -32,7 +31,7 @@ class OrquestadorAuthState extends Equatable {
 
   OrquestadorAuthState copyWith({
     AuthStep? currentStep,
-    RegisterEntity? registerData,
+
     RegisterResponseEntity? registerResponse,
     Map<String, dynamic>? validations,
     bool? isCompleted,
@@ -42,7 +41,7 @@ class OrquestadorAuthState extends Equatable {
   }) {
     return OrquestadorAuthState(
       currentStep: currentStep ?? this.currentStep,
-      registerData: registerData ?? this.registerData,
+
       registerResponse: registerResponse ?? this.registerResponse,
       validations: validations ?? this.validations,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -55,7 +54,7 @@ class OrquestadorAuthState extends Equatable {
   @override
   List<Object?> get props => [
     currentStep,
-    registerData,
+
     registerResponse,
     validations,
     isCompleted,

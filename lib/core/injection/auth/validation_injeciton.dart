@@ -7,6 +7,8 @@ import 'package:partners/features/auth/validation/domain/repository/validation_r
 import 'package:partners/features/auth/validation/domain/use_case/get_validation_steps_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/resend_email_code_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/send_email_validation_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/send_whatsapp_validation_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/verify_whatsapp_otp_usecase.dart';
 import 'package:partners/main.dart';
 
 class ValidationInjeciton {
@@ -49,6 +51,21 @@ class ValidationInjeciton {
       _getIt.registerLazySingleton<ResendEmailCodeUsecase>(
         () =>
             ResendEmailCodeUsecase(repository: _getIt<ValidationRepository>()),
+      );
+    }
+    //---
+    if (!_getIt.isRegistered<SendWhatsappValidationUsecase>()) {
+      _getIt.registerLazySingleton<SendWhatsappValidationUsecase>(
+        () => SendWhatsappValidationUsecase(
+          repository: _getIt<ValidationRepository>(),
+        ),
+      );
+    }
+    if (!_getIt.isRegistered<VerifyWhatsappOtpUsecase>()) {
+      _getIt.registerLazySingleton<VerifyWhatsappOtpUsecase>(
+        () => VerifyWhatsappOtpUsecase(
+          repository: _getIt<ValidationRepository>(),
+        ),
       );
     }
   }

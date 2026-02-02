@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:partners/features/auth/document_scan/presentation/cubit/document_scan_cubit.dart';
+import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 
 class ScanMessageWidget extends StatelessWidget {
   final DocumentScanState state;
@@ -17,33 +17,29 @@ class ScanMessageWidget extends StatelessWidget {
 
     switch (state.status) {
       case DocumentScanStatus.initial:
-      case DocumentScanStatus.initializingCamera:
         message = isCameraReady
-            ? 'Coloca tu documento de \nidentidad dentro del marco'
+            ? 'Coloca tu documento de identidad dentro del marco'
             : 'Inicializando cámara...';
         break;
       case DocumentScanStatus.cameraReady:
-        message = 'Coloca tu documento de \nidentidad dentro del marco';
-        break;
-      case DocumentScanStatus.capturing:
-        message = 'Capturando imagen...';
+        // Si hay texto detectado pero aún no está completo, mostrar que está leyendo
+        if (state.realtimeText != null && state.realtimeText!.isNotEmpty) {
+          message = 'Leyendo información del documento...';
+        } else {
+          message = 'Coloca tu documento de identidad dentro del marco';
+        }
         break;
       case DocumentScanStatus.processing:
         message = 'Procesando documento...\nPor favor espere.';
         break;
       case DocumentScanStatus.captured:
-        if (state.ocrData != null) {
+        if (state.ocrResult != null) {
+          final result = state.ocrResult!;
           message =
-              'Documento detectado:\n${state.ocrData!.tipoDocumento.name.toUpperCase()} ${state.ocrData!.numeroDocumento}';
+              'Documento Detectado:\n${result.document.type.name.toUpperCase()} ${result.document.number.toUpperCase()}';
         } else {
           message = 'Imagen capturada';
         }
-        break;
-      case DocumentScanStatus.validating:
-        message = 'Validando:\nNo mueva, por favor.';
-        break;
-      case DocumentScanStatus.validated:
-        message = '¡Perfecto!\nSu documento ha sido validado';
         break;
       case DocumentScanStatus.failure:
         message =

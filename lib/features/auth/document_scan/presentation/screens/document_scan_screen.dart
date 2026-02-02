@@ -2,12 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:partners/features/auth/document_scan/presentation/screens/document_success_screen.dart';
+import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:partners/main.dart'; // Asumiendo que getIt está aquí
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
-import 'package:partners/features/auth/document_scan/presentation/cubit/document_scan_cubit.dart';
-import 'package:partners/features/auth/document_scan/presentation/services/realtime_ocr_service.dart';
 import 'package:partners/features/auth/document_scan/presentation/widgets/document_frame_widget.dart';
 import 'package:partners/features/auth/document_scan/presentation/widgets/detected_text_widget.dart';
 import 'package:partners/features/auth/document_scan/presentation/widgets/scan_message_widget.dart';
@@ -27,28 +26,37 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isCameraPermissionGranted = false;
-  final RealtimeOcrService _realtimeOcr = RealtimeOcrService();
+
+  // ELIMINADO: RealtimeOcrService (Ahora está dentro del Cubit)
+
   late final DocumentScanCubit _cubit;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _cubit = DocumentScanCubit();
+
+    // Instanciamos el Cubit desde el Service Locator (getIt)
+    // Asegúrate de que DocumentScanCubit esté registrado en main.dart
+    _cubit = context.read<DocumentScanCubit>();
+
     _loadingController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
+
     _initializeCamera();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // IMPORTANTE: Detener el monitoreo ANTES de desechar el controller
+    _cubit.stopRealtimeMonitoring();
     _loadingController.dispose();
-    _realtimeOcr.dispose();
     _cameraController?.dispose();
-    _cubit.close();
+    // NO cerramos el cubit aquí porque puede ser reutilizado por el BlocProvider
+    // El cubit se cerrará automáticamente cuando el BlocProvider se desmonte
     super.dispose();
   }
 
@@ -59,8 +67,9 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     }
 
     if (state == AppLifecycleState.inactive) {
+      // IMPORTANTE: Detener el monitoreo ANTES de desechar el controller
+      _cubit.stopRealtimeMonitoring();
       _cameraController?.dispose();
-      _realtimeOcr.stop();
     } else if (state == AppLifecycleState.resumed) {
       _initializeCamera();
     }
@@ -68,11 +77,9 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
 
   Future<void> _initializeCamera() async {
     try {
-      // Solicitar permisos
       final status = await _requestCameraPermission();
       if (!status.isGranted) return;
 
-      // Obtener cámaras
       _cameras = await availableCameras();
       if (_cameras == null || _cameras!.isEmpty) {
         if (mounted) {
@@ -81,13 +88,11 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
         return;
       }
 
-      // Seleccionar cámara trasera
       final selectedCamera = _cameras!.firstWhere(
         (camera) => camera.lensDirection == CameraLensDirection.back,
         orElse: () => _cameras!.first,
       );
 
-      // Inicializar cámara
       _cameraController = CameraController(
         selectedCamera,
         ResolutionPreset.veryHigh,
@@ -102,13 +107,8 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
 
         Future.microtask(() {
           if (mounted) {
-            _cubit.cameraInitialized();
-
-            // Iniciar análisis en tiempo real
-            _realtimeOcr.start(
-              cameraController: _cameraController!,
-              cubit: _cubit,
-            );
+            // Iniciamos el monitoreo usando el Cubit
+            _cubit.startRealtimeMonitoring(_cameraController!);
           }
         });
       }
@@ -175,27 +175,29 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _cubit,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: MultiBlocListener(
-          listeners: [
-            BlocListener<DocumentScanCubit, DocumentScanState>(
-              listener: (context, state) {},
-            ),
-            BlocListener<OrquestorAuthCubit, OrquestorAuthState>(
-              listener: (context, state) {},
-            ),
-          ],
-          child: BlocBuilder<DocumentScanCubit, DocumentScanState>(
+      child: BlocListener<DocumentScanCubit, DocumentScanState>(
+        listener: (context, state) {
+          // Cuando el documento esté completo, navegar a la pantalla de éxito
+          if (state.status == DocumentScanStatus.captured &&
+              state.ocrResult != null) {
+            // Detener el loading controller
+            _loadingController.stop();
+
+            // Navegar a la pantalla de éxito después de un breve delay
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                context.router.push(const DocumentSuccessRoute());
+              }
+            });
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: BlocBuilder<DocumentScanCubit, DocumentScanState>(
             builder: (context, state) {
               return SizedBox.expand(
                 child: Stack(
-                  children: [
-                    // Vista previa de la cámara (fondo)
-                    _buildCameraPreview(),
-                    // Overlay con controles (arriba) - siempre visible
-                    _buildOverlay(state),
-                  ],
+                  children: [_buildCameraPreview(), _buildOverlay(state)],
                 ),
               );
             },
@@ -245,12 +247,10 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     return SafeArea(
       child: Column(
         children: [
-          // Botón cerrar
           Padding(
             padding: const EdgeInsets.all(24),
             child: _buildCloseButton(),
           ),
-          // Contenido central
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -262,36 +262,17 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
                   ),
                   const SizedBox(height: 24),
                   ScanMessageWidget(state: state, isCameraReady: isCameraReady),
-                  if (state.textoDetectado != null &&
-                      state.textoDetectado!.isNotEmpty &&
-                      (state.status == DocumentScanStatus.processing ||
+                  // Usamos 'state.realtimeText' según tu Cubit y Estado definidos
+                  // Mostrar el texto detectado cuando hay texto y la cámara está lista
+                  if (state.realtimeText != null &&
+                      state.realtimeText!.isNotEmpty &&
+                      (state.status == DocumentScanStatus.cameraReady ||
+                          state.status == DocumentScanStatus.processing ||
                           state.status == DocumentScanStatus.captured ||
                           state.status == DocumentScanStatus.failure))
                     DetectedTextWidget(state: state),
                 ],
               ),
-            ),
-          ),
-          // Botones en la parte inferior
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Botón de captura
-                if (isCameraReady &&
-                    state.status != DocumentScanStatus.processing &&
-                    state.status != DocumentScanStatus.validating)
-                  _buildCaptureButton(context, state),
-                // Espaciado
-                if (isCameraReady &&
-                    state.status != DocumentScanStatus.processing &&
-                    state.status != DocumentScanStatus.validating)
-                  const SizedBox(height: 12),
-                // Botón de galería - SIEMPRE VISIBLE
-                _buildSelectImageButton(context, state),
-              ],
             ),
           ),
         ],
@@ -303,7 +284,7 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     return Align(
       alignment: Alignment.center,
       child: GestureDetector(
-        onTap: () => context.router.maybePop(),
+        onTap: () => context.router.pop(),
         child: Container(
           width: 44,
           height: 44,
@@ -315,171 +296,5 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
         ),
       ),
     );
-  }
-
-  Widget _buildCaptureButton(BuildContext context, DocumentScanState state) {
-    final isProcessing =
-        state.status == DocumentScanStatus.processing ||
-        state.status == DocumentScanStatus.validating;
-
-    return ElevatedButton(
-      onPressed: isProcessing
-          ? null
-          : state.status == DocumentScanStatus.captured && state.ocrData != null
-          ? () => _cubit.validateDocument()
-          : () => _captureImage(context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF66CFFF),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        minimumSize: const Size(double.infinity, 56),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 12,
-        children: [
-          Icon(
-            state.status == DocumentScanStatus.captured
-                ? Icons.check_circle
-                : Icons.camera_alt,
-            color: const Color(0xFF051858),
-            size: 20,
-          ),
-          Text(
-            state.status == DocumentScanStatus.captured
-                ? 'Validar Documento'
-                : 'Capturar',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF051858),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _captureImage(BuildContext context) async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Cámara no inicializada')));
-      return;
-    }
-
-    try {
-      _realtimeOcr.stop(); // Detener análisis automático
-      final image = await _cameraController!.takePicture();
-      await _cubit.processDocumentImage(image.path);
-    } catch (e) {
-      debugPrint('Error al capturar: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-      }
-    }
-  }
-
-  Widget _buildSelectImageButton(
-    BuildContext context,
-    DocumentScanState state,
-  ) {
-    final isProcessing =
-        state.status == DocumentScanStatus.processing ||
-        state.status == DocumentScanStatus.validating;
-
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF66CFFF), width: 2),
-      ),
-      child: OutlinedButton(
-        onPressed: isProcessing
-            ? null
-            : () {
-                _selectImageFromGallery(context);
-              },
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFF66CFFF), width: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          minimumSize: const Size(double.infinity, 56),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.photo_library, color: Color(0xFF66CFFF), size: 20),
-            const SizedBox(width: 12),
-            const Text(
-              'Seleccionar de Galería',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF66CFFF),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectImageFromGallery(BuildContext context) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 100,
-      );
-
-      if (image != null) {
-        // Detener análisis en tiempo real
-        _realtimeOcr.stop();
-
-        // Procesar la imagen con OCR
-        await _cubit.processDocumentImage(image.path);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _navigateToSuccessScreen(BuildContext context) async {
-    if (!mounted) return;
-
-    final state = _cubit.state;
-    final ocrData = state.ocrData;
-
-    if (ocrData == null) {
-      return;
-    }
-
-    final router = context.router;
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: _cubit,
-          child: const DocumentSuccessScreen(),
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      router.pop(true);
-    }
   }
 }

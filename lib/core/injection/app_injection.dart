@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:partners/core/config/app_config.dart';
 import 'package:partners/core/injection/auth/auth_injection.dart';
+import 'package:partners/core/injection/auth/document_injection.dart';
 import 'package:partners/core/injection/auth/validation_injeciton.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/auth_manager_impl.dart';
@@ -8,6 +9,8 @@ import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/network/dio_services_impl.dart';
+import 'package:partners/core/services/ocr/ocr_service.dart';
+import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
 
 class AppInjection {
   final GetIt _getIt;
@@ -30,6 +33,15 @@ class AppInjection {
         () => AuthManagerImpl(_getIt<TokenManager>()),
       );
     }
+
+    if (!_getIt.isRegistered<OcrService>()) {
+      _getIt.registerLazySingleton<OcrService>(() => OcrService());
+    }
+    if (!_getIt.isRegistered<RealtimeOcrService>()) {
+      _getIt.registerLazySingleton<RealtimeOcrService>(
+        () => RealtimeOcrService(),
+      );
+    }
     if (!_getIt.isRegistered<ApiServices>()) {
       final validatedUrl = _baseUrl.isEmpty
           ? AppConfig.getValidatedBaseUrl()
@@ -44,5 +56,6 @@ class AppInjection {
 
     AuthInjection(getIt: _getIt);
     ValidationInjeciton(getIt: _getIt);
+    DocumentInjection(getIt: _getIt);
   }
 }

@@ -1,17 +1,19 @@
 import 'package:equatable/equatable.dart';
-import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/core/utils/models/document_identity.dart';
 
-abstract class Person extends Equatable {
+class Person extends Equatable {
   final String name;
   final String lastName;
-  final DocumentType documentType;
-  final String documentNumber;
+  final DateTime birthDate;
+  final String gender;
+  final DocumentIdentity documentEdentity;
 
   const Person({
     required this.name,
     required this.lastName,
-    required this.documentType,
-    required this.documentNumber,
+    required this.birthDate,
+    required this.gender,
+    required this.documentEdentity,
   });
 
   String getFullName() {
@@ -19,9 +21,9 @@ abstract class Person extends Equatable {
   }
 
   String getDocumentInfo() {
-    return '${documentType.name}: $documentNumber';
+    return documentEdentity.info();
   }
 
   @override
-  List<Object?> get props => [name, lastName, documentType, documentNumber];
+  List<Object?> get props => [name, lastName, documentEdentity];
 }

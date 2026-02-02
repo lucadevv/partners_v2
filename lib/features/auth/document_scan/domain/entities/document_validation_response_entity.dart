@@ -18,9 +18,5 @@ class DocumentValidationResponseEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [
-        isValid,
-        message,
-        code,
-      ];
+  List<Object?> get props => [isValid, message, code];
 }

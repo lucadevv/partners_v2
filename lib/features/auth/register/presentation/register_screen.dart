@@ -47,10 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (stateOrquesto.effect is NavigationValidateEffect) {
           context.read<OrquestorAuthCubit>().reset();
           context.router.push(ValidationRoute());
-        } else if (stateOrquesto.effect is NavigationBussinesEffect) {
-          context.read<OrquestorAuthCubit>().reset();
-          context.router.push(BusinessValidationRoute());
         }
+        //  else if (stateOrquesto.effect is NavigationBussinesEffect) {
+        //   context.read<OrquestorAuthCubit>().reset();
+        //   context.router.push(BusinessValidationRoute());
+        // }
       },
       child: Scaffold(
         appBar: RegisterHeaderWidget(),
@@ -60,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _formNotifier.updateFromRucResponse(state.rucData.socialReason);
             }
             if (state.sendDocStatus == RegisterStatus.success) {
-              _formNotifier.updateFromDocResponse(state.docData.getFullName());
+              _formNotifier.updateFromDocResponse(state.docData.getFullName);
             }
           },
           builder: (context, state) {
@@ -190,16 +191,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ],
                         ),
                       ),
-                      ContinueButtonWidget(
-                        onPressed: _formNotifier.isFormComplete
-                            ? () async {
-                                await context
-                                    .read<OrquestorAuthCubit>()
-                                    .navigationStartValidationPage(
-                                      _formNotifier.selectedRuc,
-                                    );
-                              }
-                            : null,
+                      Positioned(
+                        bottom: 36,
+                        left: 24,
+                        right: 24,
+                        child: ContinueButtonWidget(
+                          onPressed: _formNotifier.isFormComplete
+                              ? () async {
+                                  await context
+                                      .read<OrquestorAuthCubit>()
+                                      .navigationStartValidationPage(
+                                        _formNotifier.selectedRuc,
+                                      );
+                                }
+                              : null,
+                        ),
                       ),
                     ],
                   ),

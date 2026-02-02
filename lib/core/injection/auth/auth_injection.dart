@@ -1,12 +1,6 @@
 import 'package:get_it/get_it.dart';
 
 import 'package:partners/core/services/network/api_services.dart';
-import 'package:partners/features/auth/document_scan/data/datasource/document_scan_datasource.dart';
-import 'package:partners/features/auth/document_scan/data/datasource/provider_memory/mock_document_scan_datasource_impl.dart';
-import 'package:partners/features/auth/document_scan/data/repository/document_scan_repository_impl.dart';
-import 'package:partners/features/auth/document_scan/domain/repository/document_scan_repository.dart';
-import 'package:partners/features/auth/document_scan/domain/use_case/process_document_ocr_usecase.dart';
-import 'package:partners/features/auth/document_scan/domain/use_case/validate_document_usecase.dart';
 import 'package:partners/features/auth/login/data/datasource/login_datasource.dart';
 import 'package:partners/features/auth/login/data/datasource/provider_memory/mock_login_datasource_impl.dart';
 import 'package:partners/features/auth/login/data/repository/login_repository_impl.dart';
@@ -56,35 +50,6 @@ class AuthInjection {
     if (!_getIt.isRegistered<StartRegisterUsecase>()) {
       _getIt.registerLazySingleton<StartRegisterUsecase>(
         () => StartRegisterUsecase(repository: getIt<RegisterRepository>()),
-      );
-    }
-
-    // Document Scan Injection
-    if (!_getIt.isRegistered<DocumentScanDatasource>()) {
-      _getIt.registerLazySingleton<DocumentScanDatasource>(
-        () => MockDocumentScanDatasourceImpl(),
-      );
-    }
-
-    if (!_getIt.isRegistered<DocumentScanRepository>()) {
-      _getIt.registerLazySingleton<DocumentScanRepository>(
-        () => DocumentScanRepositoryImpl(
-          datasource: _getIt<DocumentScanDatasource>(),
-        ),
-      );
-    }
-
-    if (!_getIt.isRegistered<ProcessDocumentOcrUsecase>()) {
-      _getIt.registerLazySingleton<ProcessDocumentOcrUsecase>(
-        () => ProcessDocumentOcrUsecase(),
-      );
-    }
-
-    if (!_getIt.isRegistered<ValidateDocumentUsecase>()) {
-      _getIt.registerLazySingleton<ValidateDocumentUsecase>(
-        () => ValidateDocumentUsecase(
-          repository: _getIt<DocumentScanRepository>(),
-        ),
       );
     }
 

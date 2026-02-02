@@ -1,25 +1,31 @@
 import 'package:partners/core/utils/enums/enums.dart';
-import 'package:partners/core/utils/models/person.dart';
+import 'package:partners/core/utils/models/dni.dart';
+import 'package:partners/core/utils/models/document_identity.dart';
 
-class RepLegalResEntity extends Person {
+class RepLegalResEntity {
+  final String name;
+  final String lastName;
+  final DocumentIdentity documentEdentity;
   final String position;
+
   const RepLegalResEntity({
-    required super.name,
-    required super.lastName,
-    required super.documentType,
-    required super.documentNumber,
+    required this.name,
+    required this.lastName,
+    required this.documentEdentity,
     required this.position,
   });
 
-  factory RepLegalResEntity.empty() {
-    return const RepLegalResEntity(
-      name: '',
-      lastName: '',
-      documentType: DocumentType.dni,
-      documentNumber: '',
-      position: '',
-    );
-  }
-  @override
-  List<Object?> get props => [...super.props, position];
+  // lucadev: Factory para crear una entidad vacía con DNI por defecto
+  factory RepLegalResEntity.empty() => RepLegalResEntity(
+    name: '',
+    lastName: '',
+    documentEdentity: Dni(
+      type: DocumentType.dni,
+      number: '',
+      securityCode: '', // lucadev: Código de seguridad requerido para DNI
+    ),
+    position: '',
+  );
+
+  String get getFullName => '$name $lastName';
 }

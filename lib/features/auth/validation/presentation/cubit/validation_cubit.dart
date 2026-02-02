@@ -3,8 +3,9 @@ import 'package:equatable/equatable.dart';
 import 'package:partners/core/cubit/base_cubit_mixin.dart';
 import 'package:partners/core/services/database/flags/flags_factory.dart';
 import 'package:partners/core/services/database/flags/session_id_flug.dart';
-import 'package:partners/core/utils/conts/prefers_keys.dart';
+import 'package:partners/core/services/database/sqlite/repository/session_repository.dart';
 import 'package:partners/core/utils/enums/enums.dart';
+
 import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
 import 'package:partners/features/auth/validation/domain/entities/validation_entity.dart';
 import 'package:partners/features/auth/validation/domain/factories/item_factory.dart';
@@ -15,6 +16,7 @@ part 'validation_state.dart';
 class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
   final GetValidationStepsUsecase _getValidationStepsUsecase;
   final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
+  late final SessionRepository _sessionRepository;
 
   ValidationCubit({
     required GetValidationStepsUsecase getValidationStepsUsecase,
@@ -23,7 +25,7 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
 
   Future<void> loadValidationSteps() async {
     emit(state.copyWith(stepsStatus: ValidationStatus.loading));
-    final String sessionId = await _sessionFlug.getFlag(PrefersKeys.sessionId);
+    final String sessionId = _sessionFlug.sessionId ?? '';
     final result = await _getValidationStepsUsecase(sessionId);
     result.fold(
       (failure) {
@@ -36,13 +38,13 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
           ),
         );
       },
-      (stepsEntity) {
-        // Usar directamente el next_step del backend
+      (stepsEntity) async {
         final nextStep = stepsEntity.nextStep;
 
         final updatedItems = ItemFactory.createWithState(
           stepsEntity: stepsEntity,
           nextStep: nextStep,
+          rucType: RucType.ruc10,
         );
 
         emit(
@@ -57,14 +59,10 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
     );
   }
 
-  void navigateToStep(ItemValidation item) {
-    // Solo permitir tap si el paso está en estado pending
-    if (item.state != ItemValidationState.pending) return;
-    print('object');
-    emit(state.copyWith(nextStep: item.nextStep ?? ''));
-  }
-
-  void updateStepStatus({required String stepName, required bool isCompleted}) {
+  Future<void> updateStepStatus({
+    required String stepName,
+    required bool isCompleted,
+  }) async {
     final currentEntity = state.stepsEntity;
 
     final updatedEntity = _updateStepInEntity(
@@ -73,12 +71,21 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
       isCompleted,
     );
 
+    // Obtener el RucType de la sesión
+    final String sessionId = _sessionFlug.sessionId ?? '';
+    RucType? rucType;
+    if (sessionId.isNotEmpty) {
+      final session = await _sessionRepository.getSessionBySessionId(sessionId);
+      rucType = session?.ruc;
+    }
+
     // Usar directamente el next_step del backend actualizado
     final nextStep = updatedEntity.nextStep;
 
     final updatedItems = ItemFactory.createWithState(
       stepsEntity: updatedEntity,
       nextStep: nextStep,
+      rucType: rucType,
     );
 
     emit(
@@ -122,10 +129,19 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
     emit(ValidationState.initial());
   }
 
-  void setNextStep(String nextStep) {
+  Future<void> setNextStep(String nextStep) async {
+    // Obtener el RucType de la sesión
+    final String sessionId = _sessionFlug.sessionId ?? '';
+    RucType? rucType;
+    if (sessionId.isNotEmpty) {
+      final session = await _sessionRepository.getSessionBySessionId(sessionId);
+      rucType = session?.ruc;
+    }
+
     final updatedItems = ItemFactory.createWithState(
       stepsEntity: state.stepsEntity,
       nextStep: nextStep,
+      rucType: rucType,
     );
 
     emit(state.copyWith(nextStep: nextStep, validationItems: updatedItems));

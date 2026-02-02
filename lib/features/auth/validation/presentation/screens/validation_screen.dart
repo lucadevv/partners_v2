@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
+import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
 import 'package:partners/features/auth/validation/domain/entities/validation_entity.dart';
@@ -20,12 +21,16 @@ class ValidationScreen extends StatefulWidget {
   State<ValidationScreen> createState() => _ValidationScreenState();
 }
 
-class _ValidationScreenState extends State<ValidationScreen> {
+class _ValidationScreenState extends State<ValidationScreen>
+    with AutoRouteAware {
   late ValidationFormNotifier _notifier;
-
+  AutoRouteObserver? _observer;
   @override
   void initState() {
     super.initState();
+    final observers = RouterScope.of(context).navigatorObservers;
+    _observer = observers.whereType<AutoRouteObserver>().firstOrNull;
+    _observer?.subscribe(this, context.routeData);
     _notifier = ValidationFormNotifier();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,8 +42,15 @@ class _ValidationScreenState extends State<ValidationScreen> {
   }
 
   @override
+  void didPopNext() {
+    print('object');
+    super.didPopNext();
+  }
+
+  @override
   void dispose() {
     _notifier.dispose();
+    _observer?.unsubscribe(this);
     super.dispose();
   }
 
@@ -95,7 +107,13 @@ class _ValidationScreenState extends State<ValidationScreen> {
     );
   }
 
-  void showBottomSheet(ItemValidation item) {
+  void showBottomSheet(ItemValidation item) async {
+    final router = context.router;
+    if (item is IdentityItemValidation) {
+      router.push(const DocumentScanRoute());
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: false,
@@ -142,6 +160,8 @@ class _ValidationScreenState extends State<ValidationScreen> {
               switch (item) {
                 EmailItemValidation() => EmailValidationWidget(),
                 PhoneItemValidation() => WhatsappValidationWidget(),
+                IdentityItemValidation() =>
+                  SizedBox.shrink(), // No debería llegar aquí
                 ItemValidation() => SizedBox.shrink(),
               },
             ],

@@ -6,6 +6,9 @@ import 'package:partners/features/auth/validation/data/datasource/validation_dat
 import 'package:partners/features/auth/validation/data/models/steps_res_model.dart';
 import 'package:partners/features/auth/validation/domain/entities/email_validation_req.dart';
 import 'package:partners/features/auth/validation/domain/entities/otp_email_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/otp_whatsapp_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/whatsapp_validation_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/whatsapp_validation_res.dart';
 
 class NtwValidationDatsourceImpl implements ValidationDatasource {
   final ApiServices _services;
@@ -39,7 +42,6 @@ class NtwValidationDatsourceImpl implements ValidationDatasource {
         '/onboarding/send-email-otp',
         data: entity.toJson(),
       );
-      print(response.data);
       final data = response.data["message"];
 
       return Right(data);
@@ -64,6 +66,46 @@ class NtwValidationDatsourceImpl implements ValidationDatasource {
     } catch (e) {
       final appException = ExceptionHandler.handleException(e);
       ExceptionHandler.logException(appException, tag: 'resendEmailCode');
+      return Left(appException);
+    }
+  }
+
+  @override
+  Future<Either<AppException, WhatsappValidationRes>> sendWhatsappValidation(
+    WhatsappValidationReq entity,
+  ) async {
+    try {
+      final response = await _services.post(
+        '/onboarding/send-whatsapp-otp',
+        data: entity.toJson(),
+      );
+
+      final data = WhatsappValidationRes.fromJson(response.data);
+      return Right(data);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(
+        appException,
+        tag: 'sendWhatsappValidation',
+      );
+      return Left(appException);
+    }
+  }
+
+  @override
+  Future<Either<AppException, String>> verifyWhatsappOtp(
+    OtpWhatsappReq entity,
+  ) async {
+    try {
+      final response = await _services.post(
+        '/onboarding/verify-whatsapp',
+        data: entity.toJson(),
+      );
+      final data = response.data["message"];
+      return Right(data);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'verifyWhatsappOtp');
       return Left(appException);
     }
   }

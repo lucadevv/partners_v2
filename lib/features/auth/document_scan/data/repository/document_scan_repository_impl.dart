@@ -27,4 +27,11 @@ class DocumentScanRepositoryImpl implements DocumentScanRepository {
       cameraController: cameraController,
     );
   }
+
+  @override
+  Future<Either<AppException, String>> uploadIdentity({
+    required DocumentScanResult scanResult,
+  }) {
+    return _datasource.uploadIdentity(scanResult: scanResult);
+  }
 }

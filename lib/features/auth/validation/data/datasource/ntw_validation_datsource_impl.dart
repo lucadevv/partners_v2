@@ -1,12 +1,18 @@
+import 'dart:io';
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/core/utils/exeptions/exception_handler.dart';
 import 'package:partners/features/auth/validation/data/datasource/validation_datasource.dart';
 import 'package:partners/features/auth/validation/data/models/steps_res_model.dart';
+import 'package:partners/features/auth/validation/domain/entities/business_validation_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/business_validation_res.dart';
 import 'package:partners/features/auth/validation/domain/entities/email_validation_req.dart';
 import 'package:partners/features/auth/validation/domain/entities/otp_email_req.dart';
 import 'package:partners/features/auth/validation/domain/entities/otp_whatsapp_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/password_validation_req.dart';
+import 'package:partners/features/auth/validation/domain/entities/password_validation_res.dart';
 import 'package:partners/features/auth/validation/domain/entities/whatsapp_validation_req.dart';
 import 'package:partners/features/auth/validation/domain/entities/whatsapp_validation_res.dart';
 
@@ -106,6 +112,55 @@ class NtwValidationDatsourceImpl implements ValidationDatasource {
     } catch (e) {
       final appException = ExceptionHandler.handleException(e);
       ExceptionHandler.logException(appException, tag: 'verifyWhatsappOtp');
+      return Left(appException);
+    }
+  }
+
+  @override
+  Future<Either<AppException, PasswordValidationRes>> completePassword(
+    PasswordValidationReq entity,
+  ) async {
+    try {
+      print("lucadev entity ${entity.toJson()}");
+      final response = await _services.post(
+        '/onboarding/complete',
+        data: entity.toJson(),
+      );
+      print("lucadev response $response");
+      final data = PasswordValidationRes.fromJson(response.data);
+      return Right(data);
+    } catch (e) {
+      print("lucadev error $e");
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'completePassword');
+      return Left(appException);
+    }
+  }
+
+  @override
+  Future<Either<AppException, BusinessValidationRes>> validateBusiness(
+    BusinessValidationReq entity,
+  ) async {
+    try {
+      final formData = FormData.fromMap({
+        'session_id': entity.sessionId,
+        'ruc_file': await MultipartFile.fromFile(
+          entity.rucFile.path,
+          filename: entity.rucFile.path.split('/').last,
+        ),
+      });
+
+      final response = await _services.post(
+        '/onboarding/validate-business',
+        data: formData,
+        isFormData: true,
+      );
+
+      final data = BusinessValidationRes.fromJson(response.data);
+      return Right(data);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'validateBusiness');
       return Left(appException);
     }
   }

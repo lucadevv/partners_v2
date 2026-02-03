@@ -8,6 +8,7 @@ class ValidationState extends Equatable {
   final StepsResEntity stepsEntity;
   final List<ItemValidation> validationItems;
   final String nextStep;
+  final RucType? rucType;
 
   const ValidationState({
     required this.stepsStatus,
@@ -15,6 +16,7 @@ class ValidationState extends Equatable {
     required this.stepsEntity,
     this.validationItems = const [],
     this.nextStep = '',
+    this.rucType,
   });
 
   ValidationState copyWith({
@@ -23,6 +25,7 @@ class ValidationState extends Equatable {
     StepsResEntity? stepsEntity,
     List<ItemValidation>? validationItems,
     String? nextStep,
+    RucType? rucType,
   }) {
     return ValidationState(
       stepsStatus: stepsStatus ?? this.stepsStatus,
@@ -30,6 +33,7 @@ class ValidationState extends Equatable {
       stepsEntity: stepsEntity ?? this.stepsEntity,
       validationItems: validationItems ?? this.validationItems,
       nextStep: nextStep ?? this.nextStep,
+      rucType: rucType ?? this.rucType,
     );
   }
 
@@ -53,5 +57,6 @@ class ValidationState extends Equatable {
     stepsEntity,
     validationItems,
     nextStep,
+    rucType,
   ];
 }

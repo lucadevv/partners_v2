@@ -30,6 +30,7 @@ class EmailValidationCubit extends Cubit<EmailValidationState> {
     );
     response.fold(
       (failure) {
+        print("lucadev ${failure.message}");
         emit(
           state.copyWith(
             status: EmailValidationStatus.failure,
@@ -47,12 +48,14 @@ class EmailValidationCubit extends Cubit<EmailValidationState> {
     final sessionId = _sessionFlug.getFlag(PrefersKeys.sessionId);
     if (state.resendStatus == EmailValidationStatus.loading) return;
     emit(state.copyWith(resendStatus: EmailValidationStatus.loading));
+    print("lucadev otp $otp");
     final response = await _resendEmailCodeUsecase.call(
       sessionId: sessionId,
       otp: otp,
     );
     response.fold(
       (failure) {
+        print("lucadev ${failure.message}");
         emit(
           state.copyWith(
             resendStatus: EmailValidationStatus.failure,
@@ -61,9 +64,12 @@ class EmailValidationCubit extends Cubit<EmailValidationState> {
         );
       },
       (success) {
-        print("Resend email code success: $success");
         emit(state.copyWith(resendStatus: EmailValidationStatus.success));
       },
     );
+  }
+
+  Future<void> resetState() async {
+    emit(EmailValidationState.initial());
   }
 }

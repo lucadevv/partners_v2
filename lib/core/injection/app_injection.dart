@@ -7,6 +7,8 @@ import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/auth_manager_impl.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.dart';
+import 'package:partners/core/services/database/flags/flags_factory.dart';
+import 'package:partners/core/services/database/flags/session_id_storage.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/network/dio_services_impl.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
@@ -31,6 +33,12 @@ class AppInjection {
     if (!_getIt.isRegistered<AuthManager>()) {
       _getIt.registerLazySingleton<AuthManager>(
         () => AuthManagerImpl(_getIt<TokenManager>()),
+      );
+    }
+
+    if (!_getIt.isRegistered<SessionIdStorage>()) {
+      _getIt.registerLazySingleton<SessionIdStorage>(
+        () => FlagsFactory.createSessionIdFlug(),
       );
     }
 

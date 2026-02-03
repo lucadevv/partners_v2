@@ -1,8 +1,8 @@
-// lib/core/services/database/session_id_flug.dart
 import 'package:partners/core/services/database/flags/flags.dart';
+import 'package:partners/core/services/database/flags/session_id_storage.dart';
 import 'package:partners/core/utils/conts/prefers_keys.dart';
 
-class SessionIdFlug extends BaseFlags {
+class SessionIdFlug extends BaseFlags implements SessionIdStorage {
   // Usamos la misma instancia de SharedPreferences que todos
 
   // =============== MÉTODOS ESPECÍFICOS ===============

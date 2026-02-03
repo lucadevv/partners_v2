@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 
@@ -21,33 +20,22 @@ class DocumentFrameWidget extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Imagen capturada (Freeze frame) si existe
-          if (state.imagePath != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Image.file(
-                File(state.imagePath!),
-                width: 332,
-                height: 535,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
-              ),
-            ),
-
           // Esquinas decorativas (Siempre visibles)
           ..._buildCornerIndicators(),
 
-          // Indicador de Carga (Processing o cuando hay texto detectado pero no está completo)
-          if (state.status == DocumentScanStatus.processing ||
+          if (state.status == DocumentScanStatus.failure &&
+              state.errorMessage != null)
+            _buildErrorIndicatorWithMessage(state.errorMessage!)
+          else if (state.status == DocumentScanStatus.processing ||
               (state.status == DocumentScanStatus.cameraReady &&
                   state.realtimeText != null &&
                   state.realtimeText!.isNotEmpty &&
-                  state.ocrResult == null))
+                  state.ocrResult == null) ||
+              state.uploadStatus == UploadIdentityStatus.loading)
             _buildLoadingIndicator()
-          // Indicador de Éxito (Captured)
           else if (state.status == DocumentScanStatus.captured &&
-              state.ocrResult != null)
+              state.ocrResult != null &&
+              state.uploadStatus == UploadIdentityStatus.success)
             _buildSuccessIndicator(),
         ],
       ),
@@ -156,6 +144,53 @@ class DocumentFrameWidget extends StatelessWidget {
         size: 60,
         color: Colors.white,
       ),
+    );
+  }
+
+  Widget _buildErrorIndicator() {
+    return Container(
+      width: 103,
+      height: 103,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.red,
+      ),
+      child: const Icon(Icons.error_outline, size: 60, color: Colors.white),
+    );
+  }
+
+  Widget _buildErrorIndicatorWithMessage(String errorMessage) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 103,
+          height: 103,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.red,
+          ),
+          child: const Icon(Icons.error_outline, size: 60, color: Colors.white),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            errorMessage,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

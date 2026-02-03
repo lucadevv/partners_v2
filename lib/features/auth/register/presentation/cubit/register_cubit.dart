@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/cubit/base_cubit_mixin.dart';
-import 'package:partners/core/services/database/flags/flags_factory.dart';
-import 'package:partners/core/services/database/flags/session_id_flug.dart';
+import 'package:partners/core/services/database/flags/session_id_storage.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/register/domain/use_case/send_document_usecase.dart';
 import 'package:partners/features/auth/register/domain/use_case/send_ruc_usecase.dart';
@@ -12,16 +11,19 @@ class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
   final SendDocumentUsecase _sendDocumentUsecase;
   final SendRucUsecase _sendRucUsecase;
   final StartRegisterUsecase _startRegisterUsecase;
-  final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
+  final SessionIdStorage _sessionStorage;
 
   RegisterCubit({
     required SendDocumentUsecase sendDocumentUsecase,
     required SendRucUsecase sendRucUsecase,
     required StartRegisterUsecase startRegisterUsecase,
-  }) : _sendDocumentUsecase = sendDocumentUsecase,
-       _sendRucUsecase = sendRucUsecase,
-       _startRegisterUsecase = startRegisterUsecase,
-       super(RegisterStateX.initial());
+    required SessionIdStorage sessionStorage,
+  })  : _sendDocumentUsecase = sendDocumentUsecase,
+        _sendRucUsecase = sendRucUsecase,
+        _startRegisterUsecase = startRegisterUsecase,
+        _sessionStorage = sessionStorage,
+        super(RegisterStateX.initial());
+
 
   Future<void> sendRuc({required String ruc, required RucType type}) async {
     if (state.sendRucStatus == RegisterStatus.loading) {
@@ -49,7 +51,7 @@ class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
           ),
         );
 
-        _sessionFlug.saveSessionId(responseEntity.sessionId);
+        _sessionStorage.saveSessionId(responseEntity.sessionId);
       },
     );
   }
@@ -62,7 +64,7 @@ class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
       return;
     }
     emit(state.copyWith(sendDocStatus: RegisterStatus.loading));
-    final String? sesionId = _sessionFlug.sessionId;
+    final String? sesionId = _sessionStorage.sessionId;
     final response = await _sendDocumentUsecase.call(
       type: type,
       number: number,
@@ -95,7 +97,7 @@ class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
     }
     emit(state.copyWith(sendStartStatus: RegisterStatus.loading));
 
-    final String? sesionId = _sessionFlug.sessionId;
+    final String? sesionId = _sessionStorage.sessionId;
 
     final response = await _startRegisterUsecase.call(
       type: rucType,
@@ -118,7 +120,6 @@ class RegisterCubit extends Cubit<RegisterStateX> with BaseCubitMixin {
             startRegisterResEntity: responseEntity,
           ),
         );
-        print("Start register ${responseEntity.nextStep}");
       },
     );
   }

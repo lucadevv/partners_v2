@@ -3,14 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/document_scan/data/models/document_scan_result.dart';
 import 'package:partners/core/utils/models/dni.dart';
 import 'package:partners/features/auth/document_scan/domain/parser/dni_parser.dart';
 import 'package:partners/features/auth/document_scan/domain/parser/ce_parser.dart';
 import 'package:partners/features/auth/document_scan/domain/parser/document_parser.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/ocr_usecase.dart';
+import 'package:partners/features/auth/document_scan/domain/use_case/upload_identity_usecase.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/watch_document_realt_time_usecase.dart';
 
 part 'document_scan_state.dart';
@@ -18,84 +19,160 @@ part 'document_scan_state.dart';
 class DocumentScanCubit extends Cubit<DocumentScanState> {
   final OcrUsecase _ocrUsecase;
   final WatchDocumentRealtTimeUsecase _watchDocumentRealtTimeUsecase;
-  final List<DocumentParser> _parsers = [DniParser(), CeParser()];
+  final UploadIdentityUsecase _uploadIdentityUsecase;
+  List<DocumentParser> _parsers = [];
 
   StreamSubscription<Either<AppException, String>>? _realtimeSubscription;
+  Timer? _errorResetTimer;
+  int _retryCount = 0;
+  static const int _maxRetries = 10;
 
   DocumentScanCubit({
     required OcrUsecase ocrUsecase,
     required WatchDocumentRealtTimeUsecase watchDocumentRealtTimeUsecase,
+    required UploadIdentityUsecase uploadIdentityUsecase,
   }) : _ocrUsecase = ocrUsecase,
        _watchDocumentRealtTimeUsecase = watchDocumentRealtTimeUsecase,
+       _uploadIdentityUsecase = uploadIdentityUsecase,
        super(const DocumentScanState());
+
+  void initializeRucType(RucType rucType) {
+    _parsers = _getParsersForRucType(rucType);
+  }
+
+  List<DocumentParser> _getParsersForRucType(RucType rucType) {
+    switch (rucType) {
+      case RucType.ruc10:
+        return [DniParser()];
+      case RucType.ruc15:
+        return [CeParser()];
+      case RucType.ruc20:
+        return [DniParser(), CeParser()];
+    }
+  }
 
   void startRealtimeMonitoring(CameraController cameraController) {
     if (state.status == DocumentScanStatus.processing) return;
 
     if (isClosed) {
-      print('⚠️ Cubit cerrado, no se puede iniciar monitoreo');
       return;
     }
 
     stopRealtimeMonitoring();
+    _retryCount = 0;
 
     if (!isClosed) {
       emit(state.copyWith(status: DocumentScanStatus.cameraReady));
     }
 
-    print('🎬 Iniciando monitoreo en tiempo real...');
     _realtimeSubscription =
         _watchDocumentRealtTimeUsecase(
           cameraController: cameraController,
+          interval: const Duration(seconds: 3),
         ).listen(
           (result) {
             if (isClosed) {
-              print('⚠️ Cubit cerrado, ignorando datos del stream');
               return;
             }
 
-            print('📥 Datos recibidos en el cubit');
             result.fold(
               (failure) {
-                print('⚠️ [Realtime] Error leve: ${failure.message}');
+                _retryCount++;
+                if (_retryCount >= _maxRetries) {
+                  stopRealtimeMonitoring();
+                  if (!isClosed) {
+                    emit(
+                      state.copyWith(
+                        status: DocumentScanStatus.failure,
+                        errorMessage:
+                            'No se pudo leer el documento. Asegúrate de mantener el teléfono quieto y que haya buena iluminación.',
+                      ),
+                    );
+                    _startErrorResetTimer();
+                  }
+                }
               },
               (detectedText) {
                 final textUpperCase = detectedText.toUpperCase();
 
-                debugPrint(
-                  '✅ Texto recibido en cubit (${textUpperCase.length} caracteres): ${textUpperCase.isEmpty ? "(vacío)" : textUpperCase.substring(0, textUpperCase.length > 100 ? 100 : textUpperCase.length)}...',
-                );
-                debugPrint('📋 TEXTO COMPLETO DETECTADO:\n$textUpperCase\n');
+                if (_parsers.isEmpty) {
+                  return;
+                }
 
                 DocumentScanResult? parsedResult;
                 for (final parser in _parsers) {
                   parsedResult = parser.parse(textUpperCase);
                   if (parsedResult != null) {
-                    debugPrint(
-                      '✅ Documento parseado: ${parsedResult.document.type}',
-                    );
                     break;
                   }
                 }
 
                 if (parsedResult != null) {
                   final isComplete = _isDocumentComplete(parsedResult);
-                  debugPrint('📊 Documento completo: $isComplete');
 
                   if (isComplete) {
-                    debugPrint('🎉 ¡Documento completo! Deteniendo escaneo...');
-
                     stopRealtimeMonitoring();
+                    _retryCount = 0;
 
+                    if (parsedResult.document is Dni) {
+                      final dni = parsedResult.document as Dni;
+
+                      if (dni.expiryDate != null &&
+                          dni.expiryDate!.isNotEmpty) {
+                        final isExpired = dni.isExpired();
+
+                        if (isExpired) {
+                          if (!isClosed) {
+                            stopRealtimeMonitoring();
+                            emit(
+                              state.copyWith(
+                                status: DocumentScanStatus.failure,
+                                errorMessage:
+                                    'El documento está vencido. Por favor, utiliza un documento vigente.',
+                                ocrResult: parsedResult,
+                              ),
+                            );
+
+                            _startErrorResetTimer();
+                          }
+                          return;
+                        }
+                      } else {}
+                    }
+
+                    _uploadIdentityToBackend(parsedResult);
+                    return;
+                  } else {
+                    _retryCount++;
+                    if (_retryCount >= _maxRetries) {
+                      stopRealtimeMonitoring();
+                      if (!isClosed) {
+                        emit(
+                          state.copyWith(
+                            status: DocumentScanStatus.failure,
+                            errorMessage:
+                                'No se pudo leer completamente el documento. Asegúrate de mantener el teléfono quieto y que el documento esté bien iluminado.',
+                            ocrResult: parsedResult,
+                          ),
+                        );
+                        _startErrorResetTimer();
+                      }
+                      return;
+                    }
+                  }
+                } else {
+                  _retryCount++;
+                  if (_retryCount >= _maxRetries) {
+                    stopRealtimeMonitoring();
                     if (!isClosed) {
                       emit(
                         state.copyWith(
-                          status: DocumentScanStatus.captured,
-                          ocrResult: parsedResult,
-                          realtimeText: null,
+                          status: DocumentScanStatus.failure,
+                          errorMessage:
+                              'No se pudo reconocer el documento. Asegúrate de mantener el teléfono quieto y que haya buena iluminación.',
                         ),
                       );
-                      debugPrint('✅ Estado actualizado con documento completo');
+                      _startErrorResetTimer();
                     }
                     return;
                   }
@@ -108,17 +185,12 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
                       realtimeText: textUpperCase,
                     ),
                   );
-                  debugPrint('🔄 Estado actualizado con texto');
                 }
               },
             );
           },
-          onError: (error) {
-            print('❌ Error en stream: $error');
-          },
-          onDone: () {
-            print('🏁 Stream completado');
-          },
+          onError: (error) {},
+          onDone: () {},
         );
   }
 
@@ -127,10 +199,29 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     _realtimeSubscription = null;
   }
 
+  void _startErrorResetTimer() {
+    _errorResetTimer?.cancel();
+
+    _errorResetTimer = Timer(const Duration(seconds: 10), () {
+      if (!isClosed) {
+        emit(
+          const DocumentScanState(
+            status: DocumentScanStatus.initial,
+            errorMessage: null,
+            ocrResult: null,
+            realtimeText: null,
+            uploadStatus: UploadIdentityStatus.initial,
+          ),
+        );
+
+        _retryCount = 0;
+      }
+    });
+  }
+
   Future<void> captureAndProcessImage(String imagePath) async {
     if (state.status == DocumentScanStatus.processing) return;
     if (isClosed) {
-      print('⚠️ Cubit cerrado, no se puede procesar imagen');
       return;
     }
 
@@ -141,7 +232,6 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
         state.copyWith(
           status: DocumentScanStatus.processing,
           errorMessage: null,
-          imagePath: imagePath,
         ),
       );
     }
@@ -161,54 +251,113 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
               errorMessage: failure.message,
             ),
           );
+          _startErrorResetTimer();
         }
       },
       (scanResult) {
-        print('📄 ========== DATOS COMPLETOS CAPTURADOS ==========');
-        print('📄 Nombre: ${scanResult.extractedName ?? "N/A"}');
-        print('📄 Apellido: ${scanResult.extractedLastName ?? "N/A"}');
-        print(
-          '📄 Fecha de Nacimiento: ${scanResult.extractedBirthDate ?? "N/A"}',
+        final isComplete = _isDocumentComplete(scanResult);
+        if (isComplete) {
+          if (scanResult.document is Dni) {
+            final dni = scanResult.document as Dni;
+
+            if (dni.expiryDate != null && dni.expiryDate!.isNotEmpty) {
+              final isExpired = dni.isExpired();
+
+              if (isExpired) {
+                if (!isClosed) {
+                  emit(
+                    state.copyWith(
+                      status: DocumentScanStatus.failure,
+                      errorMessage:
+                          'El documento está vencido. Por favor, utiliza un documento vigente.',
+                      ocrResult: scanResult,
+                    ),
+                  );
+
+                  _startErrorResetTimer();
+                }
+                return;
+              }
+            } else {}
+          }
+
+          _uploadIdentityToBackend(scanResult);
+        } else {
+          if (!isClosed) {
+            emit(
+              state.copyWith(
+                status: DocumentScanStatus.processing,
+                ocrResult: scanResult,
+                realtimeText: null,
+                uploadStatus: UploadIdentityStatus.initial,
+              ),
+            );
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> _uploadIdentityToBackend(DocumentScanResult scanResult) async {
+    if (isClosed) return;
+
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          status: DocumentScanStatus.processing,
+          ocrResult: scanResult,
+          realtimeText: null,
+          uploadStatus: UploadIdentityStatus.loading,
+        ),
+      );
+    }
+
+    final result = await _uploadIdentityUsecase(scanResult: scanResult);
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: DocumentScanStatus.failure,
+            errorMessage: 'Error al subir documento: ${failure.message}',
+            uploadStatus: UploadIdentityStatus.failure,
+          ),
         );
-        print('📄 Género: ${scanResult.extractedGender ?? "N/A"}');
-        print('📄 Tipo de Documento: ${scanResult.document.type}');
-        print('📄 Número de Documento: ${scanResult.document.number}');
-
-        if (scanResult.document is Dni) {
-          print(
-            '📄 Código de Seguridad: ${(scanResult.document as Dni).securityCode}',
-          );
-        }
-        print('📄 Confianza: ${scanResult.confidence}');
-        print('📄 Texto Crudo (${scanResult.rawText.length} caracteres):');
-        print('📄 ${scanResult.rawText.toUpperCase()}');
-        print('📄 ================================================');
-
-        if (!isClosed) {
-          emit(
-            state.copyWith(
-              status: DocumentScanStatus.captured,
-              ocrResult: scanResult,
-              realtimeText: null,
-            ),
-          );
-        }
+        _startErrorResetTimer();
+      },
+      (message) {
+        emit(
+          state.copyWith(
+            status: DocumentScanStatus.captured,
+            ocrResult: scanResult,
+            realtimeText: null,
+            uploadStatus: UploadIdentityStatus.success,
+          ),
+        );
       },
     );
   }
 
   void reset() {
     stopRealtimeMonitoring();
+    _errorResetTimer?.cancel();
+    _errorResetTimer = null;
     emit(const DocumentScanState());
   }
 
   void retry() {
+    _errorResetTimer?.cancel();
+    _errorResetTimer = null;
+    _retryCount = 0;
     emit(
       state.copyWith(
         status: DocumentScanStatus.cameraReady,
         errorMessage: null,
         ocrResult: null,
         realtimeText: null,
+        uploadStatus: UploadIdentityStatus.initial,
       ),
     );
   }
@@ -227,22 +376,14 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     final hasGender =
         result.extractedGender != null && result.extractedGender!.isNotEmpty;
 
-    debugPrint('📋 Verificación de completitud:');
-    debugPrint('  - Nombre: $hasName (${result.extractedName ?? "N/A"})');
-    debugPrint(
-      '  - Apellido: $hasLastName (${result.extractedLastName ?? "N/A"})',
-    );
-    debugPrint(
-      '  - Fecha Nacimiento: $hasBirthDate (${result.extractedBirthDate ?? "N/A"})',
-    );
-    debugPrint('  - Género: $hasGender (${result.extractedGender ?? "N/A"})');
-
     return hasName && hasLastName && hasBirthDate && hasGender;
   }
 
   @override
   Future<void> close() {
     stopRealtimeMonitoring();
+    _errorResetTimer?.cancel();
+    _errorResetTimer = null;
     return super.close();
   }
 }

@@ -3,7 +3,6 @@ import 'package:equatable/equatable.dart';
 import 'package:partners/core/cubit/base_cubit_mixin.dart';
 import 'package:partners/core/services/database/flags/flags_factory.dart';
 import 'package:partners/core/services/database/flags/session_id_flug.dart';
-import 'package:partners/core/services/database/sqlite/repository/session_repository.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 
 import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
@@ -16,14 +15,13 @@ part 'validation_state.dart';
 class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
   final GetValidationStepsUsecase _getValidationStepsUsecase;
   final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
-  late final SessionRepository _sessionRepository;
 
   ValidationCubit({
     required GetValidationStepsUsecase getValidationStepsUsecase,
   }) : _getValidationStepsUsecase = getValidationStepsUsecase,
        super(ValidationState.initial());
 
-  Future<void> loadValidationSteps() async {
+  Future<void> loadValidationSteps({required RucType rucType}) async {
     emit(state.copyWith(stepsStatus: ValidationStatus.loading));
     final String sessionId = _sessionFlug.sessionId ?? '';
     final result = await _getValidationStepsUsecase(sessionId);
@@ -34,7 +32,7 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
           state.copyWith(
             stepsStatus: ValidationStatus.failure,
             errorMessage: errorMessage,
-            validationItems: ItemFactory.getConfig(),
+            validationItems: ItemFactory.getConfig(rucType: rucType),
           ),
         );
       },
@@ -44,15 +42,16 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
         final updatedItems = ItemFactory.createWithState(
           stepsEntity: stepsEntity,
           nextStep: nextStep,
-          rucType: RucType.ruc10,
+          rucType: rucType,
         );
-
+        print("lucadev ${stepsEntity.toJson()}");
         emit(
           state.copyWith(
             stepsStatus: ValidationStatus.success,
             stepsEntity: stepsEntity,
             validationItems: updatedItems,
             nextStep: nextStep,
+            rucType: rucType,
           ),
         );
       },
@@ -71,16 +70,8 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
       isCompleted,
     );
 
-    // Obtener el RucType de la sesión
-    final String sessionId = _sessionFlug.sessionId ?? '';
-    RucType? rucType;
-    if (sessionId.isNotEmpty) {
-      final session = await _sessionRepository.getSessionBySessionId(sessionId);
-      rucType = session?.ruc;
-    }
-
-    // Usar directamente el next_step del backend actualizado
     final nextStep = updatedEntity.nextStep;
+    final rucType = state.rucType ?? RucType.ruc10;
 
     final updatedItems = ItemFactory.createWithState(
       stepsEntity: updatedEntity,
@@ -130,13 +121,7 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
   }
 
   Future<void> setNextStep(String nextStep) async {
-    // Obtener el RucType de la sesión
-    final String sessionId = _sessionFlug.sessionId ?? '';
-    RucType? rucType;
-    if (sessionId.isNotEmpty) {
-      final session = await _sessionRepository.getSessionBySessionId(sessionId);
-      rucType = session?.ruc;
-    }
+    final rucType = state.rucType ?? RucType.ruc10;
 
     final updatedItems = ItemFactory.createWithState(
       stepsEntity: state.stepsEntity,

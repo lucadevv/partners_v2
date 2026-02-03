@@ -1,5 +1,4 @@
 import 'package:partners/core/utils/models/document_identity.dart';
-import 'package:partners/core/utils/models/person.dart';
 
 class DocumentScanResult {
   final DocumentIdentity document;
@@ -21,14 +20,4 @@ class DocumentScanResult {
     required this.rawText,
     required this.confidence,
   });
-
-  Person toPerson() {
-    return Person(
-      name: extractedName ?? 'Desconocido',
-      lastName: extractedLastName ?? '',
-      birthDate: DateTime.parse("$extractedBirthDate"),
-      gender: extractedGender ?? '',
-      documentEdentity: document,
-    );
-  }
 }

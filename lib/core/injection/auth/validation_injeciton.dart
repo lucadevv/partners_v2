@@ -4,10 +4,12 @@ import 'package:partners/features/auth/validation/data/datasource/ntw_validation
 import 'package:partners/features/auth/validation/data/datasource/validation_datasource.dart';
 import 'package:partners/features/auth/validation/data/repository/validation_repository_impl.dart';
 import 'package:partners/features/auth/validation/domain/repository/validation_repository.dart';
+import 'package:partners/features/auth/validation/domain/use_case/complete_password_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/get_validation_steps_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/resend_email_code_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/send_email_validation_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/send_whatsapp_validation_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/validate_business_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/verify_whatsapp_otp_usecase.dart';
 import 'package:partners/main.dart';
 
@@ -64,6 +66,20 @@ class ValidationInjeciton {
     if (!_getIt.isRegistered<VerifyWhatsappOtpUsecase>()) {
       _getIt.registerLazySingleton<VerifyWhatsappOtpUsecase>(
         () => VerifyWhatsappOtpUsecase(
+          repository: _getIt<ValidationRepository>(),
+        ),
+      );
+    }
+    if (!_getIt.isRegistered<CompletePasswordUsecase>()) {
+      _getIt.registerLazySingleton<CompletePasswordUsecase>(
+        () => CompletePasswordUsecase(
+          repository: _getIt<ValidationRepository>(),
+        ),
+      );
+    }
+    if (!_getIt.isRegistered<ValidateBusinessUsecase>()) {
+      _getIt.registerLazySingleton<ValidateBusinessUsecase>(
+        () => ValidateBusinessUsecase(
           repository: _getIt<ValidationRepository>(),
         ),
       );

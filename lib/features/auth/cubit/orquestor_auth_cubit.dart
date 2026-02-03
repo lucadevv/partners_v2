@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/cubit/strategies/business_navigation_strategy.dart';
+import 'package:partners/features/auth/cubit/strategies/navigation_strategy.dart';
+import 'package:partners/features/auth/cubit/strategies/validation_navigation_strategy.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart';
-
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_state.dart';
 
@@ -15,6 +17,10 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
   final RegisterCubit _registerCubit;
   final LoginCubit _loginCubit;
   final AuthManager _authManager;
+  final List<NavigationStrategy> _navigationStrategies = [
+    BusinessNavigationStrategy(),
+    ValidationNavigationStrategy(),
+  ];
 
   StreamSubscription? _registerSubscription;
   StreamSubscription? _loginSubscription;
@@ -48,11 +54,11 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
     await _registerCubit.submitStart(type).then((_) {
       final registerState = _registerCubit.state;
       if (registerState.sendStartStatus == RegisterStatus.success) {
-        if (type == RucType.ruc20) {
-          emit(state.copyWith(effect: const NavigationBussinesEffect()));
-        } else {
-          emit(state.copyWith(effect: const NavigationValidateEffect()));
-        }
+        final strategy = _navigationStrategies.firstWhere(
+          (s) => s.canHandle(type),
+          orElse: () => ValidationNavigationStrategy(),
+        );
+        emit(state.copyWith(effect: strategy.getEffect()));
       } else if (registerState.sendStartStatus == RegisterStatus.failure) {
         return;
       }

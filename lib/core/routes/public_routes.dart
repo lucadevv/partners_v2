@@ -14,7 +14,6 @@ class PublicRoutes {
     AutoRoute(page: ValidationRoute.page),
     AutoRoute(page: BusinessValidationRoute.page),
     AutoRoute(page: DocumentScanRoute.page),
-    AutoRoute(page: DocumentSuccessRoute.page),
     AutoRoute(page: ForgotPasswordRoute.page),
     AutoRoute(page: RegistrationSuccessRoute.page),
   ];

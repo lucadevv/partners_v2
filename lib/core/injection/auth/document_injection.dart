@@ -7,6 +7,7 @@ import 'package:partners/features/auth/document_scan/data/datasource/ntw__docume
 import 'package:partners/features/auth/document_scan/data/repository/document_scan_repository_impl.dart';
 import 'package:partners/features/auth/document_scan/domain/repository/document_scan_repository.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/ocr_usecase.dart';
+import 'package:partners/features/auth/document_scan/domain/use_case/upload_identity_usecase.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/watch_document_realt_time_usecase.dart';
 import 'package:partners/main.dart';
 
@@ -46,6 +47,14 @@ class DocumentInjection {
     if (!_getIt.isRegistered<WatchDocumentRealtTimeUsecase>()) {
       _getIt.registerLazySingleton<WatchDocumentRealtTimeUsecase>(
         () => WatchDocumentRealtTimeUsecase(
+          repository: _getIt<DocumentScanRepository>(),
+        ),
+      );
+    }
+
+    if (!_getIt.isRegistered<UploadIdentityUsecase>()) {
+      _getIt.registerLazySingleton<UploadIdentityUsecase>(
+        () => UploadIdentityUsecase(
           repository: _getIt<DocumentScanRepository>(),
         ),
       );

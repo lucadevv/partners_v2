@@ -16,6 +16,7 @@ class RegisterFieldWidget extends StatelessWidget {
   final bool? readOnly;
   final Widget? prefix;
   final Widget? suffix;
+  final bool obscureText;
 
   const RegisterFieldWidget({
     super.key,
@@ -33,6 +34,7 @@ class RegisterFieldWidget extends StatelessWidget {
     this.readOnly = false,
     this.prefix,
     this.suffix,
+    this.obscureText = false,
   });
 
   @override
@@ -76,7 +78,7 @@ class RegisterFieldWidget extends StatelessWidget {
               controller: controller,
               keyboardType: keyboardType,
               maxLength: maxLength,
-
+              obscureText: obscureText,
               onChanged: (value) => onChanged?.call(value),
               style: TextStyle(
                 fontSize: 16,

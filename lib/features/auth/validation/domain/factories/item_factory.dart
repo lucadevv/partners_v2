@@ -1,23 +1,26 @@
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
 import 'package:partners/features/auth/validation/domain/entities/validation_entity.dart';
+import 'package:partners/features/auth/validation/domain/factories/strategies/base_items_strategy.dart';
+import 'package:partners/features/auth/validation/domain/factories/strategies/business_item_strategy.dart';
+import 'package:partners/features/auth/validation/domain/factories/strategies/final_items_strategy.dart';
+import 'package:partners/features/auth/validation/domain/factories/strategies/item_config_strategy.dart';
 
 class ItemFactory {
+  static final List<ItemConfigStrategy> _strategies = [
+    BaseItemsStrategy(),
+    BusinessItemStrategy(),
+    FinalItemsStrategy(),
+  ];
+
   static List<ItemValidation> getConfig({RucType? rucType}) {
-    final items = <ItemValidation>[
-      const EmailItemValidation(),
-      const PhoneItemValidation(),
-    ];
+    final items = <ItemValidation>[];
     
-    // Solo agregar BusinessItemValidation si es ruc20
-    if (rucType == RucType.ruc20) {
-      items.add(const BusinessItemValidation());
+    for (final strategy in _strategies) {
+      if (strategy.shouldInclude(rucType)) {
+        items.addAll(strategy.getItems());
+      }
     }
-    
-    items.addAll([
-      const IdentityItemValidation(),
-      const PasswordItemValidation(),
-    ]);
     
     return items;
   }
@@ -28,21 +31,9 @@ class ItemFactory {
     RucType? rucType,
   }) {
     return getConfig(rucType: rucType).map((item) {
-      final isValid = _getIsValidForItem(item, stepsEntity);
+      final isValid = item.isValid(stepsEntity);
       final state = item.validation(isValid, nextStep);
       return item.copyWith(state: state);
     }).toList();
-  }
-
-  static bool _getIsValidForItem(ItemValidation item, StepsResEntity entity) {
-    final steps = entity.completedSteps;
-
-    if (item is EmailItemValidation) return steps.emailVerification;
-    if (item is PhoneItemValidation) return steps.whatsappVerification;
-    if (item is BusinessItemValidation) return steps.businessVerification;
-    if (item is IdentityItemValidation) return steps.identityVerification;
-    if (item is PasswordItemValidation) return steps.passwordCreation;
-
-    return false;
   }
 }

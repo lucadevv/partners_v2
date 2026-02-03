@@ -68,9 +68,12 @@ class WhatsappValidationCubit extends Cubit<WhatsappValidationState> {
         );
       },
       (success) {
-        print("Verify WhatsApp OTP success: $success");
         emit(state.copyWith(verifyStatus: WhatsappValidationStatus.success));
       },
     );
+  }
+
+  Future<void> initialState() async {
+    emit(WhatsappValidationState.initial());
   }
 }

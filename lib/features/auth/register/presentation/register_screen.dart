@@ -46,12 +46,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       listener: (context, stateOrquesto) {
         if (stateOrquesto.effect is NavigationValidateEffect) {
           context.read<OrquestorAuthCubit>().reset();
-          context.router.push(ValidationRoute());
+          context.router.push(
+            ValidationRoute(rucType: _formNotifier.selectedRuc),
+          );
         }
-        //  else if (stateOrquesto.effect is NavigationBussinesEffect) {
-        //   context.read<OrquestorAuthCubit>().reset();
-        //   context.router.push(BusinessValidationRoute());
-        // }
+        if (stateOrquesto.effect is NavigationBussinesEffect) {
+          context.read<OrquestorAuthCubit>().reset();
+          context.router.push(
+            ValidationRoute(rucType: _formNotifier.selectedRuc),
+          );
+        }
       },
       child: Scaffold(
         appBar: RegisterHeaderWidget(),
@@ -94,20 +98,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      RucSelectorWidget(
-                                        formNotifier: _formNotifier,
-                                        type: RucType.ruc10,
-                                        label: 'RUC 10',
+                                      Expanded(
+                                        child: RucSelectorWidget(
+                                          formNotifier: _formNotifier,
+                                          type: RucType.ruc10,
+                                          label: 'RUC 10',
+                                        ),
                                       ),
-                                      RucSelectorWidget(
-                                        formNotifier: _formNotifier,
-                                        type: RucType.ruc15,
-                                        label: 'RUC 15',
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: RucSelectorWidget(
+                                          formNotifier: _formNotifier,
+                                          type: RucType.ruc15,
+                                          label: 'RUC 15',
+                                        ),
                                       ),
-                                      RucSelectorWidget(
-                                        formNotifier: _formNotifier,
-                                        type: RucType.ruc20,
-                                        label: 'RUC 20',
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: RucSelectorWidget(
+                                          formNotifier: _formNotifier,
+                                          type: RucType.ruc20,
+                                          label: 'RUC 20',
+                                        ),
                                       ),
                                     ],
                                   ),

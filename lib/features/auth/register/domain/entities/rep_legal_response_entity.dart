@@ -15,15 +15,10 @@ class RepLegalResEntity {
     required this.position,
   });
 
-  // lucadev: Factory para crear una entidad vacía con DNI por defecto
   factory RepLegalResEntity.empty() => RepLegalResEntity(
     name: '',
     lastName: '',
-    documentEdentity: Dni(
-      type: DocumentType.dni,
-      number: '',
-      securityCode: '', // lucadev: Código de seguridad requerido para DNI
-    ),
+    documentEdentity: Dni(type: DocumentType.dni, number: '', securityCode: ''),
     position: '',
   );
 

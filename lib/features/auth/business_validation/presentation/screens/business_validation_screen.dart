@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/business_validation/presentation/notifier/business_validation_form_notifier.dart';
 import 'package:partners/features/auth/business_validation/presentation/widgets/business_validation_step_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
@@ -169,8 +170,7 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
   }
 
   void _showDocumentScan() async {
-    // Navegar a la pantalla de escaneo de documento
-    final result = await context.router.push(const DocumentScanRoute());
+    final result = await context.router.push(DocumentScanRoute(rucType: RucType.ruc20));
 
     // Solo completar el step si el documento fue validado exitosamente
     if (result == true) {

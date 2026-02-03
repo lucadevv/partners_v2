@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
+import 'package:partners/core/services/database/flags/flags_factory.dart';
+import 'package:partners/core/services/database/flags/session_id_flug.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
 import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
@@ -15,6 +16,7 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
   final ApiServices _services;
   final OcrService _ocrService;
   final RealtimeOcrService _realtimeOcrService;
+  final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
 
   NtwDocumentDasourceImpl({
     required ApiServices services,
@@ -40,32 +42,24 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
   @override
   Stream<Either<AppException, String>> watchDocumentRealtime({
     required CameraController cameraController,
-    Duration interval = const Duration(seconds: 2),
+    Duration interval = const Duration(seconds: 3),
   }) {
-    // Creamos un Stream para emitir datos al Bloc
     final controller = StreamController<Either<AppException, String>>();
 
     try {
-      // Iniciamos el servicio
       void callback(String text, String path) {
-        debugPrint('📨 Callback recibido con texto (${text.length} caracteres)');
-        // Verificar que el controller no esté cerrado antes de agregar
         if (!controller.isClosed) {
-          debugPrint('✅ Agregando texto al stream');
           controller.add(Right(text));
-        } else {
-          debugPrint('⚠️ StreamController está cerrado, no se puede agregar texto');
         }
       }
 
       _realtimeOcrService.start(
         cameraController: cameraController,
         interval: interval,
-        // Aquí conectamos el callback del servicio con nuestro Stream
+
         onTextDetected: callback,
       );
 
-      // Cuando el stream se cancele, detener el servicio y cerrar el controller
       controller.onCancel = () {
         _realtimeOcrService.stop();
         if (!controller.isClosed) {
@@ -78,11 +72,39 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
       }
     }
 
-    // Retornamos el stream para que el Bloc lo escuche
     return controller.stream;
   }
 
-  // Método para limpieza
+  @override
+  Future<Either<AppException, String>> uploadIdentity({
+    required DocumentScanResult scanResult,
+  }) async {
+    try {
+      final String? sessionId = _sessionFlug.sessionId;
+      if (sessionId == null || sessionId.isEmpty) {
+        return Left(ValidationException('Session ID no encontrado'));
+      }
+
+      final doc = scanResult.document;
+
+      final response = await _services.post(
+        '/onboarding/upload-identity',
+        data: {'session_id': sessionId, 'number': doc.number},
+      );
+
+      final responseData = response.data;
+      final message =
+          responseData['message'] as String? ??
+          'Documento validado correctamente.';
+
+      return Right(message);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'uploadIdentity');
+      return Left(appException);
+    }
+  }
+
   void dispose() {
     _realtimeOcrService.stop();
   }

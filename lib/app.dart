@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/routes/app_routes.dart';
+import 'package:partners/core/services/database/flags/session_id_storage.dart';
 import 'package:partners/core/theme/app_theme.dart';
 import 'package:partners/core/utils/logger/app_logger.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/ocr_usecase.dart';
+import 'package:partners/features/auth/document_scan/domain/use_case/upload_identity_usecase.dart';
 import 'package:partners/features/auth/document_scan/domain/use_case/watch_document_realt_time_usecase.dart';
 import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 import 'package:partners/features/auth/login/domain/use_case/login_usecase.dart';
@@ -15,12 +17,16 @@ import 'package:partners/features/auth/register/domain/use_case/send_document_us
 import 'package:partners/features/auth/register/domain/use_case/send_ruc_usecase.dart';
 import 'package:partners/features/auth/register/domain/use_case/start_register_usecase.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
+import 'package:partners/features/auth/validation/domain/use_case/complete_password_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/get_validation_steps_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/resend_email_code_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/send_email_validation_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/send_whatsapp_validation_usecase.dart';
+import 'package:partners/features/auth/validation/domain/use_case/validate_business_usecase.dart';
 import 'package:partners/features/auth/validation/domain/use_case/verify_whatsapp_otp_usecase.dart';
+import 'package:partners/features/auth/validation/presentation/cubit/business/business_validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/email/email_validation_cubit.dart';
+import 'package:partners/features/auth/validation/presentation/cubit/password/password_validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/whatsapp/whatsapp_validation_cubit.dart';
 import 'package:partners/main.dart';
@@ -38,6 +44,7 @@ class App extends StatelessWidget {
               sendDocumentUsecase: getIt<SendDocumentUsecase>(),
               sendRucUsecase: getIt<SendRucUsecase>(),
               startRegisterUsecase: getIt<StartRegisterUsecase>(),
+              sessionStorage: getIt<SessionIdStorage>(),
             ),
           ),
           BlocProvider(
@@ -60,10 +67,22 @@ class App extends StatelessWidget {
             ),
           ),
           BlocProvider(
+            create: (context) => PasswordValidationCubit(
+              completePasswordUsecase: getIt<CompletePasswordUsecase>(),
+              authManager: getIt<AuthManager>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => BusinessValidationCubit(
+              validateBusinessUsecase: getIt<ValidateBusinessUsecase>(),
+            ),
+          ),
+          BlocProvider(
             create: (context) => DocumentScanCubit(
               ocrUsecase: getIt<OcrUsecase>(),
               watchDocumentRealtTimeUsecase:
                   getIt<WatchDocumentRealtTimeUsecase>(),
+              uploadIdentityUsecase: getIt<UploadIdentityUsecase>(),
             ),
           ),
           BlocProvider(

@@ -4,18 +4,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
 import 'package:partners/features/auth/validation/domain/entities/validation_entity.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/notifier/validation_form_notifier.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/email_validation_widget.dart';
 import 'package:partners/features/auth/validation/presentation/widgets/validation_step_widget.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/whatsapp_validation_widget.dart';
 
 @RoutePage()
 class ValidationScreen extends StatefulWidget {
-  const ValidationScreen({super.key});
+  final RucType rucType;
+
+  const ValidationScreen({super.key, required this.rucType});
 
   @override
   State<ValidationScreen> createState() => _ValidationScreenState();
@@ -36,14 +38,19 @@ class _ValidationScreenState extends State<ValidationScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<RegisterCubit>().reset();
-        context.read<ValidationCubit>().loadValidationSteps();
+        context.read<ValidationCubit>().loadValidationSteps(
+          rucType: widget.rucType,
+        );
       }
     });
   }
 
   @override
   void didPopNext() {
-    print('object');
+    context.read<ValidationCubit>().loadValidationSteps(
+      rucType: widget.rucType,
+    );
+    context.read<DocumentScanCubit>().reset();
     super.didPopNext();
   }
 
@@ -109,65 +116,77 @@ class _ValidationScreenState extends State<ValidationScreen>
 
   void showBottomSheet(ItemValidation item) async {
     final router = context.router;
+
     if (item is IdentityItemValidation) {
-      router.push(const DocumentScanRoute());
+      router.push(DocumentScanRoute(rucType: widget.rucType));
       return;
     }
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: false,
+      isScrollControlled: true,
       isDismissible: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: context.appColor.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.router.pop(false),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: const Color(0xFF051858),
-                      size: 20,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      item.label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appColor.surface,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 30,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 30,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.router.pop(false),
+                      child: Icon(
+                        Icons.arrow_back,
                         color: const Color(0xFF051858),
+                        size: 20,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 20),
-                ],
-              ),
-              24.spaceh,
-              switch (item) {
-                EmailItemValidation() => EmailValidationWidget(),
-                PhoneItemValidation() => WhatsappValidationWidget(),
-                IdentityItemValidation() =>
-                  SizedBox.shrink(), // No debería llegar aquí
-                ItemValidation() => SizedBox.shrink(),
-              },
-            ],
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF051858),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                  ],
+                ),
+                24.spaceh,
+                item.buildWidget(),
+              ],
+            ),
           ),
         ),
       ),
-    );
+    ).then((value) {
+      if (mounted) {
+        if (value == false) return;
+        context.read<ValidationCubit>().loadValidationSteps(
+          rucType: widget.rucType,
+        );
+      }
+    });
   }
 }

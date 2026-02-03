@@ -1,6 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
+import 'package:partners/features/auth/validation/presentation/widgets/business_validation_widget.dart';
+import 'package:partners/features/auth/validation/presentation/widgets/email_validation_widget.dart';
+import 'package:partners/features/auth/validation/presentation/widgets/password_validation_widget.dart';
+import 'package:partners/features/auth/validation/presentation/widgets/whatsapp_validation_widget.dart';
 
 abstract class ItemValidation extends Equatable {
   final String label;
@@ -16,6 +21,8 @@ abstract class ItemValidation extends Equatable {
 
   ItemValidationState validation(bool isValid, String nextStep);
   ItemValidation copyWith({ItemValidationState? state});
+  Widget buildWidget();
+  bool isValid(StepsResEntity stepsEntity);
 
   @override
   List<Object?> get props => [label, icon, state, nextStep];
@@ -46,6 +53,14 @@ class EmailItemValidation extends ItemValidation {
   EmailItemValidation copyWith({ItemValidationState? state}) {
     return EmailItemValidation(state: state ?? this.state);
   }
+
+  @override
+  Widget buildWidget() => const EmailValidationWidget();
+
+  @override
+  bool isValid(StepsResEntity stepsEntity) {
+    return stepsEntity.completedSteps.emailVerification;
+  }
 }
 
 class PhoneItemValidation extends ItemValidation {
@@ -73,6 +88,14 @@ class PhoneItemValidation extends ItemValidation {
   PhoneItemValidation copyWith({ItemValidationState? state}) {
     return PhoneItemValidation(state: state ?? this.state);
   }
+
+  @override
+  Widget buildWidget() => const WhatsappValidationWidget();
+
+  @override
+  bool isValid(StepsResEntity stepsEntity) {
+    return stepsEntity.completedSteps.whatsappVerification;
+  }
 }
 
 class PasswordItemValidation extends ItemValidation {
@@ -99,6 +122,14 @@ class PasswordItemValidation extends ItemValidation {
   @override
   PasswordItemValidation copyWith({ItemValidationState? state}) {
     return PasswordItemValidation(state: state ?? this.state);
+  }
+
+  @override
+  Widget buildWidget() => const PasswordValidationWidget();
+
+  @override
+  bool isValid(StepsResEntity stepsEntity) {
+    return stepsEntity.completedSteps.passwordCreation;
   }
 }
 
@@ -128,6 +159,14 @@ class BusinessItemValidation extends ItemValidation {
   BusinessItemValidation copyWith({ItemValidationState? state}) {
     return BusinessItemValidation(state: state ?? this.state);
   }
+
+  @override
+  Widget buildWidget() => const BusinessValidationWidget();
+
+  @override
+  bool isValid(StepsResEntity stepsEntity) {
+    return stepsEntity.completedSteps.businessVerification;
+  }
 }
 
 class IdentityItemValidation extends ItemValidation {
@@ -155,5 +194,13 @@ class IdentityItemValidation extends ItemValidation {
   @override
   IdentityItemValidation copyWith({ItemValidationState? state}) {
     return IdentityItemValidation(state: state ?? this.state);
+  }
+
+  @override
+  Widget buildWidget() => const SizedBox.shrink();
+
+  @override
+  bool isValid(StepsResEntity stepsEntity) {
+    return stepsEntity.completedSteps.identityVerification;
   }
 }

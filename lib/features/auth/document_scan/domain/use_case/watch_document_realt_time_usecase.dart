@@ -11,10 +11,11 @@ class WatchDocumentRealtTimeUsecase {
 
   Stream<Either<AppException, String>> call({
     required CameraController cameraController,
-    Duration interval = const Duration(seconds: 2),
+    Duration interval = const Duration(seconds: 3),
   }) {
     return _repository.watchDocumentRealtime(
       cameraController: cameraController,
+      interval: interval,
     );
   }
 }

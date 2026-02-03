@@ -12,4 +12,7 @@ abstract class DocumentScanDatasource {
     required CameraController cameraController,
     Duration interval = const Duration(seconds: 2),
   });
+  Future<Either<AppException, String>> uploadIdentity({
+    required DocumentScanResult scanResult,
+  });
 }

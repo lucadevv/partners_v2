@@ -1,19 +1,19 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/document_scan/presentation/cubit/document/document_scan_cubit.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:partners/main.dart'; // Asumiendo que getIt está aquí
-import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/document_scan/presentation/widgets/document_frame_widget.dart';
-import 'package:partners/features/auth/document_scan/presentation/widgets/detected_text_widget.dart';
 import 'package:partners/features/auth/document_scan/presentation/widgets/scan_message_widget.dart';
 
 @RoutePage()
 class DocumentScanScreen extends StatefulWidget {
-  const DocumentScanScreen({super.key});
+  final RucType rucType;
+
+  const DocumentScanScreen({super.key, required this.rucType});
 
   @override
   State<DocumentScanScreen> createState() => _DocumentScanScreenState();
@@ -26,8 +26,8 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isCameraPermissionGranted = false;
-
-  // ELIMINADO: RealtimeOcrService (Ahora está dentro del Cubit)
+  bool _isFlashEnabled = false;
+  bool _hasRealtimeMonitoringStarted = false;
 
   late final DocumentScanCubit _cubit;
 
@@ -36,9 +36,9 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Instanciamos el Cubit desde el Service Locator (getIt)
-    // Asegúrate de que DocumentScanCubit esté registrado en main.dart
     _cubit = context.read<DocumentScanCubit>();
+
+    _cubit.initializeRucType(widget.rucType);
 
     _loadingController = AnimationController(
       vsync: this,
@@ -51,12 +51,11 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // IMPORTANTE: Detener el monitoreo ANTES de desechar el controller
+
     _cubit.stopRealtimeMonitoring();
     _loadingController.dispose();
     _cameraController?.dispose();
-    // NO cerramos el cubit aquí porque puede ser reutilizado por el BlocProvider
-    // El cubit se cerrará automáticamente cuando el BlocProvider se desmonte
+
     super.dispose();
   }
 
@@ -67,7 +66,6 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     }
 
     if (state == AppLifecycleState.inactive) {
-      // IMPORTANTE: Detener el monitoreo ANTES de desechar el controller
       _cubit.stopRealtimeMonitoring();
       _cameraController?.dispose();
     } else if (state == AppLifecycleState.resumed) {
@@ -105,15 +103,28 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
       if (mounted && _cameraController!.value.isInitialized) {
         setState(() => _isCameraInitialized = true);
 
-        Future.microtask(() {
-          if (mounted) {
-            // Iniciamos el monitoreo usando el Cubit
-            _cubit.startRealtimeMonitoring(_cameraController!);
+        // Esperar a que la cámara enfoque antes de iniciar el monitoreo
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted &&
+              _cameraController != null &&
+              _cameraController!.value.isInitialized) {
+            // Intentar enfocar automáticamente
+            _cameraController!.setFocusMode(FocusMode.auto);
+            _cameraController!.setExposureMode(ExposureMode.auto);
+
+            // Iniciar monitoreo después de un breve delay para permitir el enfoque
+            Future.delayed(const Duration(milliseconds: 800), () {
+              if (mounted &&
+                  _cameraController != null &&
+                  _cameraController!.value.isInitialized) {
+                _cubit.startRealtimeMonitoring(_cameraController!);
+                _hasRealtimeMonitoringStarted = true;
+              }
+            });
           }
         });
       }
     } on CameraException catch (e) {
-      debugPrint('CameraException: ${e.code} - ${e.description}');
       if (mounted) {
         setState(() => _isCameraInitialized = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +132,6 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
         );
       }
     } catch (e) {
-      debugPrint('Error al inicializar cámara: $e');
       if (mounted) {
         setState(() => _isCameraInitialized = false);
       }
@@ -171,22 +181,71 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
     return status;
   }
 
+  Future<void> _toggleFlash() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    try {
+      final newFlashMode = _isFlashEnabled ? FlashMode.off : FlashMode.torch;
+
+      await _cameraController!.setFlashMode(newFlashMode);
+
+      if (mounted) {
+        setState(() {
+          _isFlashEnabled = !_isFlashEnabled;
+        });
+      }
+    } catch (e) {
+      // Si hay error, simplemente no cambiamos el estado
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se pudo cambiar el flash: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _cubit,
       child: BlocListener<DocumentScanCubit, DocumentScanState>(
         listener: (context, state) {
-          // Cuando el documento esté completo, navegar a la pantalla de éxito
+          final router = context.router;
+
+          // Cuando el estado vuelve a initial después de un error, reiniciar el monitoreo
+          // Solo si el monitoreo ya se había iniciado antes (para evitar reinicios múltiples)
+          if (state.status == DocumentScanStatus.initial &&
+              state.errorMessage == null &&
+              _cameraController != null &&
+              _cameraController!.value.isInitialized &&
+              _isCameraInitialized &&
+              _hasRealtimeMonitoringStarted) {
+            // Esperar un momento para que la UI se actualice
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted &&
+                  _cameraController != null &&
+                  _cameraController!.value.isInitialized &&
+                  state.status == DocumentScanStatus.initial) {
+                // Re-enfocar antes de reiniciar
+                _cameraController!.setFocusMode(FocusMode.auto);
+                _cameraController!.setExposureMode(ExposureMode.auto);
+                // Reiniciar monitoreo en tiempo real
+                _cubit.startRealtimeMonitoring(_cameraController!);
+              }
+            });
+          }
+
           if (state.status == DocumentScanStatus.captured &&
               state.ocrResult != null) {
-            // Detener el loading controller
             _loadingController.stop();
-
-            // Navegar a la pantalla de éxito después de un breve delay
-            Future.delayed(const Duration(milliseconds: 500), () {
+            Future.delayed(const Duration(milliseconds: 1500), () {
               if (mounted) {
-                context.router.push(const DocumentSuccessRoute());
+                router.pop();
               }
             });
           }
@@ -245,36 +304,36 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
         _cameraController!.value.isInitialized;
 
     return SafeArea(
-      child: Column(
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: _buildCloseButton(),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  DocumentFrameWidget(
-                    state: state,
-                    loadingController: _loadingController,
-                  ),
-                  const SizedBox(height: 24),
-                  ScanMessageWidget(state: state, isCameraReady: isCameraReady),
-                  // Usamos 'state.realtimeText' según tu Cubit y Estado definidos
-                  // Mostrar el texto detectado cuando hay texto y la cámara está lista
-                  if (state.realtimeText != null &&
-                      state.realtimeText!.isNotEmpty &&
-                      (state.status == DocumentScanStatus.cameraReady ||
-                          state.status == DocumentScanStatus.processing ||
-                          state.status == DocumentScanStatus.captured ||
-                          state.status == DocumentScanStatus.failure))
-                    DetectedTextWidget(state: state),
-                ],
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: _buildCloseButton(),
               ),
-            ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DocumentFrameWidget(
+                        state: state,
+                        loadingController: _loadingController,
+                      ),
+                      const SizedBox(height: 24),
+                      ScanMessageWidget(
+                        state: state,
+                        isCameraReady: isCameraReady,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
+          // Botón de flash en la esquina superior derecha
+          Positioned(top: 24, right: 24, child: _buildFlashButton()),
         ],
       ),
     );
@@ -293,6 +352,34 @@ class _DocumentScanScreenState extends State<DocumentScanScreen>
             color: Colors.black.withValues(alpha: 0.5),
           ),
           child: const Icon(Icons.close, size: 32, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFlashButton() {
+    final isCameraReady =
+        _isCameraInitialized &&
+        _cameraController != null &&
+        _cameraController!.value.isInitialized;
+
+    if (!isCameraReady) {
+      return const SizedBox.shrink();
+    }
+
+    return GestureDetector(
+      onTap: _toggleFlash,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withValues(alpha: 0.5),
+        ),
+        child: Icon(
+          _isFlashEnabled ? Icons.flash_on : Icons.flash_off,
+          size: 24,
+          color: _isFlashEnabled ? Colors.yellow : Colors.white,
         ),
       ),
     );

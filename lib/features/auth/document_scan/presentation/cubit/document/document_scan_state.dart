@@ -8,19 +8,26 @@ enum DocumentScanStatus {
   failure,
 }
 
+enum UploadIdentityStatus {
+  initial,
+  loading,
+  success, 
+  failure,
+}
+
 class DocumentScanState extends Equatable {
   final DocumentScanStatus status;
-  final String? realtimeText; // Texto detectado por el stream
-  final DocumentScanResult? ocrResult; // Resultado final del escaneo
+  final String? realtimeText;
+  final DocumentScanResult? ocrResult;
   final String? errorMessage;
-  final String? imagePath; // NECESARIO: Ruta de la imagen capturada
+  final UploadIdentityStatus uploadStatus;
 
   const DocumentScanState({
     this.status = DocumentScanStatus.initial,
     this.realtimeText,
     this.ocrResult,
     this.errorMessage,
-    this.imagePath,
+    this.uploadStatus = UploadIdentityStatus.initial,
   });
 
   @override
@@ -29,7 +36,7 @@ class DocumentScanState extends Equatable {
     realtimeText,
     ocrResult,
     errorMessage,
-    imagePath,
+    uploadStatus,
   ];
 
   DocumentScanState copyWith({
@@ -37,14 +44,14 @@ class DocumentScanState extends Equatable {
     String? realtimeText,
     DocumentScanResult? ocrResult,
     String? errorMessage,
-    String? imagePath,
+    UploadIdentityStatus? uploadStatus,
   }) {
     return DocumentScanState(
       status: status ?? this.status,
       realtimeText: realtimeText ?? this.realtimeText,
       ocrResult: ocrResult ?? this.ocrResult,
       errorMessage: errorMessage ?? this.errorMessage,
-      imagePath: imagePath ?? this.imagePath,
+      uploadStatus: uploadStatus ?? this.uploadStatus,
     );
   }
 }

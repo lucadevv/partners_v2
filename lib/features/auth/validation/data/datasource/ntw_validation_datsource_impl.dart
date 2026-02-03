@@ -121,16 +121,13 @@ class NtwValidationDatsourceImpl implements ValidationDatasource {
     PasswordValidationReq entity,
   ) async {
     try {
-      print("lucadev entity ${entity.toJson()}");
       final response = await _services.post(
         '/onboarding/complete',
         data: entity.toJson(),
       );
-      print("lucadev response $response");
       final data = PasswordValidationRes.fromJson(response.data);
       return Right(data);
     } catch (e) {
-      print("lucadev error $e");
       final appException = ExceptionHandler.handleException(e);
       ExceptionHandler.logException(appException, tag: 'completePassword');
       return Left(appException);

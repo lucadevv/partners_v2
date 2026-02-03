@@ -94,7 +94,15 @@ class _ValidationScreenState extends State<ValidationScreen>
 
           BlocConsumer<ValidationCubit, ValidationState>(
             listener: (context, state) {
-              // TODO: implement listener
+              if (state.stepsStatus == ValidationStatus.failure &&
+                  state.errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
             builder: (context, state) {
               return Column(

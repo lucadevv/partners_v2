@@ -58,10 +58,29 @@ class _WhatsappValidationWidgetState extends State<WhatsappValidationWidget> {
             if (state.status == WhatsappValidationStatus.success) {
               _whatsappFromNotifier.goToNextStep();
             }
+            if (state.status == WhatsappValidationStatus.failure &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
             if (state.verifyStatus == WhatsappValidationStatus.success) {
               await Future.delayed(const Duration(milliseconds: 800));
+              context.read<WhatsappValidationCubit>().initialState();
               _whatsappFromNotifier.initNotifier();
               router.pop(true);
+            }
+            if (state.verifyStatus == WhatsappValidationStatus.failure &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: Colors.red,
+                ),
+              );
             }
           },
           builder: (context, cubitState) {
@@ -184,11 +203,9 @@ class _WhatsappValidationWidgetState extends State<WhatsappValidationWidget> {
                         },
                       ),
                     ],
-                    SizedBox(height: 100),
+                    const SizedBox(height: 100),
                   ],
                 ),
-                // Botón con estado de loading
-                // El botón solo se activa si el formulario está completo Y no está en loading
                 Positioned(
                   bottom: 30,
                   right: 0,
@@ -254,8 +271,12 @@ class _WhatsappValidationWidgetState extends State<WhatsappValidationWidget> {
 
   Widget _sufixLoadgingRuc(WhatsappValidationState state) {
     if (state.status == WhatsappValidationStatus.loading) {
-      return CircularProgressIndicator(strokeWidth: 2);
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }

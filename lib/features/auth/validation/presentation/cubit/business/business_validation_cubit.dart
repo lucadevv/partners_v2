@@ -28,7 +28,6 @@ class BusinessValidationCubit extends Cubit<BusinessValidationState> {
     );
     response.fold(
       (failure) {
-        print("lucadev ${failure.message}");
         emit(
           state.copyWith(
             status: BusinessValidationStatus.failure,

@@ -73,7 +73,6 @@ class RegisterFieldWidget extends StatelessWidget {
                 color: labelColor,
               ),
             ),
-            // if (controller != null && enabled)
             TextField(
               controller: controller,
               keyboardType: keyboardType,
@@ -104,7 +103,7 @@ class RegisterFieldWidget extends StatelessWidget {
                   color: const Color(0xFF9CA3AF),
                 ),
                 suffixIcon: suffixIcon,
-                counterText: '', // Ocultar contador
+                counterText: '',
               ),
               onTap: onTap,
               readOnly: readOnly!,

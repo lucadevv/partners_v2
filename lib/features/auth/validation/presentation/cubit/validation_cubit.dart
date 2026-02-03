@@ -44,7 +44,6 @@ class ValidationCubit extends Cubit<ValidationState> with BaseCubitMixin {
           nextStep: nextStep,
           rucType: rucType,
         );
-        print("lucadev ${stepsEntity.toJson()}");
         emit(
           state.copyWith(
             stepsStatus: ValidationStatus.success,

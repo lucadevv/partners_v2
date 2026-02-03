@@ -11,6 +11,9 @@ class PasswordFromNotifier extends ChangeNotifier {
   String? _passwordError;
   String? _passwordConfirmationError;
   PasswordSteps _currentStep = PasswordSteps.createPassword;
+  bool _isPasswordVisible = false;
+  bool _isPasswordConfirmationVisible = false;
+  
   List<FieldDefinition> get passwordFactory =>
       PasswordFactory.getConfig(_currentStep);
 
@@ -39,6 +42,18 @@ class PasswordFromNotifier extends ChangeNotifier {
   String? get passwordConfirmationError => _passwordConfirmationError;
   String? get password => _passwordController.text;
   String? get passwordConfirmation => _passwordConfirmationController.text;
+  bool get isPasswordVisible => _isPasswordVisible;
+  bool get isPasswordConfirmationVisible => _isPasswordConfirmationVisible;
+  
+  void togglePasswordVisibility() {
+    _isPasswordVisible = !_isPasswordVisible;
+    notifyListeners();
+  }
+  
+  void togglePasswordConfirmationVisibility() {
+    _isPasswordConfirmationVisible = !_isPasswordConfirmationVisible;
+    notifyListeners();
+  }
 
   bool get isFormComplete {
     if (_currentStep == PasswordSteps.createPassword) {

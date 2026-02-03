@@ -33,7 +33,6 @@ class _BusinessValidationWidgetState
         final fileSizeInBytes = await file.length();
         final fileSizeInMB = fileSizeInBytes / (1024 * 1024);
 
-        // Validar tamaño máximo 5MB
         if (fileSizeInMB > 5) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -80,8 +79,9 @@ class _BusinessValidationWidgetState
   Widget build(BuildContext context) {
     final router = context.router;
     return BlocConsumer<BusinessValidationCubit, BusinessValidationState>(
-      listener: (BuildContext context, BusinessValidationState state) async {
+      listener: (BuildContext context, BusinessValidationState state) {
         if (state.status == BusinessValidationStatus.success) {
+          context.read<BusinessValidationCubit>().resetState();
           router.pop(true);
         }
         if (state.status == BusinessValidationStatus.failure &&
@@ -106,7 +106,6 @@ class _BusinessValidationWidgetState
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: 16,
               children: [
-                // Instrucción
                 Text(
                   'Tiene que subir la FICHA RUC que se descarga gratis en la SUNAT',
                   style: TextStyle(
@@ -117,7 +116,6 @@ class _BusinessValidationWidgetState
                   ),
                   textAlign: TextAlign.center,
                 ),
-                // Mostrar archivo seleccionado
                 if (_selectedFile != null) ...[
                   const SizedBox(height: 24),
                   Container(
@@ -161,7 +159,6 @@ class _BusinessValidationWidgetState
                 ],
               ],
             ),
-            // Botón con estado de loading
             Padding(
               padding: const EdgeInsets.only(
                 top: 24,

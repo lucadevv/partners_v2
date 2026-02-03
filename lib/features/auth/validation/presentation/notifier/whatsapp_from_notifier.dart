@@ -78,10 +78,12 @@ class WhatsappFromNotifier extends ChangeNotifier {
   }
 
   void initNotifier() {
-    _phoneError == null;
+    _phoneError = null;
     _phoneController.clear();
     _currentStep = WhatsappSteps.phone;
-    _otpControllers.clear();
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
     cubit.initialState();
     notifyListeners();
   }

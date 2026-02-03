@@ -40,8 +40,9 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
         return BlocConsumer<PasswordValidationCubit, PasswordValidationState>(
           listener: (context, state) {
             if (state.status == PasswordValidationStatus.success) {
+              context.read<PasswordValidationCubit>().resetState();
               router.pop(true);
-              router.replaceAll([DashboardRoute()]);
+              router.replaceAll([const DashboardRoute()]);
             } else if (state.status == PasswordValidationStatus.failure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -79,10 +80,20 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
                             maxLength: field.maxLength,
                             errorText: _passwordFromNotifier.passwordError,
                             enabled: !isLoading,
-                            obscureText: true,
+                            obscureText: !_passwordFromNotifier.isPasswordVisible,
                             onChanged: (value) {
                               _passwordFromNotifier.setPassword(value);
                             },
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _passwordFromNotifier.isPasswordVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                size: 20,
+                                color: const Color(0xFF051858),
+                              ),
+                              onPressed: _passwordFromNotifier.togglePasswordVisibility,
+                            ),
                           );
                         },
                       ),
@@ -94,23 +105,26 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
                         (index) {
                           final field =
                               _passwordFromNotifier.passwordFactory[index];
+                          final isPasswordField = index == 0;
                           return RegisterFieldWidget(
                             label: field.label,
                             placeholder: field.placeholder,
-                            controller: index == 0
+                            controller: isPasswordField
                                 ? _passwordFromNotifier.passwordController
                                 : _passwordFromNotifier
                                       .passwordConfirmationController,
                             keyboardType: field.keyboardType,
                             maxLength: field.maxLength,
-                            errorText: index == 0
+                            errorText: isPasswordField
                                 ? _passwordFromNotifier.passwordError
                                 : _passwordFromNotifier
                                       .passwordConfirmationError,
                             enabled: !isLoading,
-                            obscureText: true,
+                            obscureText: isPasswordField
+                                ? !_passwordFromNotifier.isPasswordVisible
+                                : !_passwordFromNotifier.isPasswordConfirmationVisible,
                             onChanged: (value) {
-                              if (index == 0) {
+                              if (isPasswordField) {
                                 _passwordFromNotifier.setPassword(value);
                               } else {
                                 _passwordFromNotifier.setPasswordConfirmation(
@@ -118,6 +132,20 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
                                 );
                               }
                             },
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                (isPasswordField
+                                        ? _passwordFromNotifier.isPasswordVisible
+                                        : _passwordFromNotifier.isPasswordConfirmationVisible)
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                size: 20,
+                                color: const Color(0xFF051858),
+                              ),
+                              onPressed: isPasswordField
+                                  ? _passwordFromNotifier.togglePasswordVisibility
+                                  : _passwordFromNotifier.togglePasswordConfirmationVisibility,
+                            ),
                           );
                         },
                       ),

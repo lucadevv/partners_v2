@@ -57,10 +57,29 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
             if (state.status == EmailValidationStatus.success) {
               _emailFromNotifier.goToNextStep();
             }
+            if (state.status == EmailValidationStatus.failure &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
             if (state.resendStatus == EmailValidationStatus.success) {
               await Future.delayed(const Duration(milliseconds: 800));
+              context.read<EmailValidationCubit>().resetState();
               _emailFromNotifier.initNotifier();
               router.pop(true);
+            }
+            if (state.resendStatus == EmailValidationStatus.failure &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: Colors.red,
+                ),
+              );
             }
           },
           builder: (context, cubitState) {
@@ -164,8 +183,6 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
                     ],
                   ],
                 ),
-                // Botón con estado de loading
-                // El botón solo se activa si el formulario está completo Y no está en loading
                 Padding(
                   padding: const EdgeInsets.only(
                     top: 24,
@@ -231,8 +248,12 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
 
   Widget _sufixLoadgingRuc(EmailValidationState state) {
     if (state.status == EmailValidationStatus.loading) {
-      return CircularProgressIndicator(strokeWidth: 2);
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }

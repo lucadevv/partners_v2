@@ -78,10 +78,12 @@ class EmailFromNotifier extends ChangeNotifier {
   }
 
   void initNotifier() {
-    _emailError == null;
+    _emailError = null;
     _emailController.clear();
     _currentStep = EmailSteps.email;
-    _otpControllers.clear();
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
     cubit.resetState();
     notifyListeners();
   }

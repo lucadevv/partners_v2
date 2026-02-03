@@ -79,4 +79,8 @@ class PasswordValidationCubit extends Cubit<PasswordValidationState> {
       },
     );
   }
+
+  Future<void> resetState() async {
+    emit(PasswordValidationState.initial());
+  }
 }

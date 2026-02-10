@@ -9,139 +9,274 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i25;
-import 'package:flutter/material.dart' as _i26;
-import 'package:partners/core/routes/shell/app_shell_route.dart' as _i1;
-import 'package:partners/core/routes/shell/cuenta_shell.dart' as _i4;
-import 'package:partners/core/routes/shell/main_tabs_route.dart' as _i10;
-import 'package:partners/core/routes/shell/pagar_shell.dart' as _i13;
-import 'package:partners/core/routes/shell/para_ti_shell.dart' as _i15;
-import 'package:partners/core/routes/shell/productos_shell.dart' as _i17;
-import 'package:partners/core/utils/enums/enums.dart' as _i27;
-import 'package:partners/features/auth/business_validation/presentation/screens/business_validation_screen.dart'
+import 'package:auto_route/auto_route.dart' as _i47;
+import 'package:flutter/material.dart' as _i48;
+import 'package:partners/core/routes/shell/app_shell_route.dart' as _i3;
+import 'package:partners/core/routes/shell/cuenta_shell.dart' as _i10;
+import 'package:partners/core/routes/shell/home_shell.dart' as _i15;
+import 'package:partners/core/routes/shell/main_tabs_route.dart' as _i19;
+import 'package:partners/core/routes/shell/menu_shell.dart' as _i21;
+import 'package:partners/core/routes/shell/pagar_shell.dart' as _i24;
+import 'package:partners/core/routes/shell/para_ti_shell.dart' as _i26;
+import 'package:partners/core/routes/shell/productos_shell.dart' as _i29;
+import 'package:partners/core/routes/shell/promos_shell.dart' as _i31;
+import 'package:partners/core/routes/shell/qr_shell.dart' as _i34;
+import 'package:partners/core/routes/shell/users_shell.dart' as _i45;
+import 'package:partners/core/utils/enums/enums.dart' as _i49;
+import 'package:partners/features/analytics/presentation/screens/analytics_screen.dart'
     as _i2;
-import 'package:partners/features/auth/document_scan/presentation/screens/document_scan_screen.dart'
-    as _i6;
-import 'package:partners/features/auth/forgot_password/presentation/screens/forgot_password_screen.dart'
-    as _i7;
-import 'package:partners/features/auth/login/presentation/login_screen.dart'
-    as _i9;
-import 'package:partners/features/auth/register/presentation/register_screen.dart'
-    as _i20;
-import 'package:partners/features/auth/registration_success/presentation/screens/registration_success_screen.dart'
-    as _i21;
-import 'package:partners/features/auth/validation/presentation/screens/validation_screen.dart'
-    as _i24;
-import 'package:partners/features/cuenta/presentation/screens/cuenta_screen.dart'
-    as _i3;
-import 'package:partners/features/dashboard/presentation/screens/dashboard_screen.dart'
+import 'package:partners/features/auth/business_validation/presentation/screens/business_validation_screen.dart'
     as _i5;
-import 'package:partners/features/home/presentation/screens/home_screen.dart'
-    as _i8;
-import 'package:partners/features/menu/presentation/screens/menu_screen.dart'
-    as _i11;
-import 'package:partners/features/pagar/presentation/screens/pagar_screen.dart'
+import 'package:partners/features/auth/document_scan/presentation/screens/document_scan_screen.dart'
     as _i12;
-import 'package:partners/features/para_ti/presentation/screens/para_ti_screen.dart'
-    as _i14;
-import 'package:partners/features/productos/presentation/screens/productos_screen.dart'
-    as _i16;
-import 'package:partners/features/promos/presentation/screens/promos_screen.dart'
+import 'package:partners/features/auth/forgot_password/presentation/screens/forgot_password_screen.dart'
+    as _i13;
+import 'package:partners/features/auth/login/presentation/login_screen.dart'
     as _i18;
-import 'package:partners/features/qr/presentation/screens/qr_screen.dart'
-    as _i19;
-import 'package:partners/features/splash/presentation/splash_screen.dart'
+import 'package:partners/features/auth/register/presentation/register_screen.dart'
+    as _i36;
+import 'package:partners/features/auth/registration_success/presentation/screens/registration_success_screen.dart'
+    as _i37;
+import 'package:partners/features/auth/validation/presentation/screens/validation_screen.dart'
+    as _i46;
+import 'package:partners/features/branches/presentation/screens/add_workers_screen.dart'
+    as _i1;
+import 'package:partners/features/branches/presentation/screens/branches_screen.dart'
+    as _i4;
+import 'package:partners/features/branches/presentation/screens/configure_schedule_screen.dart'
+    as _i7;
+import 'package:partners/features/branches/presentation/screens/create_branch_screen.dart'
+    as _i8;
+import 'package:partners/features/branches/presentation/screens/select_category_screen.dart'
+    as _i38;
+import 'package:partners/features/branches/presentation/screens/select_subcategory_screen.dart'
+    as _i39;
+import 'package:partners/features/buy_points/presentation/screens/buy_points_screen.dart'
+    as _i6;
+import 'package:partners/features/cuenta/presentation/screens/cuenta_screen.dart'
+    as _i9;
+import 'package:partners/features/dashboard/presentation/screens/dashboard_screen.dart'
+    as _i11;
+import 'package:partners/features/home/presentation/screens/home_screen.dart'
+    as _i14;
+import 'package:partners/features/issue_points/presentation/screens/issue_points_screen.dart'
+    as _i16;
+import 'package:partners/features/issue_points/presentation/screens/issue_points_success_screen.dart'
+    as _i17;
+import 'package:partners/features/menu/presentation/screens/menu_screen.dart'
+    as _i20;
+import 'package:partners/features/more_tools/presentation/screens/more_tools_screen.dart'
     as _i22;
-import 'package:partners/features/users/presentation/screens/users_screen.dart'
+import 'package:partners/features/pagar/presentation/screens/pagar_screen.dart'
     as _i23;
+import 'package:partners/features/para_ti/presentation/screens/para_ti_screen.dart'
+    as _i25;
+import 'package:partners/features/prizes/presentation/screens/prizes_screen.dart'
+    as _i27;
+import 'package:partners/features/productos/presentation/screens/productos_screen.dart'
+    as _i28;
+import 'package:partners/features/promos/presentation/screens/promos_screen.dart'
+    as _i30;
+import 'package:partners/features/qr/presentation/screens/qr_screen.dart'
+    as _i33;
+import 'package:partners/features/qr_scan/presentation/screens/qr_scan_screen.dart'
+    as _i32;
+import 'package:partners/features/redeem_points/presentation/screens/redeem_points_screen.dart'
+    as _i35;
+import 'package:partners/features/smart_card/presentation/screens/smart_card_screen.dart'
+    as _i40;
+import 'package:partners/features/splash/presentation/splash_screen.dart'
+    as _i41;
+import 'package:partners/features/transactions/presentation/screens/transaction_detail_screen.dart'
+    as _i42;
+import 'package:partners/features/transactions/presentation/screens/transactions_screen.dart'
+    as _i43;
+import 'package:partners/features/users/presentation/screens/users_screen.dart'
+    as _i44;
 
 /// generated route for
-/// [_i1.AppShellRoute]
-class AppShellRoute extends _i25.PageRouteInfo<void> {
-  const AppShellRoute({List<_i25.PageRouteInfo>? children})
+/// [_i1.AddWorkersScreen]
+class AddWorkersRoute extends _i47.PageRouteInfo<void> {
+  const AddWorkersRoute({List<_i47.PageRouteInfo>? children})
+    : super(AddWorkersRoute.name, initialChildren: children);
+
+  static const String name = 'AddWorkersRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i1.AddWorkersScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i2.AnalyticsScreen]
+class AnalyticsRoute extends _i47.PageRouteInfo<void> {
+  const AnalyticsRoute({List<_i47.PageRouteInfo>? children})
+    : super(AnalyticsRoute.name, initialChildren: children);
+
+  static const String name = 'AnalyticsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i2.AnalyticsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i3.AppShellRoute]
+class AppShellRoute extends _i47.PageRouteInfo<void> {
+  const AppShellRoute({List<_i47.PageRouteInfo>? children})
     : super(AppShellRoute.name, initialChildren: children);
 
   static const String name = 'AppShellRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i1.AppShellRoute();
+      return const _i3.AppShellRoute();
     },
   );
 }
 
 /// generated route for
-/// [_i2.BusinessValidationScreen]
-class BusinessValidationRoute extends _i25.PageRouteInfo<void> {
-  const BusinessValidationRoute({List<_i25.PageRouteInfo>? children})
+/// [_i4.BranchesScreen]
+class BranchesRoute extends _i47.PageRouteInfo<void> {
+  const BranchesRoute({List<_i47.PageRouteInfo>? children})
+    : super(BranchesRoute.name, initialChildren: children);
+
+  static const String name = 'BranchesRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i4.BranchesScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i5.BusinessValidationScreen]
+class BusinessValidationRoute extends _i47.PageRouteInfo<void> {
+  const BusinessValidationRoute({List<_i47.PageRouteInfo>? children})
     : super(BusinessValidationRoute.name, initialChildren: children);
 
   static const String name = 'BusinessValidationRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i2.BusinessValidationScreen();
+      return const _i5.BusinessValidationScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i3.CuentaScreen]
-class CuentaRoute extends _i25.PageRouteInfo<void> {
-  const CuentaRoute({List<_i25.PageRouteInfo>? children})
+/// [_i6.BuyPointsScreen]
+class BuyPointsRoute extends _i47.PageRouteInfo<void> {
+  const BuyPointsRoute({List<_i47.PageRouteInfo>? children})
+    : super(BuyPointsRoute.name, initialChildren: children);
+
+  static const String name = 'BuyPointsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i6.BuyPointsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i7.ConfigureScheduleScreen]
+class ConfigureScheduleRoute extends _i47.PageRouteInfo<void> {
+  const ConfigureScheduleRoute({List<_i47.PageRouteInfo>? children})
+    : super(ConfigureScheduleRoute.name, initialChildren: children);
+
+  static const String name = 'ConfigureScheduleRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i7.ConfigureScheduleScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i8.CreateBranchScreen]
+class CreateBranchRoute extends _i47.PageRouteInfo<void> {
+  const CreateBranchRoute({List<_i47.PageRouteInfo>? children})
+    : super(CreateBranchRoute.name, initialChildren: children);
+
+  static const String name = 'CreateBranchRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i8.CreateBranchScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i9.CuentaScreen]
+class CuentaRoute extends _i47.PageRouteInfo<void> {
+  const CuentaRoute({List<_i47.PageRouteInfo>? children})
     : super(CuentaRoute.name, initialChildren: children);
 
   static const String name = 'CuentaRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i3.CuentaScreen();
+      return const _i9.CuentaScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i4.CuentaShell]
-class CuentaShell extends _i25.PageRouteInfo<void> {
-  const CuentaShell({List<_i25.PageRouteInfo>? children})
+/// [_i10.CuentaShell]
+class CuentaShell extends _i47.PageRouteInfo<void> {
+  const CuentaShell({List<_i47.PageRouteInfo>? children})
     : super(CuentaShell.name, initialChildren: children);
 
   static const String name = 'CuentaShell';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i4.CuentaShell();
+      return const _i10.CuentaShell();
     },
   );
 }
 
 /// generated route for
-/// [_i5.DashboardScreen]
-class DashboardRoute extends _i25.PageRouteInfo<void> {
-  const DashboardRoute({List<_i25.PageRouteInfo>? children})
+/// [_i11.DashboardScreen]
+class DashboardRoute extends _i47.PageRouteInfo<void> {
+  const DashboardRoute({List<_i47.PageRouteInfo>? children})
     : super(DashboardRoute.name, initialChildren: children);
 
   static const String name = 'DashboardRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return _i25.WrappedRoute(child: const _i5.DashboardScreen());
+      return _i47.WrappedRoute(child: const _i11.DashboardScreen());
     },
   );
 }
 
 /// generated route for
-/// [_i6.DocumentScanScreen]
-class DocumentScanRoute extends _i25.PageRouteInfo<DocumentScanRouteArgs> {
+/// [_i12.DocumentScanScreen]
+class DocumentScanRoute extends _i47.PageRouteInfo<DocumentScanRouteArgs> {
   DocumentScanRoute({
-    _i26.Key? key,
-    required _i27.RucType rucType,
-    List<_i25.PageRouteInfo>? children,
+    _i48.Key? key,
+    required _i49.RucType rucType,
+    List<_i47.PageRouteInfo>? children,
   }) : super(
          DocumentScanRoute.name,
          args: DocumentScanRouteArgs(key: key, rucType: rucType),
@@ -150,11 +285,11 @@ class DocumentScanRoute extends _i25.PageRouteInfo<DocumentScanRouteArgs> {
 
   static const String name = 'DocumentScanRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<DocumentScanRouteArgs>();
-      return _i6.DocumentScanScreen(key: args.key, rucType: args.rucType);
+      return _i12.DocumentScanScreen(key: args.key, rucType: args.rucType);
     },
   );
 }
@@ -162,9 +297,9 @@ class DocumentScanRoute extends _i25.PageRouteInfo<DocumentScanRouteArgs> {
 class DocumentScanRouteArgs {
   const DocumentScanRouteArgs({this.key, required this.rucType});
 
-  final _i26.Key? key;
+  final _i48.Key? key;
 
-  final _i27.RucType rucType;
+  final _i49.RucType rucType;
 
   @override
   String toString() {
@@ -183,284 +318,600 @@ class DocumentScanRouteArgs {
 }
 
 /// generated route for
-/// [_i7.ForgotPasswordScreen]
-class ForgotPasswordRoute extends _i25.PageRouteInfo<void> {
-  const ForgotPasswordRoute({List<_i25.PageRouteInfo>? children})
+/// [_i13.ForgotPasswordScreen]
+class ForgotPasswordRoute extends _i47.PageRouteInfo<void> {
+  const ForgotPasswordRoute({List<_i47.PageRouteInfo>? children})
     : super(ForgotPasswordRoute.name, initialChildren: children);
 
   static const String name = 'ForgotPasswordRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i7.ForgotPasswordScreen();
+      return const _i13.ForgotPasswordScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i8.HomeScreen]
-class HomeRoute extends _i25.PageRouteInfo<void> {
-  const HomeRoute({List<_i25.PageRouteInfo>? children})
+/// [_i14.HomeScreen]
+class HomeRoute extends _i47.PageRouteInfo<void> {
+  const HomeRoute({List<_i47.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i8.HomeScreen();
+      return const _i14.HomeScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i9.LoginScreen]
-class LoginRoute extends _i25.PageRouteInfo<void> {
-  const LoginRoute({List<_i25.PageRouteInfo>? children})
+/// [_i15.HomeShell]
+class HomeShell extends _i47.PageRouteInfo<void> {
+  const HomeShell({List<_i47.PageRouteInfo>? children})
+    : super(HomeShell.name, initialChildren: children);
+
+  static const String name = 'HomeShell';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i15.HomeShell();
+    },
+  );
+}
+
+/// generated route for
+/// [_i16.IssuePointsScreen]
+class IssuePointsRoute extends _i47.PageRouteInfo<void> {
+  const IssuePointsRoute({List<_i47.PageRouteInfo>? children})
+    : super(IssuePointsRoute.name, initialChildren: children);
+
+  static const String name = 'IssuePointsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i16.IssuePointsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i17.IssuePointsSuccessScreen]
+class IssuePointsSuccessRoute extends _i47.PageRouteInfo<void> {
+  const IssuePointsSuccessRoute({List<_i47.PageRouteInfo>? children})
+    : super(IssuePointsSuccessRoute.name, initialChildren: children);
+
+  static const String name = 'IssuePointsSuccessRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i17.IssuePointsSuccessScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i18.LoginScreen]
+class LoginRoute extends _i47.PageRouteInfo<void> {
+  const LoginRoute({List<_i47.PageRouteInfo>? children})
     : super(LoginRoute.name, initialChildren: children);
 
   static const String name = 'LoginRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i9.LoginScreen();
+      return const _i18.LoginScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i10.MainTabsRoute]
-class MainTabsRoute extends _i25.PageRouteInfo<void> {
-  const MainTabsRoute({List<_i25.PageRouteInfo>? children})
+/// [_i19.MainTabsRoute]
+class MainTabsRoute extends _i47.PageRouteInfo<void> {
+  const MainTabsRoute({List<_i47.PageRouteInfo>? children})
     : super(MainTabsRoute.name, initialChildren: children);
 
   static const String name = 'MainTabsRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i10.MainTabsRoute();
+      return const _i19.MainTabsRoute();
     },
   );
 }
 
 /// generated route for
-/// [_i11.MenuScreen]
-class MenuRoute extends _i25.PageRouteInfo<void> {
-  const MenuRoute({List<_i25.PageRouteInfo>? children})
+/// [_i20.MenuScreen]
+class MenuRoute extends _i47.PageRouteInfo<void> {
+  const MenuRoute({List<_i47.PageRouteInfo>? children})
     : super(MenuRoute.name, initialChildren: children);
 
   static const String name = 'MenuRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i11.MenuScreen();
+      return const _i20.MenuScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i12.PagarScreen]
-class PagarRoute extends _i25.PageRouteInfo<void> {
-  const PagarRoute({List<_i25.PageRouteInfo>? children})
+/// [_i21.MenuShell]
+class MenuShell extends _i47.PageRouteInfo<void> {
+  const MenuShell({List<_i47.PageRouteInfo>? children})
+    : super(MenuShell.name, initialChildren: children);
+
+  static const String name = 'MenuShell';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i21.MenuShell();
+    },
+  );
+}
+
+/// generated route for
+/// [_i22.MoreToolsScreen]
+class MoreToolsRoute extends _i47.PageRouteInfo<void> {
+  const MoreToolsRoute({List<_i47.PageRouteInfo>? children})
+    : super(MoreToolsRoute.name, initialChildren: children);
+
+  static const String name = 'MoreToolsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i22.MoreToolsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i23.PagarScreen]
+class PagarRoute extends _i47.PageRouteInfo<void> {
+  const PagarRoute({List<_i47.PageRouteInfo>? children})
     : super(PagarRoute.name, initialChildren: children);
 
   static const String name = 'PagarRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i12.PagarScreen();
+      return const _i23.PagarScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i13.PagarShell]
-class PagarShell extends _i25.PageRouteInfo<void> {
-  const PagarShell({List<_i25.PageRouteInfo>? children})
+/// [_i24.PagarShell]
+class PagarShell extends _i47.PageRouteInfo<void> {
+  const PagarShell({List<_i47.PageRouteInfo>? children})
     : super(PagarShell.name, initialChildren: children);
 
   static const String name = 'PagarShell';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i13.PagarShell();
+      return const _i24.PagarShell();
     },
   );
 }
 
 /// generated route for
-/// [_i14.ParaTiScreen]
-class ParaTiRoute extends _i25.PageRouteInfo<void> {
-  const ParaTiRoute({List<_i25.PageRouteInfo>? children})
+/// [_i25.ParaTiScreen]
+class ParaTiRoute extends _i47.PageRouteInfo<void> {
+  const ParaTiRoute({List<_i47.PageRouteInfo>? children})
     : super(ParaTiRoute.name, initialChildren: children);
 
   static const String name = 'ParaTiRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i14.ParaTiScreen();
+      return const _i25.ParaTiScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i15.ParaTiShell]
-class ParaTiShell extends _i25.PageRouteInfo<void> {
-  const ParaTiShell({List<_i25.PageRouteInfo>? children})
+/// [_i26.ParaTiShell]
+class ParaTiShell extends _i47.PageRouteInfo<void> {
+  const ParaTiShell({List<_i47.PageRouteInfo>? children})
     : super(ParaTiShell.name, initialChildren: children);
 
   static const String name = 'ParaTiShell';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i15.ParaTiShell();
+      return const _i26.ParaTiShell();
     },
   );
 }
 
 /// generated route for
-/// [_i16.ProductosScreen]
-class ProductosRoute extends _i25.PageRouteInfo<void> {
-  const ProductosRoute({List<_i25.PageRouteInfo>? children})
+/// [_i27.PrizesScreen]
+class PrizesRoute extends _i47.PageRouteInfo<void> {
+  const PrizesRoute({List<_i47.PageRouteInfo>? children})
+    : super(PrizesRoute.name, initialChildren: children);
+
+  static const String name = 'PrizesRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i27.PrizesScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i28.ProductosScreen]
+class ProductosRoute extends _i47.PageRouteInfo<void> {
+  const ProductosRoute({List<_i47.PageRouteInfo>? children})
     : super(ProductosRoute.name, initialChildren: children);
 
   static const String name = 'ProductosRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i16.ProductosScreen();
+      return const _i28.ProductosScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i17.ProductosShell]
-class ProductosShell extends _i25.PageRouteInfo<void> {
-  const ProductosShell({List<_i25.PageRouteInfo>? children})
+/// [_i29.ProductosShell]
+class ProductosShell extends _i47.PageRouteInfo<void> {
+  const ProductosShell({List<_i47.PageRouteInfo>? children})
     : super(ProductosShell.name, initialChildren: children);
 
   static const String name = 'ProductosShell';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i17.ProductosShell();
+      return const _i29.ProductosShell();
     },
   );
 }
 
 /// generated route for
-/// [_i18.PromosScreen]
-class PromosRoute extends _i25.PageRouteInfo<void> {
-  const PromosRoute({List<_i25.PageRouteInfo>? children})
+/// [_i30.PromosScreen]
+class PromosRoute extends _i47.PageRouteInfo<void> {
+  const PromosRoute({List<_i47.PageRouteInfo>? children})
     : super(PromosRoute.name, initialChildren: children);
 
   static const String name = 'PromosRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i18.PromosScreen();
+      return const _i30.PromosScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i19.QrScreen]
-class QrRoute extends _i25.PageRouteInfo<void> {
-  const QrRoute({List<_i25.PageRouteInfo>? children})
+/// [_i31.PromosShell]
+class PromosShell extends _i47.PageRouteInfo<void> {
+  const PromosShell({List<_i47.PageRouteInfo>? children})
+    : super(PromosShell.name, initialChildren: children);
+
+  static const String name = 'PromosShell';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i31.PromosShell();
+    },
+  );
+}
+
+/// generated route for
+/// [_i32.QrScanScreen]
+class QrScanRoute extends _i47.PageRouteInfo<void> {
+  const QrScanRoute({List<_i47.PageRouteInfo>? children})
+    : super(QrScanRoute.name, initialChildren: children);
+
+  static const String name = 'QrScanRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i32.QrScanScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i33.QrScreen]
+class QrRoute extends _i47.PageRouteInfo<void> {
+  const QrRoute({List<_i47.PageRouteInfo>? children})
     : super(QrRoute.name, initialChildren: children);
 
   static const String name = 'QrRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i19.QrScreen();
+      return const _i33.QrScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i20.RegisterScreen]
-class RegisterRoute extends _i25.PageRouteInfo<void> {
-  const RegisterRoute({List<_i25.PageRouteInfo>? children})
+/// [_i34.QrShell]
+class QrShell extends _i47.PageRouteInfo<void> {
+  const QrShell({List<_i47.PageRouteInfo>? children})
+    : super(QrShell.name, initialChildren: children);
+
+  static const String name = 'QrShell';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i34.QrShell();
+    },
+  );
+}
+
+/// generated route for
+/// [_i35.RedeemPointsScreen]
+class RedeemPointsRoute extends _i47.PageRouteInfo<void> {
+  const RedeemPointsRoute({List<_i47.PageRouteInfo>? children})
+    : super(RedeemPointsRoute.name, initialChildren: children);
+
+  static const String name = 'RedeemPointsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i35.RedeemPointsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i36.RegisterScreen]
+class RegisterRoute extends _i47.PageRouteInfo<void> {
+  const RegisterRoute({List<_i47.PageRouteInfo>? children})
     : super(RegisterRoute.name, initialChildren: children);
 
   static const String name = 'RegisterRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i20.RegisterScreen();
+      return const _i36.RegisterScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i21.RegistrationSuccessScreen]
-class RegistrationSuccessRoute extends _i25.PageRouteInfo<void> {
-  const RegistrationSuccessRoute({List<_i25.PageRouteInfo>? children})
+/// [_i37.RegistrationSuccessScreen]
+class RegistrationSuccessRoute extends _i47.PageRouteInfo<void> {
+  const RegistrationSuccessRoute({List<_i47.PageRouteInfo>? children})
     : super(RegistrationSuccessRoute.name, initialChildren: children);
 
   static const String name = 'RegistrationSuccessRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i21.RegistrationSuccessScreen();
+      return const _i37.RegistrationSuccessScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i22.SplashScreen]
-class SplashRoute extends _i25.PageRouteInfo<void> {
-  const SplashRoute({List<_i25.PageRouteInfo>? children})
+/// [_i38.SelectCategoryScreen]
+class SelectCategoryRoute extends _i47.PageRouteInfo<void> {
+  const SelectCategoryRoute({List<_i47.PageRouteInfo>? children})
+    : super(SelectCategoryRoute.name, initialChildren: children);
+
+  static const String name = 'SelectCategoryRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i38.SelectCategoryScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i39.SelectSubCategoryScreen]
+class SelectSubCategoryRoute extends _i47.PageRouteInfo<void> {
+  const SelectSubCategoryRoute({List<_i47.PageRouteInfo>? children})
+    : super(SelectSubCategoryRoute.name, initialChildren: children);
+
+  static const String name = 'SelectSubCategoryRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i39.SelectSubCategoryScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i40.SmartCardScreen]
+class SmartCardRoute extends _i47.PageRouteInfo<void> {
+  const SmartCardRoute({List<_i47.PageRouteInfo>? children})
+    : super(SmartCardRoute.name, initialChildren: children);
+
+  static const String name = 'SmartCardRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i40.SmartCardScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i41.SplashScreen]
+class SplashRoute extends _i47.PageRouteInfo<void> {
+  const SplashRoute({List<_i47.PageRouteInfo>? children})
     : super(SplashRoute.name, initialChildren: children);
 
   static const String name = 'SplashRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i22.SplashScreen();
+      return const _i41.SplashScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i23.UsersScreen]
-class UsersRoute extends _i25.PageRouteInfo<void> {
-  const UsersRoute({List<_i25.PageRouteInfo>? children})
+/// [_i42.TransactionDetailScreen]
+class TransactionDetailRoute
+    extends _i47.PageRouteInfo<TransactionDetailRouteArgs> {
+  TransactionDetailRoute({
+    _i48.Key? key,
+    required String transactionName,
+    required String transactionDate,
+    required String transactionPoints,
+    List<_i47.PageRouteInfo>? children,
+  }) : super(
+         TransactionDetailRoute.name,
+         args: TransactionDetailRouteArgs(
+           key: key,
+           transactionName: transactionName,
+           transactionDate: transactionDate,
+           transactionPoints: transactionPoints,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'TransactionDetailRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TransactionDetailRouteArgs>();
+      return _i42.TransactionDetailScreen(
+        key: args.key,
+        transactionName: args.transactionName,
+        transactionDate: args.transactionDate,
+        transactionPoints: args.transactionPoints,
+      );
+    },
+  );
+}
+
+class TransactionDetailRouteArgs {
+  const TransactionDetailRouteArgs({
+    this.key,
+    required this.transactionName,
+    required this.transactionDate,
+    required this.transactionPoints,
+  });
+
+  final _i48.Key? key;
+
+  final String transactionName;
+
+  final String transactionDate;
+
+  final String transactionPoints;
+
+  @override
+  String toString() {
+    return 'TransactionDetailRouteArgs{key: $key, transactionName: $transactionName, transactionDate: $transactionDate, transactionPoints: $transactionPoints}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TransactionDetailRouteArgs) return false;
+    return key == other.key &&
+        transactionName == other.transactionName &&
+        transactionDate == other.transactionDate &&
+        transactionPoints == other.transactionPoints;
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^
+      transactionName.hashCode ^
+      transactionDate.hashCode ^
+      transactionPoints.hashCode;
+}
+
+/// generated route for
+/// [_i43.TransactionsScreen]
+class TransactionsRoute extends _i47.PageRouteInfo<void> {
+  const TransactionsRoute({List<_i47.PageRouteInfo>? children})
+    : super(TransactionsRoute.name, initialChildren: children);
+
+  static const String name = 'TransactionsRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i43.TransactionsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i44.UsersScreen]
+class UsersRoute extends _i47.PageRouteInfo<void> {
+  const UsersRoute({List<_i47.PageRouteInfo>? children})
     : super(UsersRoute.name, initialChildren: children);
 
   static const String name = 'UsersRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
-      return const _i23.UsersScreen();
+      return const _i44.UsersScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i24.ValidationScreen]
-class ValidationRoute extends _i25.PageRouteInfo<ValidationRouteArgs> {
+/// [_i45.UsersShell]
+class UsersShell extends _i47.PageRouteInfo<void> {
+  const UsersShell({List<_i47.PageRouteInfo>? children})
+    : super(UsersShell.name, initialChildren: children);
+
+  static const String name = 'UsersShell';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i45.UsersShell();
+    },
+  );
+}
+
+/// generated route for
+/// [_i46.ValidationScreen]
+class ValidationRoute extends _i47.PageRouteInfo<ValidationRouteArgs> {
   ValidationRoute({
-    _i26.Key? key,
-    required _i27.RucType rucType,
-    List<_i25.PageRouteInfo>? children,
+    _i48.Key? key,
+    required _i49.RucType rucType,
+    List<_i47.PageRouteInfo>? children,
   }) : super(
          ValidationRoute.name,
          args: ValidationRouteArgs(key: key, rucType: rucType),
@@ -469,11 +920,11 @@ class ValidationRoute extends _i25.PageRouteInfo<ValidationRouteArgs> {
 
   static const String name = 'ValidationRoute';
 
-  static _i25.PageInfo page = _i25.PageInfo(
+  static _i47.PageInfo page = _i47.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<ValidationRouteArgs>();
-      return _i24.ValidationScreen(key: args.key, rucType: args.rucType);
+      return _i46.ValidationScreen(key: args.key, rucType: args.rucType);
     },
   );
 }
@@ -481,9 +932,9 @@ class ValidationRoute extends _i25.PageRouteInfo<ValidationRouteArgs> {
 class ValidationRouteArgs {
   const ValidationRouteArgs({this.key, required this.rucType});
 
-  final _i26.Key? key;
+  final _i48.Key? key;
 
-  final _i27.RucType rucType;
+  final _i49.RucType rucType;
 
   @override
   String toString() {

@@ -13,83 +13,131 @@ class PrivateRoutes {
         // Ruta de validación - SIN CompleteDataGuard (debe ser accesible cuando datos incompletos)
         // Esta será la ruta inicial cuando los datos estén incompletos
         AutoRoute(path: 'validation', page: ValidationRoute.page),
-        // Protected routes with CompleteDataGuard
+        // Protected routes with CompleteDataGuard - usando shells para navegación anidada
         AutoRoute(
           path: 'home',
           guards: [CompleteDataGuard()],
-          page: HomeRoute.page,
+          page: HomeShell.page,
+          children: [
+            AutoRoute(initial: true, path: '', page: HomeRoute.page),
+            // Rutas hijas de Home - herramientas smart
+            AutoRoute(path: 'branches', page: BranchesRoute.page),
+            AutoRoute(path: 'create-branch', page: CreateBranchRoute.page),
+            AutoRoute(path: 'select-category', page: SelectCategoryRoute.page),
+            AutoRoute(
+              path: 'select-subcategory',
+              page: SelectSubCategoryRoute.page,
+            ),
+            AutoRoute(
+              path: 'configure-schedule',
+              page: ConfigureScheduleRoute.page,
+            ),
+            AutoRoute(path: 'add-workers', page: AddWorkersRoute.page),
+            AutoRoute(path: 'buy-points', page: BuyPointsRoute.page),
+            AutoRoute(path: 'issue-points', page: IssuePointsRoute.page),
+            AutoRoute(path: 'redeem-points', page: RedeemPointsRoute.page),
+            AutoRoute(path: 'prizes', page: PrizesRoute.page),
+            AutoRoute(path: 'analytics', page: AnalyticsRoute.page),
+            AutoRoute(path: 'smart-card', page: SmartCardRoute.page),
+            AutoRoute(path: 'more', page: MoreToolsRoute.page),
+            AutoRoute(path: 'transactions', page: TransactionsRoute.page),
+            AutoRoute(
+              path: 'transaction-detail',
+              page: TransactionDetailRoute.page,
+            ),
+            AutoRoute(
+              path: 'issue-points-success',
+              page: IssuePointsSuccessRoute.page,
+            ),
+          ],
         ),
         AutoRoute(
           path: 'promos',
           guards: [CompleteDataGuard()],
-          page: PromosRoute.page,
+          page: PromosShell.page,
+          children: [
+            AutoRoute(initial: true, path: '', page: PromosRoute.page),
+            // Aquí se pueden agregar más rutas hijas de Promos
+          ],
         ),
         AutoRoute(
           path: 'qr',
           guards: [CompleteDataGuard()],
-          page: QrRoute.page,
+          page: QrShell.page,
+          children: [
+            AutoRoute(initial: true, path: '', page: QrRoute.page),
+            AutoRoute(path: 'scan', page: QrScanRoute.page),
+          ],
         ),
         AutoRoute(
           path: 'users',
           guards: [CompleteDataGuard()],
-          page: UsersRoute.page,
+          page: UsersShell.page,
+          children: [
+            AutoRoute(initial: true, path: '', page: UsersRoute.page),
+            // Aquí se pueden agregar más rutas hijas de Usuarios
+          ],
         ),
         AutoRoute(
           path: 'menu',
           guards: [CompleteDataGuard()],
-          page: MenuRoute.page,
-        ),
-        AutoRoute(
-          path: 'products',
-          guards: [CompleteDataGuard()],
-          page: ProductosShell.page,
+          page: MenuShell.page,
           children: [
-            AutoRoute(initial: true, path: '', page: ProductosRoute.page),
+            AutoRoute(initial: true, path: '', page: MenuRoute.page),
+            // Aquí se pueden agregar más rutas hijas de Menu
           ],
         ),
-        AutoRoute(
-          path: 'pagar',
-          guards: [CompleteDataGuard()],
-          page: PagarShell.page,
-          children: [
-            AutoRoute(initial: true, path: '', page: PagarRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Pagar
-            // AutoRoute(
-            //   path: 'payment-methods',
-            //   page: PaymentMethodsRoute.page,
-            // ),
-          ],
-        ),
-        AutoRoute(
-          path: 'para-ti',
-          guards: [CompleteDataGuard()],
-          page: ParaTiShell.page,
-          children: [
-            AutoRoute(initial: true, path: '', page: ParaTiRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Para Ti
-            // AutoRoute(
-            //   path: 'recommendations',
-            //   page: RecommendationsRoute.page,
-            // ),
-          ],
-        ),
-        AutoRoute(
-          path: 'cuenta',
-          guards: [CompleteDataGuard()],
-          page: CuentaShell.page,
-          children: [
-            AutoRoute(initial: true, path: '', page: CuentaRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Cuenta
-            // AutoRoute(
-            //   path: 'profile',
-            //   page: ProfileRoute.page,
-            // ),
-            // AutoRoute(
-            //   path: 'settings',
-            //   page: SettingsRoute.page,
-            // ),
-          ],
-        ),
+        // AutoRoute(
+        //   path: 'products',
+        //   guards: [CompleteDataGuard()],
+        //   page: ProductosShell.page,
+        //   children: [
+        //     AutoRoute(initial: true, path: '', page: ProductosRoute.page),
+        //   ],
+        // ),
+        // AutoRoute(
+        //   path: 'pagar',
+        //   guards: [CompleteDataGuard()],
+        //   page: PagarShell.page,
+        //   children: [
+        //     AutoRoute(initial: true, path: '', page: PagarRoute.page),
+        //     // Aquí se pueden agregar más rutas hijas de Pagar
+        //     // AutoRoute(
+        //     //   path: 'payment-methods',
+        //     //   page: PaymentMethodsRoute.page,
+        //     // ),
+        //   ],
+        // ),
+        // AutoRoute(
+        //   path: 'para-ti',
+        //   guards: [CompleteDataGuard()],
+        //   page: ParaTiShell.page,
+        //   children: [
+        //     AutoRoute(initial: true, path: '', page: ParaTiRoute.page),
+        //     // Aquí se pueden agregar más rutas hijas de Para Ti
+        //     // AutoRoute(
+        //     //   path: 'recommendations',
+        //     //   page: RecommendationsRoute.page,
+        //     // ),
+        //   ],
+        // ),
+        // AutoRoute(
+        //   path: 'cuenta',
+        //   guards: [CompleteDataGuard()],
+        //   page: CuentaShell.page,
+        //   children: [
+        //     AutoRoute(initial: true, path: '', page: CuentaRoute.page),
+        //     // Aquí se pueden agregar más rutas hijas de Cuenta
+        //     // AutoRoute(
+        //     //   path: 'profile',
+        //     //   page: ProfileRoute.page,
+        //     // ),
+        //     // AutoRoute(
+        //     //   path: 'settings',
+        //     //   page: SettingsRoute.page,
+        //     // ),
+        //   ],
+        // ),
       ],
     ),
   ];

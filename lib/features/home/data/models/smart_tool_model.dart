@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:partners/features/home/domain/entities/smart_tool_entity.dart';
 
 /// Data model for Smart Tool (Data Layer)
@@ -7,6 +8,7 @@ class SmartToolModel extends SmartToolEntity {
     required super.title,
     required super.iconName,
     required super.route,
+    super.backgroundColor = const Color(0xFF66CFFF),
   });
 
   factory SmartToolModel.fromJson(Map<String, dynamic> json) {
@@ -15,6 +17,9 @@ class SmartToolModel extends SmartToolEntity {
       title: json['title'] as String,
       iconName: json['iconName'] as String,
       route: json['route'] as String,
+      backgroundColor: json['backgroundColor'] != null
+          ? Color(json['backgroundColor'] as int)
+          : const Color(0xFF66CFFF),
     );
   }
 
@@ -24,6 +29,7 @@ class SmartToolModel extends SmartToolEntity {
       'title': title,
       'iconName': iconName,
       'route': route,
+      'backgroundColor': backgroundColor.value,
     };
   }
 
@@ -33,6 +39,7 @@ class SmartToolModel extends SmartToolEntity {
       title: title,
       iconName: iconName,
       route: route,
+      backgroundColor: backgroundColor,
     );
   }
 }

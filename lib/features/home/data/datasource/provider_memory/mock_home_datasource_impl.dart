@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/features/home/data/datasource/home_datasource.dart';
 import 'package:partners/features/home/data/models/smart_card_model.dart';
@@ -9,54 +10,57 @@ import 'package:partners/features/home/data/models/transaction_model.dart';
 /// Follows mock data pattern for development and testing
 class MockHomeDatasourceImpl implements HomeDatasource {
   // Mock data for Smart Tools
+  // Textos en español según el diseño
   final List<SmartToolModel> _mockSmartTools = const [
     SmartToolModel(
       id: '1',
-      title: 'View my\nbranches',
+      title: 'Ver mis\nsucursales',
       iconName: 'store',
       route: '/branches',
     ),
     SmartToolModel(
       id: '2',
-      title: 'Buy\nPoints',
+      title: 'Comprar\nPuntos',
       iconName: 'money',
       route: '/buy-points',
     ),
     SmartToolModel(
       id: '3',
-      title: 'Issue\nPoints',
+      title: 'Emitir\nPuntos',
       iconName: 'arrow-up',
       route: '/issue-points',
     ),
     SmartToolModel(
       id: '4',
-      title: 'Redeem\nPoints',
+      title: 'Canjear\nPuntos',
       iconName: 'coin',
       route: '/redeem-points',
     ),
     SmartToolModel(
       id: '5',
-      title: 'Prizes and\nCoupons',
+      title: 'Premios y\nCupones',
       iconName: 'gift',
       route: '/prizes',
     ),
     SmartToolModel(
       id: '6',
-      title: 'My\nAnalytics',
+      title: 'Mis\nAnalíticas',
       iconName: 'analytics',
       route: '/analytics',
     ),
     SmartToolModel(
       id: '7',
-      title: 'View my\nSmart Card',
+      title: 'Ver mi\nSmart Card',
       iconName: 'credit-card',
       route: '/smart-card',
+      backgroundColor: Colors.white, // Fondo blanco según diseño
     ),
     SmartToolModel(
       id: '8',
-      title: 'See\nMore',
+      title: 'Ver\nMás',
       iconName: 'more',
       route: '/more',
+      backgroundColor: Colors.white, // Fondo blanco según diseño
     ),
   ];
 
@@ -102,7 +106,8 @@ class MockHomeDatasourceImpl implements HomeDatasource {
   }
 
   @override
-  Future<Either<AppException, List<TransactionModel>>> getRecentTransactions() async {
+  Future<Either<AppException, List<TransactionModel>>>
+  getRecentTransactions() async {
     await Future.delayed(const Duration(milliseconds: 400));
     return Right(_mockTransactions);
   }

@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
+import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/icon_paths.dart';
@@ -11,16 +11,13 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget build(BuildContext context) {
-    final currentPath = context.router.currentPath;
-    final isValidationRoute = currentPath.contains('/validation');
-
-    // If we're on validation route, show only AutoRouter without navbar
-    if (isValidationRoute) {
-      return Scaffold(
-        backgroundColor: const Color(0XFFE3FFFC),
-        body: const AutoRouter(),
-      );
-    }
+    final visibleRoutes = [
+      '/dashboard/home',
+      '/dashboard/promos',
+      '/dashboard/qr',
+      '/dashboard/users',
+      '/dashboard/menu',
+    ];
 
     // If not in validation, show tabs with custom navbar
     return AutoTabsRouter.pageView(
@@ -34,141 +31,102 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
       ],
       builder: (context, child, _) {
         final tabsRouter = AutoTabsRouter.of(context);
+        final activeIndex = tabsRouter.activeIndex;
+        final isVisible = visibleRoutes.contains(tabsRouter.currentPath);
+        // Función para obtener el color según si está activo
+        Color getIconColor(int index) {
+          return activeIndex == index ? const Color(0xFF242760) : Colors.black;
+        }
 
         return Scaffold(
           extendBody: true, // Allow body to extend behind navbar
-          body: Stack(
-            children: [
-              // Main content
-              child,
-              // Custom navbar - NO ClipPath, just regular container with notch using Stack
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 97,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(
-                      top: BorderSide(
-                        color: const Color(0xFFE3DDDD),
-                        width: 1,
-                      ),
+          body: child,
+          bottomNavigationBar: isVisible
+              ? CircleNavBar(
+                  activeIcons: [
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.home,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(0),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -3),
-                      ),
-                    ],
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.promos,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(1),
+                    ),
+                    // QR con texto (único que tiene texto)
+                    const _QrButtonWidget(),
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.users,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(3),
+                    ),
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.menu,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(4),
+                    ),
+                  ],
+                  inactiveIcons: [
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.home,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(0),
+                    ),
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.promos,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(1),
+                    ),
+                    // QR con texto (único que tiene texto)
+                    const _QrButtonWidget(),
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.users,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(3),
+                    ),
+                    // Solo icono sin texto
+                    SvgIconWidget(
+                      assetPath: IconPaths.menu,
+                      width: 34,
+                      height: 34,
+                      color: getIconColor(4),
+                    ),
+                  ],
+                  color: Colors.white,
+                  circleColor: const Color(0xFF242760),
+                  height: 97,
+                  circleWidth: 80.54,
+                  activeIndex:
+                      2, // Siempre mantener el círculo fijo en el QR (índice 2)
+                  onTap: (index) {
+                    tabsRouter.setActiveIndex(index);
+                  },
+                  cornerRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(0),
+                    topRight: Radius.circular(0),
                   ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Navigation items background - with notch cutout
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 60,
-                          decoration: const BoxDecoration(color: Colors.white),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                // Home
-                                _NavItem(
-                                  iconPath: IconPaths.home,
-                                  label: 'Inicio',
-                                  isActive: tabsRouter.activeIndex == 0,
-                                  onTap: () => tabsRouter.setActiveIndex(0),
-                                ),
-                                // Chat/Promos
-                                _NavItem(
-                                  iconPath: IconPaths.chat,
-                                  label: 'Promos',
-                                  isActive: tabsRouter.activeIndex == 1,
-                                  onTap: () => tabsRouter.setActiveIndex(1),
-                                ),
-                                // Spacer for QR button
-                                const SizedBox(width: 50),
-                                // Users
-                                _NavItem(
-                                  iconPath: IconPaths.settings,
-                                  label: 'usuarios',
-                                  isActive: tabsRouter.activeIndex == 3,
-                                  onTap: () => tabsRouter.setActiveIndex(3),
-                                ),
-                                // Menu
-                                _NavItem(
-                                  iconPath: IconPaths.profile,
-                                  label: 'Menú',
-                                  isActive: tabsRouter.activeIndex == 4,
-                                  onTap: () => tabsRouter.setActiveIndex(4),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // QR Button (centered and elevated) - positioned above navbar
-                      Positioned(
-                        bottom: 20,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: GestureDetector(
-                            onTap: () => tabsRouter.setActiveIndex(2),
-                            child: Container(
-                              width: 80.54,
-                              height: 80.54,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF242760),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgIconWidget(
-                                    assetPath: IconPaths.qr,
-                                    width: 35,
-                                    height: 35,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  const Text(
-                                    'QR',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      fontFamily: 'Figtree',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+                  shadowColor: Colors.black.withOpacity(0.05),
+                  circleShadowColor: Colors.black.withOpacity(0.2),
+                  elevation: 10,
+                  tabCurve:
+                      Curves.linear, // Sin animación suave, cambio directo
+                )
+              : null,
         );
       },
     );
@@ -180,42 +138,30 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
   }
 }
 
-class _NavItem extends StatelessWidget {
-  final String iconPath;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.iconPath,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+// Widget separado para el QR que no se reconstruye
+class _QrButtonWidget extends StatelessWidget {
+  const _QrButtonWidget();
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? const Color(0xFF242760) : const Color(0xFFC7C6C5);
-
-    return GestureDetector(
-      onTap: onTap,
+    return RepaintBoundary(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgIconWidget(
-            assetPath: iconPath,
-            width: 34,
-            height: 34,
-            color: color,
+            assetPath: IconPaths.qr,
+            width: 35,
+            height: 35,
+            color: Colors.white,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
+          const Text(
+            'QR',
             style: TextStyle(
-              color: color,
-              fontSize: 15,
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
               fontFamily: 'Figtree',
-              fontWeight: FontWeight.normal,
             ),
           ),
         ],

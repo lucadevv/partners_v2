@@ -7,7 +7,7 @@ class AppColorsLigth {
   static Color onPrimary = Colors.white;
   static Color secondary = const Color(0XFF66CFFF);
   static Color tertiary = const Color(0XFF001C7C);
-  static Color surface = Colors.white;
+  static Color surface = const Color(0xFFD3F0FE); // Celeste
   static Color onSurface = const Color(0XFF00114A);
 
   static Color primaryContainer = const Color(0XFFDEE2FF);

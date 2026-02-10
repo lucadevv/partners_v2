@@ -1,10 +1,9 @@
-import 'dart:math' as math;
+import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
-import 'package:partners/core/theme/app_colors_ligth.dart';
-import 'package:partners/core/extension/sizedbox_extension.dart';
+import 'package:partners/core/utils/icon_paths.dart';
+import 'package:partners/core/widgets/svg_icon_widget.dart';
 
 @RoutePage()
 class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
@@ -12,24 +11,10 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget build(BuildContext context) {
-    final navItems = [
-      {'icon': Icons.shopping_bag, 'label': 'Productos'},
-      {'icon': Icons.payment, 'label': 'Pagar'},
-      {'icon': Icons.favorite, 'label': 'Para Ti'},
-      {'icon': Icons.person, 'label': 'Cuenta'},
-    ];
-    final visibleRoutes = [
-      '/dashboard/home',
-      '/dashboard/pagar',
-      '/dashboard/para-ti',
-      '/dashboard/cuenta',
-    ];
-
-    // Obtener la ruta actual
     final currentPath = context.router.currentPath;
     final isValidationRoute = currentPath.contains('/validation');
 
-    // Si estamos en la ruta de validación, mostrar solo el AutoRouter sin tabs
+    // If we're on validation route, show only AutoRouter without navbar
     if (isValidationRoute) {
       return Scaffold(
         backgroundColor: const Color(0XFFE3FFFC),
@@ -37,80 +22,151 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
       );
     }
 
-    // Si no estamos en validación, mostrar los tabs
+    // If not in validation, show tabs with custom navbar
     return AutoTabsRouter.pageView(
       physics: const NeverScrollableScrollPhysics(),
-      routes: const [
-        ProductosShell(),
-        PagarShell(),
-        ParaTiShell(),
-        CuentaShell(),
+      routes: [
+        const HomeRoute(),
+        const PromosRoute(),
+        const QrRoute(),
+        const UsersRoute(),
+        const MenuRoute(),
       ],
       builder: (context, child, _) {
         final tabsRouter = AutoTabsRouter.of(context);
-        final tabsPath = tabsRouter.currentPath;
-        final isVisible = visibleRoutes.any(
-          (route) => tabsPath.startsWith(route),
-        );
 
         return Scaffold(
-          backgroundColor: const Color(0XFFE3FFFC),
+          extendBody: true, // Allow body to extend behind navbar
           body: Stack(
             children: [
+              // Main content
               child,
-              if (isVisible) ...[
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    height: 79,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColorsLigth.onPrimary,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
+              // Custom navbar - NO ClipPath, just regular container with notch using Stack
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 97,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(
+                        color: const Color(0xFFE3DDDD),
+                        width: 1,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ItemNavbar(
-                            icon: navItems[0]['icon'] as IconData,
-                            label: navItems[0]['label'] as String,
-                            isActive: tabsRouter.activeIndex == 0,
-                            onTap: () => tabsRouter.setActiveIndex(0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -3),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Navigation items background - with notch cutout
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 60,
+                          decoration: const BoxDecoration(color: Colors.white),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                // Home
+                                _NavItem(
+                                  iconPath: IconPaths.home,
+                                  label: 'Inicio',
+                                  isActive: tabsRouter.activeIndex == 0,
+                                  onTap: () => tabsRouter.setActiveIndex(0),
+                                ),
+                                // Chat/Promos
+                                _NavItem(
+                                  iconPath: IconPaths.chat,
+                                  label: 'Promos',
+                                  isActive: tabsRouter.activeIndex == 1,
+                                  onTap: () => tabsRouter.setActiveIndex(1),
+                                ),
+                                // Spacer for QR button
+                                const SizedBox(width: 50),
+                                // Users
+                                _NavItem(
+                                  iconPath: IconPaths.settings,
+                                  label: 'usuarios',
+                                  isActive: tabsRouter.activeIndex == 3,
+                                  onTap: () => tabsRouter.setActiveIndex(3),
+                                ),
+                                // Menu
+                                _NavItem(
+                                  iconPath: IconPaths.profile,
+                                  label: 'Menú',
+                                  isActive: tabsRouter.activeIndex == 4,
+                                  onTap: () => tabsRouter.setActiveIndex(4),
+                                ),
+                              ],
+                            ),
                           ),
-                          ItemNavbar(
-                            icon: navItems[1]['icon'] as IconData,
-                            label: navItems[1]['label'] as String,
-                            isActive: tabsRouter.activeIndex == 1,
-                            onTap: () => tabsRouter.setActiveIndex(1),
-                          ),
-                          Container(
-                            height: 92,
-                            width: 110,
-                            color: Colors.transparent,
-                          ),
-                          ItemNavbar(
-                            icon: navItems[2]['icon'] as IconData,
-                            label: navItems[2]['label'] as String,
-                            isActive: tabsRouter.activeIndex == 2,
+                        ),
+                      ),
+                      // QR Button (centered and elevated) - positioned above navbar
+                      Positioned(
+                        bottom: 20,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: GestureDetector(
                             onTap: () => tabsRouter.setActiveIndex(2),
+                            child: Container(
+                              width: 80.54,
+                              height: 80.54,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF242760),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgIconWidget(
+                                    assetPath: IconPaths.qr,
+                                    width: 35,
+                                    height: 35,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'QR',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Figtree',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          ItemNavbar(
-                            icon: navItems[3]['icon'] as IconData,
-                            label: navItems[3]['label'] as String,
-                            isActive: tabsRouter.activeIndex == 3,
-                            onTap: () => tabsRouter.setActiveIndex(3),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ],
           ),
         );
@@ -120,63 +176,46 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    // Aquí se pueden agregar BlocProviders si es necesario
     return this;
   }
 }
 
-class ItemNavbar extends StatelessWidget {
-  const ItemNavbar({
-    super.key,
-    required this.icon,
+class _NavItem extends StatelessWidget {
+  final String iconPath;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.iconPath,
     required this.label,
     required this.isActive,
     required this.onTap,
   });
 
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
+    final color = isActive ? const Color(0xFF242760) : const Color(0xFFC7C6C5);
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              if (isActive)
-                Transform.rotate(
-                  angle: -24.2 * (math.pi / 180),
-                  child: Container(
-                    height: 31,
-                    width: 31,
-                    decoration: BoxDecoration(
-                      color: context.appColor.secondary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              Icon(
-                icon,
-                size: 26,
-                color: !isActive
-                    ? context.appColor.onPrimary
-                    : AppColorsLigth.onPrimary,
-              ),
-            ],
+          SvgIconWidget(
+            assetPath: iconPath,
+            width: 34,
+            height: 34,
+            color: color,
           ),
-          4.spaceh,
+          const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
-              color: context.appColor.onPrimary,
-              fontWeight: FontWeight.w500,
+              color: color,
+              fontSize: 15,
+              fontFamily: 'Figtree',
+              fontWeight: FontWeight.normal,
             ),
           ),
         ],

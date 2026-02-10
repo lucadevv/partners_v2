@@ -25,6 +25,10 @@ class ValidationException extends AppException {
   const ValidationException(super.message, {super.code, super.details});
 }
 
+class NotFoundException extends AppException {
+  const NotFoundException(super.message, {super.code, super.details});
+}
+
 class UnknownException extends AppException {
   const UnknownException(super.message, {super.code, super.details});
 }

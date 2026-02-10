@@ -13,18 +13,38 @@ class PrivateRoutes {
         // Ruta de validación - SIN CompleteDataGuard (debe ser accesible cuando datos incompletos)
         // Esta será la ruta inicial cuando los datos estén incompletos
         AutoRoute(path: 'validation', page: ValidationRoute.page),
-        // Rutas protegidas con CompleteDataGuard
+        // Protected routes with CompleteDataGuard
         AutoRoute(
           path: 'home',
+          guards: [CompleteDataGuard()],
+          page: HomeRoute.page,
+        ),
+        AutoRoute(
+          path: 'promos',
+          guards: [CompleteDataGuard()],
+          page: PromosRoute.page,
+        ),
+        AutoRoute(
+          path: 'qr',
+          guards: [CompleteDataGuard()],
+          page: QrRoute.page,
+        ),
+        AutoRoute(
+          path: 'users',
+          guards: [CompleteDataGuard()],
+          page: UsersRoute.page,
+        ),
+        AutoRoute(
+          path: 'menu',
+          guards: [CompleteDataGuard()],
+          page: MenuRoute.page,
+        ),
+        AutoRoute(
+          path: 'products',
           guards: [CompleteDataGuard()],
           page: ProductosShell.page,
           children: [
             AutoRoute(initial: true, path: '', page: ProductosRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Productos
-            // AutoRoute(
-            //   path: 'detail',
-            //   page: ProductDetailRoute.page,
-            // ),
           ],
         ),
         AutoRoute(

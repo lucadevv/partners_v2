@@ -3,6 +3,11 @@ import 'package:partners/core/config/app_config.dart';
 import 'package:partners/core/injection/auth/auth_injection.dart';
 import 'package:partners/core/injection/auth/document_injection.dart';
 import 'package:partners/core/injection/auth/validation_injeciton.dart';
+import 'package:partners/core/injection/home/home_injection.dart';
+import 'package:partners/core/injection/pagar/pagar_injection.dart';
+import 'package:partners/core/injection/para_ti/para_ti_injection.dart';
+import 'package:partners/core/injection/productos/productos_injection.dart';
+import 'package:partners/core/injection/role_injection.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/auth_manager_impl.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
@@ -65,5 +70,10 @@ class AppInjection {
     AuthInjection(getIt: _getIt);
     ValidationInjeciton(getIt: _getIt);
     DocumentInjection(getIt: _getIt);
+    RoleInjection(getIt: _getIt);
+    ProductosInjection(getIt: _getIt);
+    PagarInjection(getIt: _getIt);
+    ParaTiInjection(getIt: _getIt);
+    HomeInjection(getIt: _getIt);
   }
 }

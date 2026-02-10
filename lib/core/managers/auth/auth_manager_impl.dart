@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
+import 'package:partners/core/models/user_model.dart';
 
 class AuthManagerImpl implements AuthManager {
   final TokenManager _tokenManager;
@@ -18,6 +19,7 @@ class AuthManagerImpl implements AuthManager {
     String accessToken,
     String refreshToken, {
     bool isCompleteData = false,
+    UserModel? user,
   }) async {
     await _tokenManager.saveToken(
       accessToken,

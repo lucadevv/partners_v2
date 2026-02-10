@@ -1,16 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
+import 'package:partners/core/models/user_model.dart';
+import 'package:partners/core/models/user_role.dart';
 import 'package:partners/core/services/database/flags/flags_factory.dart';
 import 'package:partners/core/services/database/flags/session_id_flug.dart';
+import 'package:partners/core/services/role_service.dart';
 import 'package:partners/core/utils/conts/prefers_keys.dart';
 import 'package:partners/features/auth/validation/domain/use_case/complete_password_usecase.dart';
+import 'package:partners/main.dart';
 
 part 'password_validation_state.dart';
 
 class PasswordValidationCubit extends Cubit<PasswordValidationState> {
   final CompletePasswordUsecase _completePasswordUsecase;
   final AuthManager _authManager;
+  final RoleService _roleService;
   final SessionIdFlug _sessionFlug = FlagsFactory.createSessionIdFlug();
 
   PasswordValidationCubit({
@@ -18,6 +23,7 @@ class PasswordValidationCubit extends Cubit<PasswordValidationState> {
     required AuthManager authManager,
   })  : _completePasswordUsecase = completePasswordUsecase,
         _authManager = authManager,
+        _roleService = getIt<RoleService>(),
         super(PasswordValidationState.initial());
 
   Future<void> completePassword({
@@ -58,11 +64,25 @@ class PasswordValidationCubit extends Cubit<PasswordValidationState> {
       },
       (passwordRes) async {
         try {
+          // Por defecto, al completar el registro, el usuario es dueño del negocio
+          // Esto puede cambiar cuando el backend devuelva el rol real
+          final defaultUser = UserModel(
+            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            email: '', // Se actualizará cuando tengamos la info del usuario
+            name: 'Usuario Registrado',
+            role: UserRole.businessOwner, // Por defecto dueño del negocio
+          );
+          
           await _authManager.login(
             passwordRes.accessToken,
             passwordRes.refreshToken,
             isCompleteData: true,
+            user: defaultUser,
           );
+          
+          // Establecer usuario y rol en RoleService
+          _roleService.setUser(defaultUser);
+          
           if (!isClosed) {
             emit(state.copyWith(status: PasswordValidationStatus.success));
           }

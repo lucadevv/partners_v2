@@ -19,6 +19,15 @@ class NavigationBussinesEffect extends OrquestorAuthEffect {
   List<Object?> get props => [];
 }
 
+class NavigationLoginSuccessEffect extends OrquestorAuthEffect {
+  final bool isCompleteData;
+  
+  const NavigationLoginSuccessEffect({required this.isCompleteData});
+  
+  @override
+  List<Object?> get props => [isCompleteData];
+}
+
 class OrquestorAuthState extends Equatable {
   final RegisterState registerState;
   final LoginState loginState;

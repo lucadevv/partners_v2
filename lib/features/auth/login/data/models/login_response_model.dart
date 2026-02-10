@@ -1,3 +1,4 @@
+import 'package:partners/core/models/user_model.dart';
 import 'package:partners/features/auth/login/domain/entities/login_response_entity.dart';
 
 class LoginResponseModel extends LoginResponseEntity {
@@ -5,6 +6,7 @@ class LoginResponseModel extends LoginResponseEntity {
     required super.accessToken,
     required super.refreshToken,
     required super.isCompleteData,
+    required super.user,
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
@@ -12,6 +14,7 @@ class LoginResponseModel extends LoginResponseEntity {
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
       isCompleteData: json['isCompleteData'] as bool? ?? false,
+      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
     );
   }
 
@@ -20,6 +23,7 @@ class LoginResponseModel extends LoginResponseEntity {
       'accessToken': accessToken,
       'refreshToken': refreshToken,
       'isCompleteData': isCompleteData,
+      'user': user.toJson(),
     };
   }
 
@@ -28,6 +32,7 @@ class LoginResponseModel extends LoginResponseEntity {
       accessToken: accessToken,
       refreshToken: refreshToken,
       isCompleteData: isCompleteData,
+      user: user,
     );
   }
 }

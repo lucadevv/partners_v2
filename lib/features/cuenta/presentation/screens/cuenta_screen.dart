@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/core/services/role_service.dart';
 import 'package:partners/main.dart';
 
 @RoutePage()
@@ -30,7 +31,11 @@ class CuentaScreen extends StatelessWidget {
 
     if (confirm == true) {
       final authManager = getIt<AuthManager>();
+      final roleService = getIt<RoleService>();
+      
+      // Limpiar autenticación y rol
       await authManager.logout();
+      roleService.clearUser();
       
       if (context.mounted) {
         context.router.replaceAll([const LoginRoute()]);

@@ -1,3 +1,5 @@
+import 'package:partners/core/models/user_model.dart';
+
 /// Manager abstracto para manejar la autenticación
 abstract class AuthManager {
   /// Verifica si el usuario está logueado
@@ -5,10 +7,12 @@ abstract class AuthManager {
 
   /// Realiza login con access y refresh token
   /// [isCompleteData] indica si el usuario ha completado todos sus datos
+  /// [user] información del usuario con su rol
   Future<void> login(
     String accessToken,
     String refreshToken, {
     bool isCompleteData = false,
+    UserModel? user,
   });
 
   /// Actualiza el access token

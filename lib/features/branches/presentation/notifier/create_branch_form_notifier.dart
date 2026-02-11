@@ -62,14 +62,14 @@ class CreateBranchFormNotifier extends ChangeNotifier {
   // Getter para saber si el formulario está completo
   bool get isFormComplete {
     return nameController.text.isNotEmpty &&
-           phoneController.text.isNotEmpty &&
-           addressController.text.isNotEmpty &&
-           _selectedCategory != null &&
-           _selectedSubCategory != null &&
-           _selectedSchedule != null &&
-           _nameError == null &&
-           _phoneError == null &&
-           _addressError == null;
+        phoneController.text.isNotEmpty &&
+        addressController.text.isNotEmpty &&
+        _selectedCategory != null &&
+        _selectedSubCategory != null &&
+        _selectedSchedule != null &&
+        _nameError == null &&
+        _phoneError == null &&
+        _addressError == null;
   }
 
   // Validación con debouncer. Si el campo está vacío, se quita el error.

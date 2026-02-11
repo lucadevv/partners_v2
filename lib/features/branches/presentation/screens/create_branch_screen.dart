@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart' as img;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:partners/core/extension/extension.dart';
 import 'package:partners/core/services/mapbox/mapbox_geocoding_service.dart';
+import 'package:partners/core/services/services.dart';
 import 'package:partners/core/widgets/custom_text_form_field.dart';
 import 'package:partners/features/branches/presentation/presentation.dart';
 import 'package:partners/features/branches/presentation/screens/create_branch_screen_strings.dart';
@@ -23,6 +26,9 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
   Timer? _addressSearchDebounce;
   double _mapCenterLng = _defaultLng;
   double _mapCenterLat = _defaultLat;
+  double? _markerLng;
+  double? _markerLat;
+  double _mapZoom = _defaultZoom;
 
   @override
   void initState() {
@@ -48,6 +54,9 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
       setState(() {
         _mapCenterLng = result.longitude;
         _mapCenterLat = result.latitude;
+        _markerLng = result.longitude;
+        _markerLat = result.latitude;
+        _mapZoom = _zoomWhenLocated;
       });
     }
   }
@@ -656,6 +665,10 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
   }
 
   Widget _buildUploadBannerButton() {
+    final imagePath = _formNotifier.imagePath;
+    final hasImage =
+        imagePath != null && imagePath.isNotEmpty && imagePath != 'placeholder';
+
     return SizedBox(
       height: 77,
       child: DecoratedBox(
@@ -666,30 +679,50 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              _showImageSourceBottomSheet();
-            },
+            onTap: () => _showImageSourceBottomSheet(),
             borderRadius: BorderRadius.circular(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.add_a_photo_outlined,
-                  color: context.appColor.primary,
-                  size: 35,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  CreateBranchScreenStrings.uploadBanner,
-                  style: TextStyle(
-                    color: context.appColor.primary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Figtree',
+            child: hasImage
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(File(imagePath), fit: BoxFit.cover),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: context.appColor.onSurface,
+                            size: 20,
+                          ),
+                          onPressed: () => _formNotifier.clearImage(),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_a_photo_outlined,
+                        color: context.appColor.primary,
+                        size: 35,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        CreateBranchScreenStrings.uploadBanner,
+                        style: TextStyle(
+                          color: context.appColor.primary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Figtree',
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -781,6 +814,23 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
 
   static const double _defaultLng = -77.0428;
   static const double _defaultLat = -12.0464;
+  static const double _defaultZoom = 12.0;
+  static const double _zoomWhenLocated = 15.0;
+
+  Future<void> _onMapCreated(MapboxMap mapboxMap) async {
+    if (_markerLng == null || _markerLat == null) return;
+    try {
+      final circleManager = await mapboxMap.annotations
+          .createCircleAnnotationManager();
+      circleManager.create(
+        CircleAnnotationOptions(
+          geometry: Point(coordinates: Position(_markerLng!, _markerLat!)),
+          circleColor: 0xFF0EA5E9,
+          circleRadius: 12.0,
+        ),
+      );
+    } catch (_) {}
+  }
 
   Future<void> _onMapTapped(double lng, double lat) async {
     final service = getIt<MapboxGeocodingService>();
@@ -794,6 +844,8 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
       setState(() {
         _mapCenterLng = lng;
         _mapCenterLat = lat;
+        _markerLng = lng;
+        _markerLat = lat;
       });
     }
   }
@@ -822,15 +874,17 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
                 borderRadius: BorderRadius.circular(20),
                 child: MapWidget(
                   key: ValueKey(
-                    'create_branch_map_${_mapCenterLat}_$_mapCenterLng',
+                    'create_branch_map_${_mapCenterLat}_$_mapCenterLng'
+                    '_${_markerLat ?? ""}_${_markerLng ?? ""}_$_mapZoom',
                   ),
                   cameraOptions: CameraOptions(
                     center: Point(
                       coordinates: Position(_mapCenterLng, _mapCenterLat),
                     ),
-                    zoom: 12,
+                    zoom: _mapZoom,
                   ),
                   styleUri: MapboxStyles.MAPBOX_STREETS,
+                  onMapCreated: _onMapCreated,
                   onTapListener: (MapContentGestureContext ctx) {
                     final lng = ctx.point.coordinates.lng.toDouble();
                     final lat = ctx.point.coordinates.lat.toDouble();
@@ -915,6 +969,56 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
     );
   }
 
+  Future<void> _pickImageFromCamera() async {
+    final permissionService = getIt<CameraPermissionService>();
+    final status = await permissionService.request();
+    if (status != PermissionStatus.granted && !mounted) return;
+    if (status != PermissionStatus.granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Se necesita permiso de cámara para tomar la foto'),
+          ),
+        );
+      }
+      return;
+    }
+    final picker = img.ImagePicker();
+    final xFile = await picker.pickImage(
+      source: img.ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (!mounted) return;
+    final path = xFile?.path;
+    if (path != null) _formNotifier.setImagePath(path);
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final permissionService = getIt<PhotosPermissionService>();
+    final status = await permissionService.request();
+    if (status != PermissionStatus.granted && !mounted) return;
+    if (status != PermissionStatus.granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Se necesita permiso de fotos para elegir una imagen',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    final picker = img.ImagePicker();
+    final xFile = await picker.pickImage(
+      source: img.ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (!mounted) return;
+    final path = xFile?.path;
+    if (path != null) _formNotifier.setImagePath(path);
+  }
+
   void _showImageSourceBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -978,8 +1082,7 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
                 title: CreateBranchScreenStrings.takePhoto,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implementar cámara
-                  _formNotifier.setImagePath('placeholder');
+                  _pickImageFromCamera();
                 },
               ),
               const SizedBox(height: 20),
@@ -988,8 +1091,7 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
                 title: CreateBranchScreenStrings.uploadFromGallery,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implementar galería
-                  _formNotifier.setImagePath('placeholder');
+                  _pickImageFromGallery();
                 },
               ),
               const SizedBox(height: 20),

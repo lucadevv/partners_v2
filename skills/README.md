@@ -14,6 +14,7 @@ Las **reglas de Cursor** en [.cursor/rules/](../.cursor/rules/) son obligatorias
 | [testing-flutter](testing-flutter/SKILL.md) | Unit, widget, integration tests |
 | [auto-route](auto-route/SKILL.md) | Navigation, routes, guards |
 | [get-it-di](get-it-di/SKILL.md) | Dependency injection |
+| [solid-design](solid-design/SKILL.md) | POO, SOLID, patrones de diseño (Repository, Strategy, DI, contrato base) |
 
 ## Partners-Specific Skills
 

@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.partners"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler requiere compileSdk >= 33
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

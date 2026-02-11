@@ -30,6 +30,7 @@ Use these skills for detailed patterns on-demand. If a skill file does not exist
 |-------|-------------|-----|
 | `flutter-3` | Clean Architecture, BLoC/Cubit, widget patterns | [SKILL.md](skills/flutter-3/SKILL.md) |
 | `clean-architecture` | Domain/data/presentation separation | [SKILL.md](skills/clean-architecture/SKILL.md) |
+| `solid-design` | POO, SOLID, patrones de diseño (Repository, Strategy, DI) | [SKILL.md](skills/solid-design/SKILL.md) |
 | `state-management` | BLoC/Cubit, ChangeNotifier, providers | [SKILL.md](skills/state-management/SKILL.md) |
 | `testing-flutter` | Unit, widget, integration tests | [SKILL.md](skills/testing-flutter/SKILL.md) |
 | `auto-route` | Navigation, route generation, guards | [SKILL.md](skills/auto-route/SKILL.md) |
@@ -85,6 +86,7 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 | Setting up or modifying AutoRoute routes or guards | `auto-route` |
 | Setting up dependency injection (GetIt) | `get-it-di` |
 | Writing Flutter tests (general patterns) | `testing-flutter` |
+| Aplicar POO, SOLID o patrones de diseño (abstracciones, nuevos servicios) | `solid-design` |
 | Crear o usar barrel files (domain/data/presentation, core) | Seguir `.cursor/rules/barrel_files.mdc` |
 
 ### Orden de los agentes de testing
@@ -137,6 +139,24 @@ flutter build ios
 
 ---
 
+## POO, SOLID y patrones de diseño
+
+El código debe aplicar **orientación a objetos**, **SOLID** y **patrones de diseño** de forma explícita. Referencia: [solid.md](solid.md).
+
+| Principio | Aplicación en el proyecto |
+|-----------|----------------------------|
+| **S** (Single Responsibility) | Una clase, una responsabilidad. Ej.: un servicio de permiso por tipo (cámara, fotos, ubicación); cada UseCase hace una sola acción. |
+| **O** (Open/Closed) | Extender sin modificar: nuevas implementaciones de una abstracción (ej. `PermissionService`, estrategias de pago) sin tocar el código existente. |
+| **L** (Liskov Substitution) | Las implementaciones deben poder sustituir a la abstracción sin romper el contrato. No lanzar excepciones o comportarse de forma distinta a lo que el tipo base promete. |
+| **I** (Interface Segregation) | Interfaces pequeñas y específicas. Depender de `CameraPermissionService` cuando solo se necesita cámara, no de un “permiso genérico” con muchos métodos. |
+| **D** (Dependency Inversion) | Depender de abstracciones (interfaces/abstract class), no de implementaciones. Inyectar `PermissionService`/`Repository` vía GetIt; el cliente no conoce la impl concreta. |
+
+**Patrones usados en el proyecto**: Repository (domain ↔ data), Use Case (lógica de negocio), Dependency Injection (GetIt), Factory (configuración/creación), Strategy (cuando hay varias formas de hacer algo). Al crear servicios reutilizables (ej. permisos), definir **una clase abstracta base** que todas las implementaciones utilicen (véase `PermissionService` en `lib/core/services/permission/`).
+
+Para detalles y ejemplos (cafetería, pagos, bebidas), leer [solid.md](solid.md). Para aplicar esto al diseñar features o capas, usar el skill **solid-design**.
+
+---
+
 ## Code Style (Flutter)
 
 - **Performance**: Use `DecoratedBox` when only decoration is needed; `Container` when you need padding, margin, constraints, or alignment. Use `ListView.builder` for lists. Prefer `const` constructors.
@@ -174,3 +194,10 @@ Before creating a PR:
 - **Routes**: AutoRoute generates `app_routes.gr.dart`; do not edit by hand.
 - **Theme**: Use `context.appColor` and extensions from `core/extension` when available.
 - **Tests**: Use `flutter test --coverage` for coverage; import failures often come from barrel files or route imports.
+
+### Permisos (permission_handler)
+
+Para que **permission_handler** funcione correctamente:
+
+- **Android**: En `android/app/src/main/AndroidManifest.xml` deben estar declarados los permisos que uses (CAMERA, READ_MEDIA_IMAGES, ACCESS_FINE_LOCATION, etc.). En `android/gradle.properties`: `android.useAndroidX=true` y `android.enableJetifier=true`. En `android/app/build.gradle.kts`: `compileSdk` ≥ 33 (recomendado 35).
+- **iOS**: En `ios/Runner/Info.plist` deben existir las claves de uso (ej. `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSLocationWhenInUseUsageDescription`) con un texto para el usuario. En `ios/Podfile`, dentro de `post_install`, hay que definir los macros de permission_handler (`GCC_PREPROCESSOR_DEFINITIONS`) con `PERMISSION_CAMERA=1`, `PERMISSION_PHOTOS=1`, `PERMISSION_LOCATION_WHENINUSE=1` (y el resto en 0 si no se usan). Ver [documentación de permission_handler](https://pub.dev/packages/permission_handler).

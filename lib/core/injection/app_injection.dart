@@ -23,6 +23,9 @@ import 'package:partners/core/services/network/dio_services_impl.dart';
 import 'package:partners/core/services/location/location_service.dart';
 import 'package:partners/core/services/location/location_service_impl.dart';
 import 'package:partners/core/services/mapbox/mapbox_geocoding_service.dart';
+import 'package:partners/core/services/permission/location_permission_service.dart';
+import 'package:partners/core/services/permission/camera_permission_service.dart';
+import 'package:partners/core/services/permission/photos_permission_service.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
 import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
 
@@ -37,6 +40,23 @@ class AppInjection {
   }
 
   void _init() {
+    // Servicios de permisos (registrar primero para uso en pantallas sin depender de otros módulos)
+    if (!_getIt.isRegistered<LocationPermissionService>()) {
+      _getIt.registerLazySingleton<LocationPermissionService>(
+        () => LocationPermissionServiceImpl(),
+      );
+    }
+    if (!_getIt.isRegistered<CameraPermissionService>()) {
+      _getIt.registerLazySingleton<CameraPermissionService>(
+        () => CameraPermissionServiceImpl(),
+      );
+    }
+    if (!_getIt.isRegistered<PhotosPermissionService>()) {
+      _getIt.registerLazySingleton<PhotosPermissionService>(
+        () => PhotosPermissionServiceImpl(),
+      );
+    }
+
     // Auth Managers
     if (!_getIt.isRegistered<TokenManager>()) {
       _getIt.registerLazySingleton<TokenManager>(() => TokenManager());

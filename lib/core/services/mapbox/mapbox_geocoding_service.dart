@@ -41,10 +41,11 @@ class MapboxGeocodingServiceImpl implements MapboxGeocodingService {
 
     try {
       final encoded = Uri.encodeComponent(query.trim());
-      // Restringir a Perú y resultados en español
+      // Restringir a Perú, solo direcciones y mejor resultado
       const country = 'PE';
       const language = 'es';
-      final url = '$_baseUrl/$encoded.json?access_token=$token&limit=5&country=$country&language=$language';
+      const types = 'address';
+      final url = '$_baseUrl/$encoded.json?access_token=$token&limit=1&country=$country&language=$language&types=$types';
       final response = await _dio.get<String>(url);
       if (response.data == null) return null;
 

@@ -43,14 +43,8 @@ import 'package:partners/features/branches/presentation/screens/add_workers_scre
     as _i1;
 import 'package:partners/features/branches/presentation/screens/branches_screen.dart'
     as _i4;
-import 'package:partners/features/branches/presentation/screens/configure_schedule_screen.dart'
-    as _i7;
 import 'package:partners/features/branches/presentation/screens/create_branch_screen.dart'
     as _i8;
-import 'package:partners/features/branches/presentation/screens/select_category_screen.dart'
-    as _i38;
-import 'package:partners/features/branches/presentation/screens/select_subcategory_screen.dart'
-    as _i39;
 import 'package:partners/features/buy_points/presentation/screens/buy_points_screen.dart'
     as _i6;
 import 'package:partners/features/cuenta/presentation/screens/cuenta_screen.dart'
@@ -194,22 +188,6 @@ class BuyPointsRoute extends _i47.PageRouteInfo<void> {
     name,
     builder: (data) {
       return const _i6.BuyPointsScreen();
-    },
-  );
-}
-
-/// generated route for
-/// [_i7.ConfigureScheduleScreen]
-class ConfigureScheduleRoute extends _i47.PageRouteInfo<void> {
-  const ConfigureScheduleRoute({List<_i47.PageRouteInfo>? children})
-    : super(ConfigureScheduleRoute.name, initialChildren: children);
-
-  static const String name = 'ConfigureScheduleRoute';
-
-  static _i47.PageInfo page = _i47.PageInfo(
-    name,
-    builder: (data) {
-      return const _i7.ConfigureScheduleScreen();
     },
   );
 }
@@ -868,38 +846,6 @@ class RegistrationSuccessRoute extends _i47.PageRouteInfo<void> {
     name,
     builder: (data) {
       return const _i37.RegistrationSuccessScreen();
-    },
-  );
-}
-
-/// generated route for
-/// [_i38.SelectCategoryScreen]
-class SelectCategoryRoute extends _i47.PageRouteInfo<void> {
-  const SelectCategoryRoute({List<_i47.PageRouteInfo>? children})
-    : super(SelectCategoryRoute.name, initialChildren: children);
-
-  static const String name = 'SelectCategoryRoute';
-
-  static _i47.PageInfo page = _i47.PageInfo(
-    name,
-    builder: (data) {
-      return const _i38.SelectCategoryScreen();
-    },
-  );
-}
-
-/// generated route for
-/// [_i39.SelectSubCategoryScreen]
-class SelectSubCategoryRoute extends _i47.PageRouteInfo<void> {
-  const SelectSubCategoryRoute({List<_i47.PageRouteInfo>? children})
-    : super(SelectSubCategoryRoute.name, initialChildren: children);
-
-  static const String name = 'SelectSubCategoryRoute';
-
-  static _i47.PageInfo page = _i47.PageInfo(
-    name,
-    builder: (data) {
-      return const _i39.SelectSubCategoryScreen();
     },
   );
 }

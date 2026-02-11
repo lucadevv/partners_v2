@@ -29,7 +29,7 @@ lib/features/<feature>/domain/
 
 - No imports from `data/` or `presentation/`. No Flutter, no Dio. Reglas de capa: `.cursor/rules/arquiecture.mdc`.
 - Entities: equality (Equatable), immutable where possible.
-- Repository: only method signatures; implementation lives in `data/repositories/`.
+- Repository: only method signatures; implementation lives in `data/repositories/`. Para SOLID y cuándo introducir abstracciones, ver skill **solid-design**.
 
 ## Reglas clave (referencia: auth/register)
 

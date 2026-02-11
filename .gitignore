@@ -46,3 +46,6 @@ app.*.map.json
 
 
 env.json
+
+# Assets pesados (evitar subir zips grandes a GitHub)
+assets/svg/*.zip

@@ -39,26 +39,46 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    
+
     target.build_configurations.each do |config|
+      # permission_handler: macros para permisos usados (cámara, fotos, ubicación)
+      # Ver: https://github.com/Baseflow/flutter-permission-handler/blob/main/permission_handler_apple/ios/Classes/PermissionHandlerEnums.h
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'PERMISSION_PHOTOS=1',
+        'PERMISSION_LOCATION_WHENINUSE=1',
+        'PERMISSION_EVENTS=0',
+        'PERMISSION_EVENTS_FULL_ACCESS=0',
+        'PERMISSION_REMINDERS=0',
+        'PERMISSION_CONTACTS=0',
+        'PERMISSION_MICROPHONE=0',
+        'PERMISSION_SPEECH_RECOGNIZER=0',
+        'PERMISSION_LOCATION=0',
+        'PERMISSION_NOTIFICATIONS=0',
+        'PERMISSION_MEDIA_LIBRARY=0',
+        'PERMISSION_SENSORS=0',
+        'PERMISSION_BLUETOOTH=0',
+        'PERMISSION_APP_TRACKING_TRANSPARENCY=0',
+        'PERMISSION_CRITICAL_ALERTS=0',
+        'PERMISSION_ASSISTANT=0',
+      ]
+
       # Asegurar versión mínima de iOS 16.0 (requerida por ML Kit)
       if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 16.0
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
       end
-      
+
       # Excluir arquitecturas 32-bit (ML Kit no las soporta)
       config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "armv7"
-      
+
       # Configuración específica para ML Kit y MLImage
       if target.name.include?('MLKit') || target.name == 'MLImage'
         config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
-        # Permitir todas las arquitecturas del simulador
         config.build_settings['VALID_ARCHS'] = 'arm64 x86_64'
         config.build_settings['VALID_ARCHS[sdk=iphonesimulator*]'] = 'arm64 x86_64'
-        # Asegurar que se construya para simulador correctamente
         config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
       else
-        # Para otros pods, usar ONLY_ACTIVE_ARCH en debug
         if config.name == 'Debug'
           config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
         end

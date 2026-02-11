@@ -23,15 +23,6 @@ class PrivateRoutes {
             // Rutas hijas de Home - herramientas smart
             AutoRoute(path: 'branches', page: BranchesRoute.page),
             AutoRoute(path: 'create-branch', page: CreateBranchRoute.page),
-            AutoRoute(path: 'select-category', page: SelectCategoryRoute.page),
-            AutoRoute(
-              path: 'select-subcategory',
-              page: SelectSubCategoryRoute.page,
-            ),
-            AutoRoute(
-              path: 'configure-schedule',
-              page: ConfigureScheduleRoute.page,
-            ),
             AutoRoute(path: 'add-workers', page: AddWorkersRoute.page),
             AutoRoute(path: 'buy-points', page: BuyPointsRoute.page),
             AutoRoute(path: 'issue-points', page: IssuePointsRoute.page),

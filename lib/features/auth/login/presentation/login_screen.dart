@@ -7,6 +7,8 @@ import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/core/utils/widgets/custom_text_field_widget.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
+import 'package:partners/features/auth/login/presentation/login_screen_keys.dart';
+import 'package:partners/features/auth/login/presentation/login_screen_strings.dart';
 import 'package:partners/features/auth/login/presentation/cubit/login_cubit.dart'
     show LoginStatus;
 
@@ -36,42 +38,53 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  static final RegExp _emailRegex = RegExp(
+    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+  );
+
   void _handleLogin() {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingrese email y contraseña')),
+        SnackBar(content: Text(LoginScreenStrings.emptyFieldsSnackBar)),
       );
       return;
     }
 
-    // Llamar al login del cubit
+    if (!_emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(LoginScreenStrings.invalidEmailFormat)),
+      );
+      return;
+    }
+
     context.read<OrquestorAuthCubit>().login(email: email, password: password);
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<OrquestorAuthCubit, OrquestorAuthState>(
+      listenWhen: (previous, current) =>
+          previous.loginState != current.loginState ||
+          previous.effect != current.effect,
       listener: (context, state) {
-        // Escuchar efecto de navegación después del login exitoso
+        if (state.loginState.status == LoginStatus.failure &&
+            state.loginState.errorMessage != null &&
+            state.loginState.errorMessage!.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.loginState.errorMessage!),
+            ),
+          );
+          return;
+        }
         if (state.effect is NavigationLoginSuccessEffect) {
-          final effect = state.effect as NavigationLoginSuccessEffect;
           context.read<OrquestorAuthCubit>().reset();
-
-          if (effect.isCompleteData) {
-            // Complete data - go to dashboard with Home
-            context.router.replaceAll([
-              const DashboardRoute(children: [HomeRoute()]),
-            ]);
-          } else {
-            // Incomplete data - go to validation
-            const rucType = RucType.ruc10;
-            context.router.replaceAll([
-              DashboardRoute(children: [ValidationRoute(rucType: rucType)]),
-            ]);
-          }
+          context.router.replaceAll([
+            const DashboardRoute(children: [HomeRoute()]),
+          ]);
         }
       },
       child: Scaffold(
@@ -130,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         runSpacing: -8,
                         children: [
                           Text(
-                            "¡Bienvenido a",
+                            LoginScreenStrings.welcomeTitle,
                             style: TextStyle(
                               color: context.appColor.onPrimary,
                               fontSize: 35,
@@ -138,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           Text(
-                            "Partners",
+                            LoginScreenStrings.appName,
                             style: TextStyle(
                               color: context.appColor.onPrimary,
                               fontSize: 30,
@@ -150,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       Text(
-                        "Ingrese colocando sus datos",
+                        LoginScreenStrings.subtitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: context.appColor.onPrimary,
@@ -175,14 +188,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             spacing: 20,
                             children: [
                               CustomTextFieldWidget(
-                                label: "Email",
-                                hintText: "Ingrese su correo electrónico",
+                                key: const Key(LoginScreenKeys.emailField),
+                                label: LoginScreenStrings.emailLabel,
+                                hintText: LoginScreenStrings.emailHint,
                                 keyboardType: TextInputType.emailAddress,
                                 controller: _emailController,
                               ),
                               CustomTextFieldWidget(
-                                label: "Contraseña",
-                                hintText: "Ingrese su contraseña",
+                                key: const Key(LoginScreenKeys.passwordField),
+                                label: LoginScreenStrings.passwordLabel,
+                                hintText: LoginScreenStrings.passwordHint,
                                 keyboardType: TextInputType.visiblePassword,
                                 obscureText: true,
                                 controller: _passwordController,
@@ -196,6 +211,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       state.loginState.status ==
                                       LoginStatus.loading;
                                   return ElevatedButton(
+                                    key: const Key(
+                                        LoginScreenKeys.continueButton),
                                     onPressed: isLoading ? null : _handleLogin,
                                     child: isLoading
                                         ? const SizedBox(
@@ -221,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 Icons.arrow_right_alt_outlined,
                                               ),
                                               Text(
-                                                "Continuar",
+                                                LoginScreenStrings.continueButton,
                                                 style: TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.w400,
@@ -239,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 alignment: WrapAlignment.center,
                                 children: [
                                   SvgPicture.asset('assets/svg/locked.svg'),
-                                  Text("¿Olvidó su contraseña?"),
+                                  Text(LoginScreenStrings.forgotPassword),
                                 ],
                               ),
                             ],
@@ -258,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: context.appColor.onPrimary,
                           ),
                           Text(
-                            '¿No tiene cuenta?',
+                            LoginScreenStrings.noAccount,
                             style: TextStyle(
                               color: context.appColor.onPrimary,
                               fontSize: 18,
@@ -266,6 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           TextButton(
+                            key: const Key(LoginScreenKeys.registerLink),
                             style: ButtonStyle(
                               padding: WidgetStatePropertyAll(
                                 EdgeInsets.symmetric(horizontal: 4),
@@ -275,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context.router.push(const RegisterRoute());
                             },
                             child: Text(
-                              'Regístrese gratis',
+                              LoginScreenStrings.registerFree,
                               style: TextStyle(
                                 color: context.appColor.onPrimary,
                                 fontSize: 18,

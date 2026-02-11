@@ -3,6 +3,8 @@ export 'cubit/register_cubit.dart';
 export 'cubit/register_state.dart';
 export 'notifier/register_form_notifier.dart';
 export 'register_screen.dart';
+export 'register_screen_keys.dart';
+export 'register_screen_strings.dart';
 export 'widgets/continue_button_widget.dart';
 export 'widgets/free_banner_widget.dart';
 export 'widgets/register_field_widget.dart';

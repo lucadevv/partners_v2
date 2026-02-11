@@ -43,7 +43,9 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
             if (state.status == PasswordValidationStatus.success) {
               context.read<PasswordValidationCubit>().resetState();
               router.pop(true);
-              router.replaceAll([const DashboardRoute()]);
+              context.router.replaceAll([
+                const DashboardRoute(children: [HomeRoute()]),
+              ]);
             } else if (state.status == PasswordValidationStatus.failure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

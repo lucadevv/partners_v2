@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:partners/core/utils/utils.dart';
 import 'package:partners/features/branches/domain/domain.dart';
 
 /// Widget específico para campo de teléfono con prefijo +51
@@ -52,59 +51,51 @@ class BranchPhoneFieldWidget extends StatelessWidget {
                     )
                   : null,
             ),
-            child: Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 26),
-                  child: Text(
-                    '+51 ',
-                    style: TextStyle(
-                      color: Color(0xFF757575),
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'Figtree',
-                    ),
-                  ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.phone,
+                maxLength: field.maxLength,
+                readOnly: field.readOnly,
+                enabled: enabled && field.enabled,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: 'Figtree',
                 ),
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: KeyboardTypeConverter.toTextInputType(
-                      field.keyboardType,
-                    ),
-                    maxLength: field.maxLength,
-                    readOnly: field.readOnly,
-                    enabled: enabled && field.enabled,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'Figtree',
-                    ),
-                    decoration: InputDecoration(
-                      hintText: field.placeholder,
-                      hintStyle: TextStyle(
-                        color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'Figtree',
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 0,
-                        vertical: 38,
-                      ),
-                      errorText: errorText,
-                      counterText: '',
-                    ),
-                    onChanged: onChanged,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: backgroundColor,
+                  prefixText: '+51 ',
+                  prefixStyle: const TextStyle(
+                    color: Color(0xFF051858),
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'Figtree',
                   ),
+                  hintText: field.placeholder,
+                  hintStyle: const TextStyle(
+                    color: Color(0xFF051858),
+                    fontSize: 18,
+                    fontFamily: 'Figtree',
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 26,
+                    vertical: 26,
+                  ),
+                  counterText: '',
                 ),
-              ],
+                onChanged: onChanged,
+              ),
             ),
           ),
         ),
-        if (errorText != null)
+        if (errorText != null && errorText!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(

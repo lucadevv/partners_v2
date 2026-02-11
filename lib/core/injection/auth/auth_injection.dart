@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/features/auth/login/data/datasource/login_datasource.dart';
-import 'package:partners/features/auth/login/data/datasource/provider_memory/mock_login_datasource_impl.dart';
+import 'package:partners/features/auth/login/data/datasource/ntw/ntw_login_datasource_impl.dart';
 import 'package:partners/features/auth/login/data/repository/login_repository_impl.dart';
 import 'package:partners/features/auth/login/domain/repository/login_repository.dart';
 import 'package:partners/features/auth/login/domain/use_case/login_usecase.dart';
@@ -53,10 +53,10 @@ class AuthInjection {
       );
     }
 
-    // Login Injection
+    // Login: datasource real (llama al endpoint /auth/login)
     if (!_getIt.isRegistered<LoginDatasource>()) {
       _getIt.registerLazySingleton<LoginDatasource>(
-        () => MockLoginDatasourceImpl(),
+        () => NtwLoginDatasourceImpl(services: getIt<ApiServices>()),
       );
     }
 

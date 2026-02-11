@@ -160,6 +160,19 @@ class RegisterFormNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Errores devueltos por el backend (RUC o documento inválido, comercio no encontrado, etc.)
+  void setRucErrorFromBackend(String? message) {
+    _rucError = message;
+    _isRucValid = false;
+    notifyListeners();
+  }
+
+  void setDocErrorFromBackend(String? message) {
+    _docError = message;
+    _isDocValid = false;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _rucDebounce?.cancel();

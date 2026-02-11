@@ -22,6 +22,7 @@ import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/network/dio_services_impl.dart';
 import 'package:partners/core/services/location/location_service.dart';
 import 'package:partners/core/services/location/location_service_impl.dart';
+import 'package:partners/core/services/mapbox/mapbox_geocoding_service.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
 import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
 
@@ -75,6 +76,11 @@ class AppInjection {
     if (!_getIt.isRegistered<LocationService>()) {
       _getIt.registerLazySingleton<LocationService>(
         () => LocationServiceImpl(),
+      );
+    }
+    if (!_getIt.isRegistered<MapboxGeocodingService>()) {
+      _getIt.registerLazySingleton<MapboxGeocodingService>(
+        () => MapboxGeocodingServiceImpl(),
       );
     }
 

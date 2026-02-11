@@ -64,24 +64,24 @@ class PasswordValidationCubit extends Cubit<PasswordValidationState> {
       },
       (passwordRes) async {
         try {
-          // Por defecto, al completar el registro, el usuario es dueño del negocio
-          // Esto puede cambiar cuando el backend devuelva el rol real
-          final defaultUser = UserModel(
+          // Misma lógica que login: backend devuelve access_token, refresh_token, role
+          final role = passwordRes.role != null
+              ? UserRoleExtension.fromString(passwordRes.role!)
+              : UserRole.businessOwner;
+          final user = UserModel(
             id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-            email: '', // Se actualizará cuando tengamos la info del usuario
+            email: '',
             name: 'Usuario Registrado',
-            role: UserRole.businessOwner, // Por defecto dueño del negocio
+            role: role,
           );
-          
+
           await _authManager.login(
             passwordRes.accessToken,
             passwordRes.refreshToken,
-            isCompleteData: true,
-            user: defaultUser,
+            user: user,
           );
-          
-          // Establecer usuario y rol en RoleService
-          _roleService.setUser(defaultUser);
+
+          _roleService.setUser(user);
           
           if (!isClosed) {
             emit(state.copyWith(status: PasswordValidationStatus.success));

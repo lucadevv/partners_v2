@@ -14,6 +14,8 @@ import 'package:partners/features/auth/register/presentation/widgets/free_banner
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_title_widget.dart';
+import 'package:partners/features/auth/register/presentation/register_screen_keys.dart';
+import 'package:partners/features/auth/register/presentation/register_screen_strings.dart';
 import 'package:partners/features/auth/register/presentation/widgets/ruc_selector_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/tipo_documento_selector_widget.dart';
 
@@ -61,12 +63,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Scaffold(
         appBar: RegisterHeaderWidget(),
         body: BlocConsumer<RegisterCubit, RegisterStateX>(
+          listenWhen: (previous, current) =>
+              previous.sendRucStatus != current.sendRucStatus ||
+              previous.sendDocStatus != current.sendDocStatus ||
+              previous.sendStartStatus != current.sendStartStatus,
           listener: (context, state) {
             if (state.sendRucStatus == RegisterStatus.success) {
               _formNotifier.updateFromRucResponse(state.rucData.socialReason);
             }
             if (state.sendDocStatus == RegisterStatus.success) {
               _formNotifier.updateFromDocResponse(state.docData.getFullName);
+            }
+            final message = state.errorMessage?.trim();
+            final showMessage = message != null && message.isNotEmpty;
+            final displayMessage =
+                showMessage ? message : RegisterScreenStrings.defaultErrorSnackBar;
+            if (state.sendRucStatus == RegisterStatus.failure) {
+              _formNotifier.setRucErrorFromBackend(displayMessage);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(displayMessage)),
+              );
+            }
+            if (state.sendDocStatus == RegisterStatus.failure) {
+              _formNotifier.setDocErrorFromBackend(displayMessage);
+              if (state.sendRucStatus != RegisterStatus.failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(displayMessage)),
+                );
+              }
+            }
+            if (state.sendStartStatus == RegisterStatus.failure &&
+                state.sendRucStatus != RegisterStatus.failure &&
+                state.sendDocStatus != RegisterStatus.failure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(displayMessage)),
+              );
             }
           },
           builder: (context, state) {
@@ -125,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ],
                                   ),
                                   RegisterFieldWidget(
-                                    key: Key('ruc_field'),
+                                    key: const Key(RegisterScreenKeys.rucField),
                                     label: _formNotifier.rucConfig.label,
                                     placeholder:
                                         _formNotifier.rucConfig.placeholder,
@@ -164,7 +195,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       },
                                     ),
                                     RegisterFieldWidget(
-                                      key: Key('doc_field'),
+                                      key: const Key(RegisterScreenKeys.docField),
                                       label: _formNotifier.repConfig.label,
                                       placeholder:
                                           _formNotifier.repConfig.placeholder,
@@ -208,6 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         left: 24,
                         right: 24,
                         child: ContinueButtonWidget(
+                          key: const Key(RegisterScreenKeys.continueButton),
                           onPressed: _formNotifier.isFormComplete
                               ? () async {
                                   await context

@@ -9,3 +9,4 @@ export 'screens/promo_map_screen.dart';
 export 'screens/promos_screen.dart';
 export 'widgets/promo_image_source_bottom_sheet.dart';
 export 'widgets/promo_type_bottom_sheet.dart';
+export 'widgets/promos_oval_background.dart';

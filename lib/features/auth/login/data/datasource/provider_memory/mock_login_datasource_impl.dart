@@ -15,7 +15,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_owner',
         refreshToken: 'mock_refresh_token_owner',
-        isCompleteData: true,
         user: const UserModel(
           id: '1',
           email: 'owner@example.com',
@@ -28,7 +27,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_dueno',
         refreshToken: 'mock_refresh_token_dueno',
-        isCompleteData: true,
         user: const UserModel(
           id: '2',
           email: 'dueno@example.com',
@@ -43,7 +41,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_admin',
         refreshToken: 'mock_refresh_token_admin',
-        isCompleteData: true,
         user: const UserModel(
           id: '3',
           email: 'admin@example.com',
@@ -57,7 +54,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_administrador',
         refreshToken: 'mock_refresh_token_administrador',
-        isCompleteData: true,
         user: const UserModel(
           id: '4',
           email: 'administrador@example.com',
@@ -73,7 +69,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_waiter',
         refreshToken: 'mock_refresh_token_waiter',
-        isCompleteData: true,
         user: const UserModel(
           id: '5',
           email: 'waiter@example.com',
@@ -87,7 +82,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_cajera',
         refreshToken: 'mock_refresh_token_cajera',
-        isCompleteData: true,
         user: const UserModel(
           id: '6',
           email: 'cajera@example.com',
@@ -101,7 +95,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_mesero',
         refreshToken: 'mock_refresh_token_mesero',
-        isCompleteData: true,
         user: const UserModel(
           id: '7',
           email: 'mesero@example.com',
@@ -117,7 +110,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_incompleto',
         refreshToken: 'mock_refresh_token_incompleto',
-        isCompleteData: false,
         user: const UserModel(
           id: '8',
           email: 'incompleto@example.com',
@@ -132,7 +124,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_usuario1',
         refreshToken: 'mock_refresh_token_usuario1',
-        isCompleteData: true,
         user: const UserModel(
           id: '9',
           email: 'usuario1@example.com',
@@ -145,7 +136,6 @@ class MockLoginDatasourceImpl implements LoginDatasource {
       'password123': LoginResponseModel(
         accessToken: 'mock_access_token_completo',
         refreshToken: 'mock_refresh_token_completo',
-        isCompleteData: true,
         user: const UserModel(
           id: '10',
           email: 'completo@example.com',

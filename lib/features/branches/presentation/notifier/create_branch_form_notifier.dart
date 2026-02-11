@@ -72,10 +72,16 @@ class CreateBranchFormNotifier extends ChangeNotifier {
            _addressError == null;
   }
 
-  // Validación con debouncer
+  // Validación con debouncer. Si el campo está vacío, se quita el error.
   void validateName(String value) {
     if (_nameDebounce?.isActive ?? false) {
       _nameDebounce!.cancel();
+    }
+
+    if (value.trim().isEmpty) {
+      _nameError = null;
+      notifyListeners();
+      return;
     }
 
     _nameDebounce = Timer(const Duration(milliseconds: 500), () {
@@ -94,6 +100,12 @@ class CreateBranchFormNotifier extends ChangeNotifier {
       _phoneDebounce!.cancel();
     }
 
+    if (value.trim().isEmpty) {
+      _phoneError = null;
+      notifyListeners();
+      return;
+    }
+
     _phoneDebounce = Timer(const Duration(milliseconds: 500), () {
       final validator = BranchConfigFactory.getPhoneValidator();
       if (!validator.validate(value)) {
@@ -108,6 +120,12 @@ class CreateBranchFormNotifier extends ChangeNotifier {
   void validateAddress(String value) {
     if (_addressDebounce?.isActive ?? false) {
       _addressDebounce!.cancel();
+    }
+
+    if (value.trim().isEmpty) {
+      _addressError = null;
+      notifyListeners();
+      return;
     }
 
     _addressDebounce = Timer(const Duration(milliseconds: 500), () {

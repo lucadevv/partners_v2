@@ -17,10 +17,7 @@ class BranchesScreen extends StatelessWidget implements AutoRouteWrapper {
   Widget wrappedRoute(BuildContext context) {
     final cubit = getIt<BranchesCubit>();
     cubit.loadBranches();
-    return BlocProvider(
-      create: (_) => cubit,
-      child: this,
-    );
+    return BlocProvider(create: (_) => cubit, child: this);
   }
 
   @override
@@ -313,7 +310,11 @@ class BranchesScreen extends StatelessWidget implements AutoRouteWrapper {
 
   Widget _buildFloatingActionButton(BuildContext context) {
     final roleService = getIt<RoleService>();
-    if (!roleService.hasPermission(Permission.createBranches)) {
+    // Superadmin tiene acceso total; además se verifica el permiso explícito
+    final canCreate =
+        roleService.hasRole(UserRole.superadmin) ||
+        roleService.hasPermission(Permission.createBranches);
+    if (!canCreate) {
       return const SizedBox.shrink();
     }
 

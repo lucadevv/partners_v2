@@ -68,7 +68,6 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
       await _authManager.login(
         responseEntity.accessToken,
         responseEntity.refreshToken,
-        isCompleteData: responseEntity.isCompleteData,
         user: responseEntity.user,
       );
       
@@ -77,9 +76,7 @@ class OrquestorAuthCubit extends Cubit<OrquestorAuthState> {
       
       // Emitir efecto de navegación para que la UI navegue
       emit(state.copyWith(
-        effect: NavigationLoginSuccessEffect(
-          isCompleteData: responseEntity.isCompleteData,
-        ),
+        effect: const NavigationLoginSuccessEffect(),
       ));
     } catch (e) {
       // Error al procesar login - ya está manejado en el estado

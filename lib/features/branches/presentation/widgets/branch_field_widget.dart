@@ -55,41 +55,47 @@ class BranchFieldWidget extends StatelessWidget {
                     )
                   : null,
             ),
-            child: TextField(
-              controller: controller,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.normal,
-                fontFamily: 'Figtree',
-              ),
-              keyboardType: KeyboardTypeConverter.toTextInputType(
-                field.keyboardType,
-              ),
-              maxLength: field.maxLength,
-              readOnly: field.readOnly,
-              enabled: enabled && field.enabled,
-              decoration: InputDecoration(
-                hintText: field.placeholder,
-                hintStyle: TextStyle(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(
                   color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.normal,
                   fontFamily: 'Figtree',
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 26,
-                  vertical: 38,
+                keyboardType: KeyboardTypeConverter.toTextInputType(
+                  field.keyboardType,
                 ),
-                errorText: errorText,
-                counterText: '',
+                maxLength: field.maxLength,
+                readOnly: field.readOnly,
+                enabled: enabled && field.enabled,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: backgroundColor,
+                  hintText: field.placeholder,
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF051858),
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'Figtree',
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 26,
+                    vertical: 26,
+                  ),
+                  counterText: '',
+                ),
+                onChanged: onChanged,
               ),
-              onChanged: onChanged,
             ),
           ),
         ),
-        if (errorText != null)
+        if (errorText != null && errorText!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(

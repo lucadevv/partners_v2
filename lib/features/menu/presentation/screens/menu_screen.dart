@@ -1,8 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/extension/extension.dart';
+import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/utils/utils.dart';
 import 'package:partners/core/widgets/widgets.dart';
+import 'package:partners/main.dart';
 
 @RoutePage()
 class MenuScreen extends StatelessWidget {
@@ -10,6 +12,7 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authManager = getIt<AuthManager>();
     return Scaffold(
       backgroundColor: context.appColor.primary,
       appBar: AppBar(
@@ -25,6 +28,14 @@ class MenuScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              authManager.logout();
+            },
+            icon: const Icon(Icons.logout, color: Colors.white),
+          ),
+        ],
       ),
       body: GridView.count(
         crossAxisCount: 2,

@@ -12,6 +12,36 @@ import 'package:partners/core/models/user_role.dart';
 class RolePermissions {
   /// Mapa estático que define los permisos para cada rol
   static const Map<UserRole, List<Permission>> rolePermissions = {
+    // Superadministrador - acceso total (igual que dueño)
+    UserRole.superadmin: [
+      Permission.fullAccess,
+      Permission.readProducts,
+      Permission.createProducts,
+      Permission.updateProducts,
+      Permission.deleteProducts,
+      Permission.readOrders,
+      Permission.createOrders,
+      Permission.updateOrders,
+      Permission.cancelOrders,
+      Permission.readPoints,
+      Permission.emitPoints,
+      Permission.redeemPoints,
+      Permission.managePoints,
+      Permission.readUsers,
+      Permission.createUsers,
+      Permission.updateUsers,
+      Permission.deleteUsers,
+      Permission.readBranches,
+      Permission.createBranches,
+      Permission.updateBranches,
+      Permission.deleteBranches,
+      Permission.manageBranch,
+      Permission.readSettings,
+      Permission.updateSettings,
+      Permission.readReports,
+      Permission.generateReports,
+    ],
+
     // Dueño del negocio - puede hacer todo
     UserRole.businessOwner: [
       Permission.fullAccess,

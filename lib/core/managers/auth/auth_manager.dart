@@ -6,12 +6,10 @@ abstract class AuthManager {
   Future<bool> isUserLoggedIn();
 
   /// Realiza login con access y refresh token
-  /// [isCompleteData] indica si el usuario ha completado todos sus datos
   /// [user] información del usuario con su rol
   Future<void> login(
     String accessToken,
     String refreshToken, {
-    bool isCompleteData = false,
     UserModel? user,
   });
 
@@ -29,6 +27,9 @@ abstract class AuthManager {
 
   /// Obtiene el refresh token actual
   Future<String?> getCurrentRefreshToken();
+
+  /// Obtiene el usuario almacenado (para restaurar RoleService al iniciar)
+  Future<UserModel?> getCurrentUser();
 
   /// Stream de cambios en el estado de autenticación
   Stream<AuthStatus> get authStatusStream;

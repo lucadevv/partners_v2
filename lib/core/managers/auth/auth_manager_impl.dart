@@ -18,14 +18,9 @@ class AuthManagerImpl implements AuthManager {
   Future<void> login(
     String accessToken,
     String refreshToken, {
-    bool isCompleteData = false,
     UserModel? user,
   }) async {
-    await _tokenManager.saveToken(
-      accessToken,
-      refreshToken,
-      isCompleteData: isCompleteData,
-    );
+    await _tokenManager.saveToken(accessToken, refreshToken, user: user);
     _authStatusController.add(AuthStatus.authenticated);
   }
 
@@ -55,6 +50,11 @@ class AuthManagerImpl implements AuthManager {
   @override
   Future<String?> getCurrentRefreshToken() async {
     return await _tokenManager.getResfreshToken();
+  }
+
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    return await _tokenManager.getStoredUser();
   }
 
   @override

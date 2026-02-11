@@ -3,7 +3,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
-import 'package:partners/core/managers/auth/storage/token_manager.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/business_validation/presentation/notifier/business_validation_form_notifier.dart';
@@ -12,7 +11,6 @@ import 'package:partners/features/auth/register/presentation/widgets/register_he
 import 'package:partners/features/auth/otp/presentation/widgets/otp_bottom_sheet.dart';
 import 'package:partners/features/auth/validation/presentation/widgets/validation_input_bottom_sheet.dart';
 import 'package:partners/features/auth/validation/presentation/widgets/validation_loading_dots.dart';
-import 'package:partners/main.dart';
 
 @RoutePage()
 class BusinessValidationScreen extends StatefulWidget {
@@ -25,7 +23,6 @@ class BusinessValidationScreen extends StatefulWidget {
 
 class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
   late BusinessValidationFormNotifier _notifier;
-  final TokenManager _tokenManager = getIt<TokenManager>();
   bool _isLoading = false;
 
   @override
@@ -49,10 +46,6 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
       Future.delayed(const Duration(seconds: 2), () async {
         if (!mounted) return;
 
-        // Actualizar el flag isCompleteData
-        await _tokenManager.setIsCompleteData(true);
-
-        // Navegar al dashboard (el guard ya no redirigirá a validación)
         if (mounted) {
           context.router.replaceAll([const DashboardRoute()]);
         }

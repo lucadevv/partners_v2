@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 abstract class FieldDefinition {
   final String label;
   final String placeholder;
   final int? maxLength;
-  final TextInputType keyboardType;
+  final KeyboardType keyboardType;
   final bool enabled;
   final bool readOnly;
   final bool obscureText;

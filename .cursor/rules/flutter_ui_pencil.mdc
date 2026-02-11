@@ -1,0 +1,92 @@
+---
+name: flutter_ui_pencil
+description: Mapeo Pencil/.pen → Flutter, elección de widgets (ListView vs Column/Row), y mejores prácticas de rendimiento. Aplicar al traducir diseños o escribir UI.
+globs: lib/**/*.dart
+---
+
+# Pencil / .pen → Flutter (equivalencia tipo Tailwind → widgets)
+
+Cuando traduzcas diseños desde Pencil (.pen) o conceptos tipo Tailwind/layout, usa estos equivalentes en Flutter:
+
+## Layout
+
+| Concepto .pen / Tailwind | Flutter | Notas |
+|--------------------------|---------|--------|
+| `layout: "vertical"` / columna | `Column` | `mainAxisAlignment`, `crossAxisAlignment`, `mainAxisSize` |
+| `layout: "horizontal"` / fila | `Row` | Idem |
+| `gap` (espacio entre hijos) | `Column`/`Row` con `gap` (Flutter 3.16+) o `Wrap` con `spacing`/`runSpacing`, o `SizedBox(height: n)`/`width` entre hijos | Preferir `gap` cuando exista en el SDK que uses |
+| `fill_container` (flex) | `Expanded` (dentro de Row/Column) o `Flexible` | Para ocupar espacio restante |
+| `fit_content` | Sin Expanded; el hijo define su tamaño | `IntrinsicHeight`/`IntrinsicWidth` solo si es estrictamente necesario (coste de layout) |
+| Contenedor con scroll vertical | `ListView` o `CustomScrollView` + slivers | Ver sección "ListView vs Column" |
+| Grid | `GridView.builder` (lazy) o `GridView` con pocos hijos | Ver sección "Listas y grids" |
+
+## Apariencia
+
+| Concepto | Flutter |
+|----------|---------|
+| Fondo, borde, bordes redondeados (sin padding/margin) | `DecoratedBox` + `BoxDecoration` (no `Container` solo por decoración) |
+| Fondo + padding/margin/alignment | `Container` o `Padding` + `DecoratedBox` |
+| Color con transparencia | `Color.withValues(alpha: 0.0–1.0)` (nunca `withOpacity`) |
+| Variables/tokens de diseño ($--primary, etc.) | `Theme.of(context).colorScheme`, `Theme.of(context).textTheme`, o constantes del proyecto |
+
+## Texto e iconos
+
+| Concepto | Flutter |
+|----------|---------|
+| Texto | `Text` con `style: TextStyle(...)` o `Theme.of(context).textTheme` |
+| Icono (Lucide/Material names en .pen) | `Icon(Icons.xxx)` o paquete de iconos del proyecto; mapear nombre del diseño al icono Flutter |
+
+---
+
+# ListView vs Column / Row (cuándo usar cada uno)
+
+- **Column / Row**: Cuando hay **pocos hijos fijos** (típicamente &lt; ~10–15) y **no** se requiere scroll, o el scroll lo hace un padre (ej. una sola `ListView` arriba). Ej.: formulario corto, fila de chips, header con 3 líneas.
+- **ListView** (o `ListView.builder`): Cuando hay **muchos ítems** o **cantidad variable/dinámica**, o se necesita **scroll** de una lista de elementos. Siempre preferir **`ListView.builder`** (y análogamente `GridView.builder`) para listas largas: solo construye los hijos visibles (lazy). Referencia: [Working with long lists](https://docs.flutter.dev/cookbook/lists/long-lists), [Performance best practices](https://docs.flutter.dev/perf/best-practices).
+- **Evitar**: `ListView(children: [ ... muchos widgets ... ])` o `Column(children: [ ... 100 ítems ... ])` cuando la mayoría no son visibles; eso fuerza a construir y hacer layout de todos. Usar `ListView.builder` con `itemBuilder`.
+- **GridView**: Igual que listas: para muchas celdas usar `GridView.builder`; para pocas celdas fijas puede usarse `GridView` con lista de hijos (con mesura).
+
+Resumen: **lista larga o scrollable → ListView.builder**. **Pocos hijos, sin scroll (o scroll por otro widget) → Column/Row**.
+
+---
+
+# Rendimiento (Flutter best practices)
+
+Seguir las [Performance best practices](https://docs.flutter.dev/perf/best-practices) de Flutter. Resumen aplicable al proyecto:
+
+## Coste de build()
+
+- Minimizar trabajo costoso en `build()`; puede ejecutarse muy a menudo.
+- **Const**: Usar constructores `const` siempre que sea posible (el proyecto ya tiene `prefer_const_constructors`).
+- **Dividir widgets**: Evitar un solo widget con un `build()` enorme. Dividir por responsabilidad y por “qué cambia”: si solo una parte depende de `setState`, que esa parte sea un widget que reciba los datos y el resto quede estable.
+- **Localizar setState**: Llamar `setState` en el widget más bajo posible cuyo árbol deba reconstruirse. No llamar en la raíz si el cambio es local.
+- **Reutilización**: Preferir `StatelessWidget` (o widgets con `const`) para trozos de UI reutilizables en lugar de funciones que devuelven `Widget` (Flutter puede optimizar mejor el árbol de widgets).
+
+## Opacidad y clipping
+
+- **Opacity**: Evitar el widget `Opacity` cuando se pueda; es costoso (usa saveLayer). Para formas o texto con transparencia, dibujar con color semitransparente: `Color.withValues(alpha: x)`. Para fade-in de imágenes usar `FadeInImage`.
+- **Animaciones**: No usar `Opacity` en animaciones; usar `AnimatedOpacity` o `FadeInImage` según el caso.
+- **Clipping**: Usar con moderación. Para esquinas redondeadas preferir `BoxDecoration.borderRadius` en lugar de `ClipRRect` cuando baste.
+
+## Listas y grids
+
+- Ser **lazy**: listas/grids grandes con callbacks (`ListView.builder`, `GridView.builder`) para construir solo lo visible.
+- Evitar constructores que reciben una lista completa de hijos cuando la mayoría no están en pantalla (ej. `Column(children: listaGrande)` o `ListView(children: listaGrande)`).
+- Celdas de grid: cuando sea posible usar tamaños fijos para evitar pases intrínsecos costosos.
+
+## Layout y pases intrínsecos
+
+- Minimizar operaciones intrínsecas (que obligan a Flutter a preguntar tamaños “ideales” a todos los hijos). Cuando sea posible, dar tamaños fijos a celdas de listas/grids en lugar de depender de que “todas las celdas se igualen al más grande”.
+- Objetivo de frame: construir y pintar en **&lt; 16 ms** (60 fps); en dispositivos 120 fps, &lt; 8 ms.
+
+## Otros
+
+- **AnimatedBuilder**: No poner en el `builder` un subárbol que no dependa de la animación; construirlo una vez y pasarlo como `child`.
+- **operator == en Widgets**: No anular `operator ==` en widgets para “evitar rebuilds”; puede degradar rendimiento (comportamiento O(N²)). Confiar en `const` y en árbol bien dividido.
+
+---
+
+# Integración con Pencil
+
+- Al generar UI desde un .pen: usar `batch_get` / `snapshot_layout` / `get_variables` para estructura, tamaños y tokens; mapear a los widgets Flutter de esta regla y de `arquiecture.mdc`.
+- Mantener etiquetas de texto, iconos y espaciados del diseño; usar `Theme` y colores del proyecto (incl. `withValues(alpha:)`) en lugar de valores hardcodeados.
+- Las guías de Pencil (code, design-system) están orientadas a React/Tailwind; esta regla es la referencia Flutter del proyecto. No modificar las tools de Pencil; aplicar este mapeo al traducir.

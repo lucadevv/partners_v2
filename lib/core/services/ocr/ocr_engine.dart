@@ -11,7 +11,6 @@ class OcrEngine {
 
       final recognizedText = await _recognizer.processImage(inputImage);
 
-      print('lucadev1 ${recognizedText.text}');
       final text = recognizedText.text;
       return text.toUpperCase();
     } catch (e) {

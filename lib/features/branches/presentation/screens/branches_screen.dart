@@ -1,57 +1,30 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:partners/core/routes/app_routes.gr.dart';
-import 'package:partners/features/branches/domain/entities/branch_entity.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/models/models.dart';
+import 'package:partners/core/routes/routes.dart';
+import 'package:partners/core/services/services.dart';
+import 'package:partners/features/branches/domain/domain.dart';
+import 'package:partners/features/branches/presentation/presentation.dart';
+import 'package:partners/main.dart';
 
 @RoutePage()
 class BranchesScreen extends StatelessWidget {
   const BranchesScreen({super.key});
-
-  final List<BranchEntity> _branches = const [
-    BranchEntity(
-      id: '1',
-      name: 'Sucursal Starbucks\nC. Lima',
-      address: 'Centro Comercial, Av. Javier Prado Este 500, San Isidro.',
-      phone: '123456789',
-      schedule: 'Lunes a Sábado:\n9:00AM a 9PM',
-      workers: 8,
-      imageUrl: null,
-    ),
-    BranchEntity(
-      id: '2',
-      name: 'Sucursal Starbucks\nC. Lima',
-      address: 'Centro Comercial, Av. Javier Prado Este 500, San Isidro.',
-      phone: '123456789',
-      schedule: 'Lunes a Sábado:\n9:00AM a 9PM',
-      workers: 8,
-      imageUrl: null,
-    ),
-    BranchEntity(
-      id: '3',
-      name: 'Sucursal Starbucks\nC. Lima',
-      address: 'Centro Comercial, Av. Javier Prado Este 500, San Isidro.',
-      phone: '123456789',
-      schedule: 'Lunes a Sábado:\n9:00AM a 9PM',
-      workers: 8,
-      imageUrl: null,
-    ),
-    BranchEntity(
-      id: '4',
-      name: 'Sucursal Starbucks\nC. Lima',
-      address: 'Centro Comercial, Av. Javier Prado Este 500, San Isidro.',
-      phone: '123456789',
-      schedule: 'Lunes a Sábado:\n9:00AM a 9PM',
-      workers: 8,
-      imageUrl: null,
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaceColor = theme.colorScheme.surface;
 
-    return Scaffold(
+    // Load branches when screen is built
+    return BlocProvider(
+      create: (context) {
+        final cubit = getIt<BranchesCubit>();
+        cubit.loadBranches();
+        return cubit;
+      },
+      child: Scaffold(
       backgroundColor: surfaceColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -71,24 +44,65 @@ class BranchesScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        itemCount: _branches.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: index < _branches.length - 1 ? 20 : 100,
-            ),
-            child: _buildBranchCard(context, _branches[index]),
+      body: BlocBuilder<BranchesCubit, BranchesState>(
+        builder: (context, state) {
+          if (state.status == BranchesStatus.loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state.status == BranchesStatus.failure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error: ${state.errorMessage ?? "Error desconocido"}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<BranchesCubit>().loadBranches();
+                    },
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (state.branches.isEmpty) {
+            return const Center(
+              child: Text('No hay sucursales disponibles'),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            itemCount: state.branches.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index < state.branches.length - 1 ? 20 : 100,
+                ),
+                child: _buildBranchCard(context, state.branches[index]),
+              );
+            },
           );
         },
       ),
-      floatingActionButton: _buildFloatingActionButton(context),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: _buildFloatingActionButton(context),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ),
     );
   }
 
   Widget _buildBranchCard(BuildContext context, BranchEntity branch) {
+    final roleService = getIt<RoleService>();
+    final canEdit = roleService.hasPermission(Permission.updateBranches);
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -120,41 +134,48 @@ class BranchesScreen extends StatelessWidget {
                       )
                     : Image.network(branch.imageUrl!, fit: BoxFit.cover),
               ),
-              // Edit button
-              Positioned(
-                left: 18,
-                bottom: 76,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.edit,
-                        color: Color(0xFF00114A),
-                        size: 24,
+              // Edit button - solo si tiene permisos
+              if (canEdit)
+                Positioned(
+                  left: 18,
+                  bottom: 76,
+                  child: GestureDetector(
+                    onTap: () {
+                      // TODO: Navegar a pantalla de edición
+                      // context.router.push(EditBranchRoute(branchId: branch.id));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Editar',
-                        style: TextStyle(
-                          color: Color(0xFF00114A),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Figtree',
-                        ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.edit,
+                            color: Color(0xFF00114A),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Editar',
+                            style: TextStyle(
+                              color: Color(0xFF00114A),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Figtree',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
               // Workers count
               Positioned(
                 right: 18,
@@ -295,6 +316,13 @@ class BranchesScreen extends StatelessWidget {
   }
 
   Widget _buildFloatingActionButton(BuildContext context) {
+    final roleService = getIt<RoleService>();
+    
+    // Verificar permisos antes de mostrar el botón
+    if (!roleService.hasPermission(Permission.createBranches)) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       width: 109,
       height: 109,
@@ -307,7 +335,17 @@ class BranchesScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            context.router.push(const CreateBranchRoute());
+            // Verificar permisos nuevamente antes de navegar
+            if (roleService.hasPermission(Permission.createBranches)) {
+              context.router.push(const CreateBranchRoute());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No tiene permisos para crear sucursales'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           borderRadius: BorderRadius.circular(70.5),
           child: Column(

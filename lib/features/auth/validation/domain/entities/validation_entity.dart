@@ -1,38 +1,33 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/validation/domain/entities/steps_res_entity.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/business_validation_widget.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/email_validation_widget.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/password_validation_widget.dart';
-import 'package:partners/features/auth/validation/presentation/widgets/whatsapp_validation_widget.dart';
 
 abstract class ItemValidation extends Equatable {
   final String label;
-  final IconData icon;
+  final String iconName; // Nombre del icono (Domain Layer - sin dependencia de Material)
   final ItemValidationState state;
   final String? nextStep;
   const ItemValidation({
     required this.label,
-    required this.icon,
+    required this.iconName,
     required this.state,
     this.nextStep,
   });
 
   ItemValidationState validation(bool isValid, String nextStep);
   ItemValidation copyWith({ItemValidationState? state});
-  Widget buildWidget();
   bool isValid(StepsResEntity stepsEntity);
+  String get widgetType; // Tipo de widget para construir en Presentation
 
   @override
-  List<Object?> get props => [label, icon, state, nextStep];
+  List<Object?> get props => [label, iconName, state, nextStep];
 }
 
 class EmailItemValidation extends ItemValidation {
   const EmailItemValidation({super.state = ItemValidationState.initial})
     : super(
         label: 'Validemos su email',
-        icon: Icons.email,
+        iconName: 'email',
         nextStep: 'email_verification',
       );
 
@@ -55,7 +50,7 @@ class EmailItemValidation extends ItemValidation {
   }
 
   @override
-  Widget buildWidget() => const EmailValidationWidget();
+  String get widgetType => 'email';
 
   @override
   bool isValid(StepsResEntity stepsEntity) {
@@ -67,7 +62,7 @@ class PhoneItemValidation extends ItemValidation {
   const PhoneItemValidation({super.state = ItemValidationState.initial})
     : super(
         label: 'Validemos su whatsapp',
-        icon: Icons.phone,
+        iconName: 'phone',
         nextStep: 'whatsapp_verification',
       );
 
@@ -90,7 +85,7 @@ class PhoneItemValidation extends ItemValidation {
   }
 
   @override
-  Widget buildWidget() => const WhatsappValidationWidget();
+  String get widgetType => 'whatsapp';
 
   @override
   bool isValid(StepsResEntity stepsEntity) {
@@ -102,7 +97,7 @@ class PasswordItemValidation extends ItemValidation {
   const PasswordItemValidation({super.state = ItemValidationState.initial})
     : super(
         label: 'Cree una contraseña segura',
-        icon: Icons.lock,
+        iconName: 'lock',
         nextStep: 'password_creation',
       );
 
@@ -125,7 +120,7 @@ class PasswordItemValidation extends ItemValidation {
   }
 
   @override
-  Widget buildWidget() => const PasswordValidationWidget();
+  String get widgetType => 'password';
 
   @override
   bool isValid(StepsResEntity stepsEntity) {
@@ -137,8 +132,7 @@ class BusinessItemValidation extends ItemValidation {
   const BusinessItemValidation({super.state = ItemValidationState.initial})
     : super(
         label: 'Validemos su negocio',
-        icon: Icons.business,
-
+        iconName: 'business',
         nextStep: 'business_verification',
       );
 
@@ -161,7 +155,7 @@ class BusinessItemValidation extends ItemValidation {
   }
 
   @override
-  Widget buildWidget() => const BusinessValidationWidget();
+  String get widgetType => 'business';
 
   @override
   bool isValid(StepsResEntity stepsEntity) {
@@ -173,8 +167,7 @@ class IdentityItemValidation extends ItemValidation {
   const IdentityItemValidation({super.state = ItemValidationState.initial})
     : super(
         label: 'Validemos su identidad',
-        icon: Icons.badge,
-
+        iconName: 'badge',
         nextStep: 'identity_verification',
       );
 
@@ -197,7 +190,7 @@ class IdentityItemValidation extends ItemValidation {
   }
 
   @override
-  Widget buildWidget() => const SizedBox.shrink();
+  String get widgetType => 'identity';
 
   @override
   bool isValid(StepsResEntity stepsEntity) {

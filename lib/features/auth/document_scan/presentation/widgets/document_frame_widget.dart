@@ -147,18 +147,6 @@ class DocumentFrameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorIndicator() {
-    return Container(
-      width: 103,
-      height: 103,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.red,
-      ),
-      child: const Icon(Icons.error_outline, size: 60, color: Colors.white),
-    );
-  }
-
   Widget _buildErrorIndicatorWithMessage(String errorMessage) {
     return Column(
       mainAxisSize: MainAxisSize.min,

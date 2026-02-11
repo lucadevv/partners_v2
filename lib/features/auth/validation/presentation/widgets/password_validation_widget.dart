@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:partners/core/utils/keyboard_type_converter.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/password/password_validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/notifier/password_from_notifier.dart';
@@ -76,7 +77,8 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
                             placeholder: field.placeholder,
                             controller:
                                 _passwordFromNotifier.passwordController,
-                            keyboardType: field.keyboardType,
+                            keyboardType: KeyboardTypeConverter.toTextInputType(
+                                field.keyboardType),
                             maxLength: field.maxLength,
                             errorText: _passwordFromNotifier.passwordError,
                             enabled: !isLoading,
@@ -113,7 +115,8 @@ class _PasswordValidationWidgetState extends State<PasswordValidationWidget> {
                                 ? _passwordFromNotifier.passwordController
                                 : _passwordFromNotifier
                                       .passwordConfirmationController,
-                            keyboardType: field.keyboardType,
+                            keyboardType: KeyboardTypeConverter.toTextInputType(
+                                field.keyboardType),
                             maxLength: field.maxLength,
                             errorText: isPasswordField
                                 ? _passwordFromNotifier.passwordError

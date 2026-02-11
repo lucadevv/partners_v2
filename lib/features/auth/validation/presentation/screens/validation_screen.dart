@@ -12,6 +12,7 @@ import 'package:partners/features/auth/validation/domain/entities/validation_ent
 import 'package:partners/features/auth/validation/presentation/cubit/validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/notifier/validation_form_notifier.dart';
 import 'package:partners/features/auth/validation/presentation/widgets/validation_step_widget.dart';
+import 'package:partners/features/auth/validation/presentation/widgets/validation_widget_factory.dart';
 
 @RoutePage()
 class ValidationScreen extends StatefulWidget {
@@ -182,7 +183,7 @@ class _ValidationScreenState extends State<ValidationScreen>
                   ],
                 ),
                 24.spaceh,
-                item.buildWidget(),
+                ValidationWidgetFactory.buildWidget(item),
               ],
             ),
           ),

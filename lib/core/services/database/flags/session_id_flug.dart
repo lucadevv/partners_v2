@@ -7,10 +7,12 @@ class SessionIdFlug extends BaseFlags implements SessionIdStorage {
 
   // =============== MÉTODOS ESPECÍFICOS ===============
 
+  @override
   Future<void> saveSessionId(String sessionId) async {
     await saveFlag(PrefersKeys.sessionId, sessionId);
   }
 
+  @override
   String? get sessionId => getFlagAs<String>(PrefersKeys.sessionId);
 
   bool get hasSessionId => containsFlag(PrefersKeys.sessionId);

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:partners/features/issue_points/presentation/presentation.dart';
 
 @RoutePage()
 class IssuePointsScreen extends StatefulWidget {
@@ -10,17 +11,19 @@ class IssuePointsScreen extends StatefulWidget {
 }
 
 class _IssuePointsScreenState extends State<IssuePointsScreen> {
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _voucherAmountController = TextEditingController();
-  final TextEditingController _pointsController = TextEditingController();
-  String _userName = 'Amderson Joaquin Moscol Sicha';
-  String? _imagePath;
+  late IssuePointsFormNotifier _formNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _formNotifier = IssuePointsFormNotifier(
+      userName: 'Amderson Joaquin Moscol Sicha',
+    );
+  }
 
   @override
   void dispose() {
-    _descriptionController.dispose();
-    _voucherAmountController.dispose();
-    _pointsController.dispose();
+    _formNotifier.dispose();
     super.dispose();
   }
 
@@ -28,7 +31,7 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaceColor = theme.colorScheme.surface;
-    
+
     return Scaffold(
       backgroundColor: surfaceColor,
       appBar: AppBar(
@@ -49,187 +52,62 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // User name field
-            _buildTextField(
-              label: 'Nombre del usuario',
-              value: _userName,
-              isEditable: false,
-            ),
-            const SizedBox(height: 20),
-            // Amount fields row
-            Row(
+      body: ListenableBuilder(
+        listenable: _formNotifier,
+        builder: (context, child) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildAmountField(
-                    label: 'Monto total del voucher',
-                    controller: _voucherAmountController,
-                    isActive: true,
-                  ),
+                // User name field (read-only)
+                IssuePointsFieldWidget(
+                  field: _formNotifier.userNameField,
+                  value: _formNotifier.userName,
                 ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: _buildAmountField(
-                    label: 'Puntos a emitir',
-                    controller: _pointsController,
-                    isActive: false,
-                  ),
+                const SizedBox(height: 20),
+                // Amount fields row
+                Row(
+                  children: [
+                    Expanded(
+                      child: IssuePointsFieldWidget(
+                        field: _formNotifier.voucherAmountField,
+                        controller: _formNotifier.voucherAmountController,
+                        errorText: _formNotifier.voucherAmountError,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: IssuePointsFieldWidget(
+                        field: _formNotifier.pointsField,
+                        controller: _formNotifier.pointsController,
+                        errorText: _formNotifier.pointsError,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 20),
+                // Description field
+                IssuePointsFieldWidget(
+                  field: _formNotifier.descriptionField,
+                  controller: _formNotifier.descriptionController,
+                  errorText: _formNotifier.descriptionError,
+                ),
+                const SizedBox(height: 20),
+                // Upload receipt button
+                _buildUploadButton(),
+                const SizedBox(height: 20),
+                // Image preview if uploaded
+                if (_formNotifier.imagePath != null) _buildImagePreview(),
+                const SizedBox(height: 40),
+                // Submit button
+                _buildSubmitButton(),
               ],
             ),
-            const SizedBox(height: 20),
-            // Description field
-            _buildDescriptionField(),
-            const SizedBox(height: 20),
-            // Upload receipt button
-            _buildUploadButton(),
-            const SizedBox(height: 20),
-            // Image preview if uploaded
-            if (_imagePath != null) _buildImagePreview(),
-            const SizedBox(height: 40),
-            // Submit button
-            _buildSubmitButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required String value,
-    bool isEditable = true,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFFC6C6C6),
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF696969),
-              fontSize: 18,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAmountField({
-    required String label,
-    required TextEditingController controller,
-    required bool isActive,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isActive
-            ? Colors.white.withOpacity(0.64)
-            : const Color(0xFFE5E7EB),
-        borderRadius: BorderRadius.circular(10),
-        border: isActive
-            ? Border.all(color: const Color(0xFF0A2B7A), width: 1)
-            : null,
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFFC6C6C6),
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            style: TextStyle(
-              color: isActive ? const Color(0xFF00114A) : const Color(0xFF696969),
-              fontSize: 23,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              hintText: '0',
-            ),
-            onChanged: (value) {
-              // Calculate points based on voucher amount
-              if (isActive && value.isNotEmpty) {
-                final amount = double.tryParse(value) ?? 0;
-                _pointsController.text = amount.toStringAsFixed(0);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDescriptionField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.64),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF0A2B7A), width: 1),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Descripción',
-            style: TextStyle(
-              color: Color(0xFFC6C6C6),
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _descriptionController,
-            style: const TextStyle(
-              color: Color(0xFF00114A),
-              fontSize: 18,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Figtree',
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Agrega un comentario',
-            ),
-            maxLines: 3,
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -238,32 +116,97 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     return GestureDetector(
       onTap: () {
         // TODO: Implement image picker
-        setState(() {
-          _imagePath = 'placeholder';
-        });
+        _formNotifier.setImagePath('placeholder');
       },
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xFFD3F0FE),
           borderRadius: BorderRadius.circular(10),
         ),
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.add_a_photo_outlined,
-              color: Color(0xFF00114A),
-              size: 35,
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Subir comprobante',
-              style: TextStyle(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.add_a_photo_outlined,
                 color: Color(0xFF00114A),
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Figtree',
+                size: 35,
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Subir comprobante',
+                style: TextStyle(
+                  color: Color(0xFF00114A),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Figtree',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePreview() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE5E7EB),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const SizedBox(
+                width: 330,
+                height: 440,
+                child: Center(child: Icon(Icons.image, size: 50)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                _formNotifier.clearImage();
+              },
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD3F0FE),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add_a_photo_outlined,
+                        color: Color(0xFF00114A),
+                        size: 35,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Tomar nuevamente',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Figtree',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -272,75 +215,17 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     );
   }
 
-  Widget _buildImagePreview() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Container(
-            width: 330,
-            height: 440,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Icon(Icons.image, size: 50),
-            ),
-          ),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _imagePath = null;
-              });
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFD3F0FE),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.add_a_photo_outlined,
-                    color: Color(0xFF00114A),
-                    size: 35,
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Tomar nuevamente',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Figtree',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: Navigate to success screen
-          // context.router.push(const IssuePointsSuccessRoute());
-          // Navigate to success screen - route will be available after build_runner
-        },
+        onPressed: _formNotifier.isFormComplete
+            ? () {
+                // TODO: Navigate to success screen
+                // context.router.push(const IssuePointsSuccessRoute());
+                // Navigate to success screen - route will be available after build_runner
+              }
+            : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF66CFFF),
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -351,11 +236,7 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.arrow_back,
-              color: Color(0xFF051858),
-              size: 20,
-            ),
+            const Icon(Icons.arrow_back, color: Color(0xFF051858), size: 20),
             const SizedBox(width: 10),
             const Text(
               'Emitir puntos',

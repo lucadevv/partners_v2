@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 
 // --- ESTRATEGIAS DE VALIDACIÓN PARA RUC (Pilar: POLIMORFISMO) ---
@@ -7,7 +6,7 @@ abstract class RucStrategy {
   bool validate(String value);
   String getErrorMessage();
   int? getMaxLength();
-  TextInputType getKeyboardType();
+  KeyboardType getKeyboardType();
   RucType getRuc();
 }
 
@@ -25,7 +24,7 @@ class Ruc10Strategy implements RucStrategy {
   int? getMaxLength() => 11;
 
   @override
-  TextInputType getKeyboardType() => TextInputType.number;
+  KeyboardType getKeyboardType() => KeyboardType.number;
 
   @override
   RucType getRuc() => RucType.ruc10;
@@ -45,7 +44,7 @@ class Ruc15Strategy implements RucStrategy {
   int? getMaxLength() => 11;
 
   @override
-  TextInputType getKeyboardType() => TextInputType.number;
+  KeyboardType getKeyboardType() => KeyboardType.number;
 
   @override
   RucType getRuc() => RucType.ruc15;
@@ -65,7 +64,7 @@ class Ruc20Strategy implements RucStrategy {
   int? getMaxLength() => 11;
 
   @override
-  TextInputType getKeyboardType() => TextInputType.number;
+  KeyboardType getKeyboardType() => KeyboardType.number;
 
   @override
   RucType getRuc() => RucType.ruc20;
@@ -87,7 +86,7 @@ class RucGeneralStrategy implements RucStrategy {
   int? getMaxLength() => 11;
 
   @override
-  TextInputType getKeyboardType() => TextInputType.number;
+  KeyboardType getKeyboardType() => KeyboardType.number;
 
   @override
   RucType getRuc() => RucType.ruc10;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/register/domain/forms/form_config.dart';
 import 'package:partners/features/auth/validation/domain/fields/email_field.dart';
 import 'package:partners/features/auth/validation/domain/fields/otp_field.dart';
@@ -12,7 +12,7 @@ class EmailFactory {
           EmailField(
             label: 'Email',
             placeholder: 'Ingrese correo electrónico',
-            keyboardType: TextInputType.emailAddress,
+            keyboardType: KeyboardType.email,
           ),
         ];
       case EmailSteps.verification:
@@ -20,27 +20,27 @@ class EmailFactory {
           OtpField(
             label: '',
             placeholder: '-',
-            keyboardType: TextInputType.text,
+            keyboardType: KeyboardType.text,
           ),
           OtpField(
             label: '',
             placeholder: '-',
-            keyboardType: TextInputType.text,
+            keyboardType: KeyboardType.text,
           ),
           OtpField(
             label: '',
             placeholder: '-',
-            keyboardType: TextInputType.text,
+            keyboardType: KeyboardType.text,
           ),
           OtpField(
             label: '',
             placeholder: '-',
-            keyboardType: TextInputType.text,
+            keyboardType: KeyboardType.text,
           ),
           OtpField(
             label: '',
             placeholder: '-',
-            keyboardType: TextInputType.text,
+            keyboardType: KeyboardType.text,
           ),
         ];
     }

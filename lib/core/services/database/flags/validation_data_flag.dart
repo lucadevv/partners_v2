@@ -1,39 +1,15 @@
 import 'package:partners/core/services/database/flags/flags.dart';
 
-class ValidationDataFlag extends Flags {
-  @override
-  bool containsFlag(String key) {
-    // TODO: implement containsFlag
-    throw UnimplementedError();
-  }
+/// Flag para almacenar datos de validación
+/// Extiende BaseFlags para obtener implementación automática de todos los métodos
+class ValidationDataFlag extends BaseFlags {
+  // BaseFlags ya implementa todos los métodos requeridos:
+  // - containsFlag(String key)
+  // - getAllKeys()
+  // - getFlag(String key)
+  // - getFlagAs<T>(String key)
+  // - removeFlag(String key)
+  // - saveFlag(String key, dynamic value)
 
-  @override
-  Set<String> getAllKeys() {
-    // TODO: implement getAllKeys
-    throw UnimplementedError();
-  }
-
-  @override
-  getFlag(String key) {
-    // TODO: implement getFlag
-    throw UnimplementedError();
-  }
-
-  @override
-  T? getFlagAs<T>(String key) {
-    // TODO: implement getFlagAs
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> removeFlag(String key) {
-    // TODO: implement removeFlag
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> saveFlag(String key, value) {
-    // TODO: implement saveFlag
-    throw UnimplementedError();
-  }
+  // Aquí puedes agregar métodos específicos para datos de validación si es necesario
 }

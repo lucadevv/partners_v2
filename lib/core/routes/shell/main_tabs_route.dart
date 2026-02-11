@@ -9,8 +9,6 @@ class MainTabsRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabsRouter = AutoTabsRouter.of(context);
-
     return Scaffold(
       body: const AutoRouter(),
       bottomNavigationBar: Container(
@@ -18,7 +16,7 @@ class MainTabsRoute extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -3),
             ),
@@ -90,7 +88,7 @@ class MainTabsRoute extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

@@ -1,0 +1,23 @@
+// Barrel: utils area.
+export 'conts/prefers_keys.dart';
+export 'enums/enums.dart';
+export 'exeptions/app_exceptions.dart';
+export 'exeptions/exception_handler.dart';
+export 'exeptions/extractors/error_details_extractor.dart';
+export 'exeptions/extractors/error_message_extractor.dart';
+export 'exeptions/loggers/exception_logger.dart';
+export 'exeptions/strategies/app_exception_handler_strategy.dart';
+export 'exeptions/strategies/dio_error_handler_strategy.dart';
+export 'exeptions/strategies/error_handler_strategy.dart';
+export 'exeptions/strategies/format_error_handler_strategy.dart';
+export 'exeptions/strategies/http_status_error_handler_strategy.dart';
+export 'exeptions/strategies/unknown_error_handler_strategy.dart';
+export 'icon_paths.dart';
+export 'keyboard_type_converter.dart';
+export 'logger/app_logger.dart';
+export 'models/ce.dart';
+export 'models/dni.dart';
+export 'models/document_identity.dart';
+export 'models/entity.dart';
+export 'validations/phone_validator.dart';
+export 'widgets/custom_text_field_widget.dart';

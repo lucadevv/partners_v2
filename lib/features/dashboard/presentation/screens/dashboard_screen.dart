@@ -1,9 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:partners/core/routes/app_routes.gr.dart';
-import 'package:partners/core/utils/icon_paths.dart';
-import 'package:partners/core/widgets/svg_icon_widget.dart';
+import 'package:partners/core/routes/routes.dart';
+import 'package:partners/core/utils/utils.dart';
+import 'package:partners/core/widgets/widgets.dart';
 
 @RoutePage()
 class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
@@ -120,8 +120,8 @@ class DashboardScreen extends StatelessWidget implements AutoRouteWrapper {
                     topLeft: Radius.circular(0),
                     topRight: Radius.circular(0),
                   ),
-                  shadowColor: Colors.black.withOpacity(0.05),
-                  circleShadowColor: Colors.black.withOpacity(0.2),
+                  shadowColor: Colors.black.withValues(alpha: 0.05),
+                  circleShadowColor: Colors.black.withValues(alpha: 0.2),
                   elevation: 10,
                   tabCurve:
                       Curves.linear, // Sin animación suave, cambio directo

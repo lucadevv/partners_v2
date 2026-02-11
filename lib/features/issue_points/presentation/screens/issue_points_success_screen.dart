@@ -183,7 +183,7 @@ class IssuePointsSuccessScreen extends StatelessWidget {
                     'Detalles\nPuede que la acción no sea inmediata y se deba esperar unos minutos para que esto se actualice en el servidor.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.52),
+                      color: Colors.white.withValues(alpha: 0.52),
                       fontSize: 15,
                       fontWeight: FontWeight.normal,
                       fontFamily: 'Figtree',

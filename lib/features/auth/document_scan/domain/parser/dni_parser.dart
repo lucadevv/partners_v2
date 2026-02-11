@@ -11,7 +11,6 @@ class DniParser implements DocumentParser {
 
     // 2. FILTRO DE BASURA (Sanity Check) - Rechazar texto ilegible inmediatamente
     if (!_isValidOcrText(cleanText)) {
-      print('DEBUG: Texto rechazado por _isValidOcrText');
       return null; // Descartar inmediatamente sin procesar Regex
     }
 
@@ -80,7 +79,6 @@ class DniParser implements DocumentParser {
     }
 
     if (number == null || number.isEmpty) {
-      print('DEBUG: No se pudo extraer el número de DNI');
       return null;
     }
 
@@ -89,11 +87,6 @@ class DniParser implements DocumentParser {
     final dob = _extractBirthDate(cleanText);
     final gender = _extractGender(cleanText);
     final expiryDate = _extractExpiryDate(cleanText);
-
-    print('DEBUG: DNI parseado - number: $number, securityCode: $securityCode');
-    print(
-      'DEBUG: name: $name, lastName: $lastName, dob: $dob, gender: $gender, expiryDate: $expiryDate',
-    );
 
     return DocumentScanResult(
       document: Dni(
@@ -818,7 +811,6 @@ class DniParser implements DocumentParser {
 
     if (match != null) {
       final date = _normalizeDate(match.group(1)!);
-      print('DEBUG: Fecha de caducidad extraída (patrón 1): $date');
       return date;
     }
 
@@ -833,7 +825,6 @@ class DniParser implements DocumentParser {
 
     if (match != null) {
       final date = _normalizeDate(match.group(1)!);
-      print('DEBUG: Fecha de caducidad extraída (patrón 2): $date');
       return date;
     }
 
@@ -846,7 +837,6 @@ class DniParser implements DocumentParser {
 
     if (match != null) {
       final date = _normalizeDate(match.group(1)!);
-      print('DEBUG: Fecha de caducidad extraída (patrón 2b): $date');
       return date;
     }
 

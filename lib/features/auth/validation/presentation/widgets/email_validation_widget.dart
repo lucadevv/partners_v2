@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/utils/keyboard_type_converter.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/email/email_validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/notifier/email_from_notifier.dart';
@@ -68,18 +69,22 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
             }
             if (state.resendStatus == EmailValidationStatus.success) {
               await Future.delayed(const Duration(milliseconds: 800));
-              context.read<EmailValidationCubit>().resetState();
-              _emailFromNotifier.initNotifier();
-              router.pop(true);
+              if (context.mounted) {
+                context.read<EmailValidationCubit>().resetState();
+                _emailFromNotifier.initNotifier();
+                router.pop(true);
+              }
             }
             if (state.resendStatus == EmailValidationStatus.failure &&
                 state.errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           builder: (context, cubitState) {
@@ -170,7 +175,9 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
                           label: field.label,
                           placeholder: field.placeholder,
                           controller: _emailFromNotifier.emailController,
-                          keyboardType: field.keyboardType,
+                          keyboardType: KeyboardTypeConverter.toTextInputType(
+                            field.keyboardType,
+                          ),
                           maxLength: field.maxLength,
                           errorText: _emailFromNotifier.emailError,
                           enabled: !isLoading,
@@ -184,10 +191,7 @@ class _EmailValidationWidgetState extends State<EmailValidationWidget> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                    top: 24,
-                    bottom: 0,
-                  ),
+                  padding: const EdgeInsets.only(top: 24, bottom: 0),
                   child: ElevatedButton(
                     onPressed: _emailFromNotifier.isFormComplete && !isLoading
                         ? () {

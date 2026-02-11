@@ -1,12 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
+import 'package:partners/features/para_ti/data/datasource/para_ti_datasource.dart';
 import 'package:partners/features/para_ti/data/models/recomendacion_model.dart';
-import 'package:partners/features/para_ti/domain/entities/recomendacion_entity.dart';
 
-abstract class ParaTiDatasource {
-  Future<Either<AppException, List<RecomendacionEntity>>> getRecomendaciones();
-}
-
+/// Mock implementation of Para Ti datasource
+/// Follows mock data pattern for development and testing
 class MockParaTiDatasourceImpl implements ParaTiDatasource {
   final List<RecomendacionModel> _recomendaciones = [
     const RecomendacionModel(
@@ -33,8 +31,8 @@ class MockParaTiDatasourceImpl implements ParaTiDatasource {
   ];
 
   @override
-  Future<Either<AppException, List<RecomendacionEntity>>> getRecomendaciones() async {
+  Future<Either<AppException, List<RecomendacionModel>>> getRecomendaciones() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return Right(_recomendaciones.map((m) => m.toEntity()).toList());
+    return Right(_recomendaciones);
   }
 }

@@ -1,6 +1,5 @@
 // --- DOMINIO: FACTORY DEL REPRESENTANTE ---
 
-import 'package:flutter/material.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/register/domain/forms/rep_doc_form_config.dart';
 
@@ -12,21 +11,21 @@ class RepConfigFactory {
           label: "Nro. de documento",
           placeholder: "Ingrese DNI del representante",
           maxLength: 8,
-          keyboardType: TextInputType.number,
+          keyboardType: KeyboardType.number,
         );
       case DocumentType.ce:
         return RepDocFormConfig(
           label: "Nro. de documento",
           placeholder: "Ingrese CE del representante",
           maxLength: null,
-          keyboardType: TextInputType.text,
+          keyboardType: KeyboardType.text,
         );
       default:
         return RepDocFormConfig(
           label: "Nro. de documento",
           placeholder: "Seleccione tipo primero",
           maxLength: null,
-          keyboardType: TextInputType.text,
+          keyboardType: KeyboardType.text,
         );
     }
   }
@@ -36,7 +35,7 @@ class RepConfigFactory {
       label: "Nombres del registrante",
       placeholder: "Su nombre completo aparecerá aquí",
       maxLength: 100,
-      keyboardType: TextInputType.text,
+      keyboardType: KeyboardType.text,
       enabled: false,
       readOnly: true,
     );

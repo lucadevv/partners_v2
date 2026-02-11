@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:partners/features/para_ti/data/datasource/para_ti_datasource.dart';
+import 'package:partners/features/para_ti/data/datasource/provider_memory/mock_para_ti_datasource_impl.dart';
 import 'package:partners/features/para_ti/data/repository/para_ti_repository_impl.dart';
 import 'package:partners/features/para_ti/domain/repository/para_ti_repository.dart';
 import 'package:partners/features/para_ti/domain/use_case/get_recomendaciones_usecase.dart';
@@ -12,9 +14,19 @@ class ParaTiInjection {
   }
 
   void _init() {
+    // Datasource
+    if (!_getIt.isRegistered<ParaTiDatasource>()) {
+      _getIt.registerLazySingleton<ParaTiDatasource>(
+        () => MockParaTiDatasourceImpl(),
+      );
+    }
+
+    // Repository
     if (!_getIt.isRegistered<ParaTiRepository>()) {
       _getIt.registerLazySingleton<ParaTiRepository>(
-        () => ParaTiRepositoryImpl(),
+        () => ParaTiRepositoryImpl(
+          datasource: _getIt<ParaTiDatasource>(),
+        ),
       );
     }
 

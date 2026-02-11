@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:partners/core/extension/context_extension.dart';
-import 'package:partners/features/productos/domain/entities/producto_entity.dart';
+import 'package:partners/core/extension/extension.dart';
+import 'package:partners/features/productos/domain/domain.dart';
 
 /// Widget para mostrar una tarjeta de producto
 /// Sigue el principio de Single Responsibility (SRP)
@@ -30,7 +30,7 @@ class ProductoCardWidget extends StatelessWidget {
                 top: Radius.circular(12),
               ),
               child: Container(
-                color: context.appColor.surfaceVariant,
+                color: context.appColor.surfaceContainerHighest,
                 child: producto.imagenUrl.isNotEmpty
                     ? Image.network(
                         producto.imagenUrl,

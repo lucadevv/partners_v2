@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/enums/enums.dart';
+import 'package:partners/core/utils/keyboard_type_converter.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_cubit.dart';
 import 'package:partners/features/auth/register/presentation/cubit/register_state.dart';
@@ -129,8 +130,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     placeholder:
                                         _formNotifier.rucConfig.placeholder,
                                     controller: _formNotifier.rucController,
-                                    keyboardType:
-                                        _formNotifier.rucConfig.keyboardType,
+                                    keyboardType: KeyboardTypeConverter.toTextInputType(
+                                        _formNotifier.rucConfig.keyboardType),
                                     maxLength:
                                         _formNotifier.rucConfig.maxLength,
                                     errorText: _formNotifier.rucError,
@@ -145,8 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         _formNotifier.nameConfig.placeholder,
                                     controller:
                                         _formNotifier.nameSocialRazonController,
-                                    keyboardType:
-                                        _formNotifier.nameConfig.keyboardType,
+                                    keyboardType: KeyboardTypeConverter.toTextInputType(
+                                        _formNotifier.nameConfig.keyboardType),
                                     maxLength:
                                         _formNotifier.nameConfig.maxLength,
                                     enabled: _formNotifier.nameConfig.enabled,
@@ -169,8 +170,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           _formNotifier.repConfig.placeholder,
                                       controller:
                                           _formNotifier.docRepController,
-                                      keyboardType:
-                                          _formNotifier.repConfig.keyboardType,
+                                      keyboardType: KeyboardTypeConverter.toTextInputType(
+                                          _formNotifier.repConfig.keyboardType),
                                       maxLength:
                                           _formNotifier.repConfig.maxLength,
                                       errorText: _formNotifier.docError,
@@ -186,9 +187,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           .placeholder,
                                       controller:
                                           _formNotifier.nameRepContoller,
-                                      keyboardType: _formNotifier
-                                          .repNameConfig
-                                          .keyboardType,
+                                      keyboardType: KeyboardTypeConverter.toTextInputType(
+                                          _formNotifier.repNameConfig.keyboardType),
                                       maxLength:
                                           _formNotifier.repNameConfig.maxLength,
                                       enabled:

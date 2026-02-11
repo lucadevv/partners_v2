@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 class DocFormConfig {
   final String label;
   final String placeholder;
   final int? maxLength;
-  final TextInputType keyboardType;
+  final KeyboardType keyboardType;
 
   DocFormConfig({
     required this.label,

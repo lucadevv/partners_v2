@@ -1,0 +1,22 @@
+// Barrel: domain layer of auth/register feature.
+export 'entities/rep_legal_response_entity.dart';
+export 'entities/request/document_rq.dart';
+export 'entities/request/entity_rq.dart';
+export 'entities/request/start_register_req.dart';
+export 'entities/register_response_entity.dart';
+export 'entities/response/start_resgister_res_entity.dart';
+export 'entities/validators/doc_validator.dart';
+export 'entities/validators/ruc_validator.dart';
+export 'factory/doc_config_factory.dart';
+export 'factory/name_config_factory.dart';
+export 'factory/rep_config_factory.dart';
+export 'factory/ruc_config_factory.dart';
+export 'forms/doc_form_config.dart';
+export 'forms/form_config.dart';
+export 'forms/name_form_config.dart';
+export 'forms/rep_doc_form_config.dart';
+export 'forms/ruc_form_config.dart';
+export 'repository/register_repository.dart';
+export 'use_case/send_document_usecase.dart';
+export 'use_case/send_ruc_usecase.dart';
+export 'use_case/start_register_usecase.dart';

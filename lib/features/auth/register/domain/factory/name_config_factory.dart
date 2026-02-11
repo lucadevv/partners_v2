@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/register/domain/entities/validators/ruc_validator.dart';
 
@@ -11,7 +10,7 @@ class NameConfigFactory {
         return NameFormConfig(
           label: "Nombre del registrante",
           placeholder: "Su nombre completo, aparece aquí",
-          keyboardType: TextInputType.name,
+          keyboardType: KeyboardType.name,
           enabled: false,
           readOnly: true,
         );
@@ -19,7 +18,7 @@ class NameConfigFactory {
         return NameFormConfig(
           label: "Nombre del registrante",
           placeholder: "Su nombre completo, aparece aquí",
-          keyboardType: TextInputType.name,
+          keyboardType: KeyboardType.name,
           enabled: false,
           readOnly: true,
         );
@@ -27,7 +26,7 @@ class NameConfigFactory {
         return NameFormConfig(
           label: "Nombre de la empresa",
           placeholder: "Su razón social aparece aquí",
-          keyboardType: TextInputType.name,
+          keyboardType: KeyboardType.name,
           enabled: false,
           readOnly: true,
         );

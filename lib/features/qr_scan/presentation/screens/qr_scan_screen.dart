@@ -31,7 +31,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
           // Overlay
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Column(
                 children: [
                   const SizedBox(height: 60),

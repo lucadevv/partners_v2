@@ -1,12 +1,12 @@
 // --- ESTRATEGIAS DE VALIDACIÓN (Pilar: POLIMORFISMO) ---
 
-import 'package:flutter/material.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 
 abstract class DocValidatorStrategy {
   bool validate(String value);
   String getErrorMessage();
   int? getMaxLength();
-  TextInputType getKeyboardType();
+  KeyboardType getKeyboardType();
 }
 
 // Implementación DNI
@@ -21,7 +21,7 @@ class DniStrategy implements DocValidatorStrategy {
   int? getMaxLength() => 8;
 
   @override
-  TextInputType getKeyboardType() => TextInputType.number;
+  KeyboardType getKeyboardType() => KeyboardType.number;
 }
 
 // Implementación Carnet Extranjería
@@ -37,5 +37,5 @@ class CeStrategy implements DocValidatorStrategy {
   int? getMaxLength() => 9; // Ejemplo
 
   @override
-  TextInputType getKeyboardType() => TextInputType.text;
+  KeyboardType getKeyboardType() => KeyboardType.text;
 }

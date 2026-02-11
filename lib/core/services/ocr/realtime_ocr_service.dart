@@ -74,7 +74,7 @@ class RealtimeOcrService {
       if (rawText.isNotEmpty) {
         _onTextDetectedCallback?.call(rawText, imagePath);
       } else {
-        File(imagePath).delete().catchError((e) {});
+        File(imagePath).delete().catchError((e) => File(imagePath));
       }
     } on CameraException catch (e) {
       if (e.code == 'Disposed CameraController' ||

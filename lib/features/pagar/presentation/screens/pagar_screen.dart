@@ -1,10 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:partners/core/extension/context_extension.dart';
-import 'package:partners/features/pagar/domain/entities/pago_entity.dart';
-import 'package:partners/features/pagar/presentation/cubit/pagar_cubit.dart';
-import 'package:partners/features/pagar/presentation/cubit/pagar_state.dart';
+import 'package:partners/core/extension/extension.dart';
+import 'package:partners/features/pagar/domain/domain.dart';
+import 'package:partners/features/pagar/presentation/presentation.dart';
 import 'package:partners/main.dart';
 
 @RoutePage()
@@ -172,6 +171,7 @@ class _PagarScreenState extends State<PagarScreen> {
     );
 
     context.read<PagarCubit>().procesarPago(pago).then((_) {
+      if (!mounted) return;
       _montoController.clear();
       _descripcionController.clear();
       ScaffoldMessenger.of(context).showSnackBar(

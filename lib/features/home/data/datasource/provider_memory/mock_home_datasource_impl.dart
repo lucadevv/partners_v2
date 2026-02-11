@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/features/home/data/datasource/home_datasource.dart';
 import 'package:partners/features/home/data/models/smart_card_model.dart';
@@ -53,14 +52,14 @@ class MockHomeDatasourceImpl implements HomeDatasource {
       title: 'Ver mi\nSmart Card',
       iconName: 'credit-card',
       route: '/smart-card',
-      backgroundColor: Colors.white, // Fondo blanco según diseño
+      backgroundColor: 0xFFFFFFFF, // Fondo blanco según diseño
     ),
     SmartToolModel(
       id: '8',
       title: 'Ver\nMás',
       iconName: 'more',
       route: '/more',
-      backgroundColor: Colors.white, // Fondo blanco según diseño
+      backgroundColor: 0xFFFFFFFF, // Fondo blanco según diseño
     ),
   ];
 

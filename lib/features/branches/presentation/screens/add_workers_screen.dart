@@ -125,7 +125,7 @@ class AddWorkersScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: _buildWorkerItem(worker),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -140,7 +140,7 @@ class AddWorkersScreen extends StatelessWidget {
     return Container(
       height: 80,
       decoration: BoxDecoration(
-        color: const Color(0xFF2427600D),
+        color: const Color(0x0D242760),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

@@ -1,6 +1,5 @@
 // --- FACTORIES (Patrón CREACIONAL) ---
 
-import 'package:flutter/cupertino.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/register/domain/entities/validators/ruc_validator.dart';
 
@@ -14,22 +13,21 @@ class RucConfigFactory {
           label: "RUC del negocio",
           placeholder: "Ingrese RUC (11 dígitos)",
           maxLength: 11,
-          keyboardType: TextInputType.number,
+          keyboardType: KeyboardType.number,
         );
       case RucType.ruc15:
         return RucFormConfig(
           label: "RUC del negocio",
           placeholder: "Ingrese RUC (11 dígitos)",
           maxLength: 11,
-
-          keyboardType: TextInputType.number,
+          keyboardType: KeyboardType.number,
         );
       case RucType.ruc20:
         return RucFormConfig(
           label: "RUC del negocio",
           placeholder: "Ingrese RUC (11 dígitos)",
           maxLength: 11,
-          keyboardType: TextInputType.number,
+          keyboardType: KeyboardType.number,
           showDocument: true,
           showTypeDocument: true,
         );

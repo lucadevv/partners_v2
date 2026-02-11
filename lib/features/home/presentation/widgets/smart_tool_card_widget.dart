@@ -25,7 +25,7 @@ class SmartToolCardWidget extends StatelessWidget {
             width: 63,
             height: 63,
             decoration: BoxDecoration(
-              color: tool.backgroundColor,
+              color: Color(tool.backgroundColor),
               shape: BoxShape.circle,
             ),
             child: Center(

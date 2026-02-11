@@ -8,7 +8,7 @@ class RedeemPointsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.68),
+      backgroundColor: Colors.black.withValues(alpha: 0.68),
       body: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),

@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/utils/keyboard_type_converter.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/validation/presentation/cubit/whatsapp/whatsapp_validation_cubit.dart';
 import 'package:partners/features/auth/validation/presentation/notifier/whatsapp_from_notifier.dart';
@@ -69,18 +70,22 @@ class _WhatsappValidationWidgetState extends State<WhatsappValidationWidget> {
             }
             if (state.verifyStatus == WhatsappValidationStatus.success) {
               await Future.delayed(const Duration(milliseconds: 800));
-              context.read<WhatsappValidationCubit>().initialState();
-              _whatsappFromNotifier.initNotifier();
-              router.pop(true);
+              if (context.mounted) {
+                context.read<WhatsappValidationCubit>().initialState();
+                _whatsappFromNotifier.initNotifier();
+                router.pop(true);
+              }
             }
             if (state.verifyStatus == WhatsappValidationStatus.failure &&
                 state.errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           builder: (context, cubitState) {
@@ -191,7 +196,9 @@ class _WhatsappValidationWidgetState extends State<WhatsappValidationWidget> {
                             label: field.label,
                             placeholder: field.placeholder,
                             controller: _whatsappFromNotifier.phoneController,
-                            keyboardType: field.keyboardType,
+                            keyboardType: KeyboardTypeConverter.toTextInputType(
+                              field.keyboardType,
+                            ),
                             maxLength: field.maxLength,
                             errorText: _whatsappFromNotifier.phoneError,
                             enabled: !isLoading,

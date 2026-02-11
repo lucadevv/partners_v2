@@ -1,0 +1,52 @@
+---
+name: barrel_files
+description: Convención de archivos barril (barrel files) para importaciones. Usar por feature y por core.
+globs: lib/**/*.dart
+---
+
+# Archivos barril (Barrel files)
+
+- **Objetivo**: Reducir ruido en imports y tener un único punto de exportación por capa/área. Importar desde el barril en lugar del archivo concreto cuando el barril exista.
+
+## Features (lib/features/<feature>/)
+
+- Por cada **capa** que exista en el feature, crear un barril con nombre de la capa:
+  - **domain/domain.dart**: exporta entidades, interfaces de repository, use cases, forms, validators, factory (todo lo público del dominio).
+  - **data/data.dart**: exporta models, datasource (interfaces e implementaciones que se registran), mappers, repository impl (lo que use injection o otras capas).
+  - **presentation/presentation.dart**: exporta cubit/bloc, state, screens, widgets, notifiers (todo lo que use rutas o otros features).
+- Si un feature solo tiene **presentation** (sin domain/data), solo crear **presentation/presentation.dart**.
+- **Auth** y features con subcarpetas (ej. auth/register, auth/validation): cada subfeature tiene sus propios barriles (register/domain/domain.dart, register/data/data.dart, register/presentation/presentation.dart, etc.).
+
+## Core (lib/core/)
+
+- Por **área** de core, crear un barril que exporte la API pública de esa área:
+  - **routes/routes.dart**: exporta app_routes, app_routes.gr (y guards si se usan desde fuera).
+  - **utils/utils.dart**: exporta enums, keyboard_type_converter, icon_paths, exceptions, models de utils, etc.
+  - **widgets/widgets.dart**: exporta widgets compartidos (svg_icon_widget, etc.).
+  - **extension/extension.dart**: exporta context_extension, sizedbox_extension.
+  - **models/models.dart**: exporta permission, user_model, role_permissions, etc.
+  - **services/services.dart** (opcional): exporta role_service, api_services; solo lo que se use desde features. Los servicios internos (database, ocr) pueden quedarse con imports directos desde injection.
+  - **theme/theme.dart**: exporta app_theme, app_colors.
+- **injection**: no hace falta barril único; cada módulo de inyección se importa donde se registra (app_injection.dart).
+
+## Uso de imports
+
+- **Desde fuera del feature** (rutas, app, otro feature): usar el barril.
+  - Ejemplo: `import 'package:partners/features/branches/domain/domain.dart';`
+  - Ejemplo: `import 'package:partners/features/branches/presentation/presentation.dart';`
+- **Dentro del mismo feature**: se puede importar desde el barril de la otra capa o el archivo concreto; preferir barril para consistencia.
+- **Core**: `import 'package:partners/core/routes/routes.dart';`, `import 'package:partners/core/utils/utils.dart';`, etc.
+- No re-exportar en un barril archivos que generen **dependencias circulares** (ej. domain no debe exportar nada de data ni presentation).
+- **Conflictos de nombres**: Si dos archivos exportados definen el mismo nombre (clase, mixin, etc.), el barril dará error. Solución: usar `hide Nombre` en uno de los exports (ej. `export 'models/otro_model.dart' hide Data;`). En **core/routes/routes.dart** no exportar los `shell/*` porque `app_routes.gr.dart` ya reexporta esos tipos; exportarlos también provocaría conflicto (AppShellRoute, CuentaShell, etc.).
+- **Archivos `part of`**: No exportar nunca un archivo que tenga `part of 'otro.dart';`. Solo se puede exportar la librería principal (la que declara `part 'xxx.dart';`). Al exportar el cubit, sus `part` (p. ej. el state) quedan expuestos automáticamente. Si el barril exporta el `.state.dart`, Dart falla con "The exported library can't have a part-of directive".
+
+## Nomenclatura
+
+- Nombre del archivo barril: **domain.dart**, **data.dart**, **presentation.dart** (por capa), o **routes.dart**, **utils.dart**, **widgets.dart** (en core).
+- No usar `index.dart` para evitar confusión con otros usos; mantener nombres explícitos.
+
+## Migración y excepciones
+
+- **app_routes.gr.dart**: Es código generado por AutoRoute; no modificar sus imports. El barril **routes.dart** re-exporta app_routes y app_routes.gr para que el resto del proyecto importe `core/routes/routes.dart`.
+- El proyecto tiene barriles creados en todos los features y en core. Parte del código ya usa imports desde barriles; el resto puede migrarse gradualmente (buscar `package:partners/features/.../domain/` o `.../presentation/` y sustituir por el barril de esa capa cuando convenga).
+- **Core** sin barril: `core/config`, `core/cubit`, `core/injection`, `core/managers`, `core/services/database`, `core/services/ocr` se importan por ruta directa (no hay barril para no acoplar todo el core en un solo archivo).

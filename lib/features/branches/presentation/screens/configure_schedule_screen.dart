@@ -22,8 +22,8 @@ class _ConfigureScheduleScreenState extends State<ConfigureScheduleScreen> {
   ];
 
   final Set<String> _selectedDays = {'Lunes', 'Martes'};
-  String _startTime = '09:00';
-  String _endTime = '21:00';
+  final String _startTime = '09:00';
+  final String _endTime = '21:00';
 
   @override
   Widget build(BuildContext context) {

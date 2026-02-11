@@ -1,5 +1,3 @@
-import 'package:partners/core/utils/enums/enums.dart';
-import 'package:partners/core/utils/models/dni.dart';
 import 'package:partners/core/utils/models/document_identity.dart';
 import 'package:partners/features/auth/register/data/mappers/strategies/ce_strategy.dart';
 import 'package:partners/features/auth/register/data/mappers/strategies/dni_strategy.dart';

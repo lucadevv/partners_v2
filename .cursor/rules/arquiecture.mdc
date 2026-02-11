@@ -1,0 +1,64 @@
+---
+name: arquiecture
+description: This is a new rule
+---
+
+- Estructura de Carpetas (Feature-First):
+  - lib/features/coffee_order/
+    - domain/ (entities, repositories, usecases)
+    - data/ (models, datasource, repositories_impl)
+    - presentation/ (bloc, pages, widgets)
+- BLoC Naming Convention:
+  - Archivos: feature_name_bloc.dart, feature_name_event.dart, feature_name_state.dart.
+  - Estados: Define clases para Initial, Loading, Loaded, Error.
+  - Eventos: Usa verbos claros (LoadCoffee, PlaceOrder, SelectDrink).
+- Reglas de Capa:
+  - La capa de Data NO debe importar nada de Presentation.
+  - La capa de Domain NO debe importar nada de Data ni Flutter material.dart.
+  - Los BLoCs (Presentation) solo deben comunicarse con la capa de Domain a través de Use Cases.
+- Acceso y Seguridad (RBAC):
+  - Usa Guards de AutoRoute (AuthGuard, AdminGuard, PartnerGuard) en rutas privadas.
+  - Usa el servicio RoleService para verificar permisos dentro de los Widgets (ej. ocultar botón 'Eliminar' si !hasPermission).
+  - Las rutas críticas deben validar permisos en UI y en Backend (nunca confíes solo en el frontend).
+- Mapeo de Datos:
+  - Siempre usa Mappers para convertir entre Models (Data) y Entities (Domain). No expongas los modelos de red/db fuera de la capa data.
+- Manejo de Errores:
+  - Usa `Either<Failure, Success>` (paquete dartz o similar) en los Use Cases para manejar errores explícitamente.
+  - Los BLoCs deben capturar estas fallas y emitir estados de Error.
+- Dependencias:
+  - flutter_bloc
+  - auto_route
+  - get_it
+  - dartz (para Either/Failure)
+  - freezed (opcional pero recomendado para modelos inmutables)
+- Linting: Mantener 0 errores en `flutter analyze`. Reglas activas: prefer_const_constructors, avoid_print, sort_pub_dependencies.
+- Colores y Opacidad:
+  - **NUNCA** uses `withOpacity()` (deprecated). Siempre usa `withValues(alpha: valor)` donde `valor` es un double entre 0.0 y 1.0.
+  - Ejemplo: `Colors.black.withValues(alpha: 0.5)` en lugar de `Colors.black.withOpacity(0.5)`.
+  - Esto evita pérdida de precisión y sigue las mejores prácticas de Flutter.
+- Performance y Optimización:
+  - **Container vs DecoratedBox**: Usa `DecoratedBox` cuando solo necesitas decoration (color, border, borderRadius, gradient, etc.). Usa `Container` solo cuando necesitas: padding, margin, constraints, alignment, O decoration.
+  - Ejemplo: `DecoratedBox(decoration: BoxDecoration(...), child: Widget())` en lugar de `Container(decoration: BoxDecoration(...), child: Widget())` cuando no hay padding/margin.
+  - Esto mejora el rendimiento, especialmente en listas y scrolls.
+- Formularios Complejos:
+  - **SIEMPRE** usa `ChangeNotifier` (extend ChangeNotifier) para formularios con 2+ campos o lógica compleja.
+  - Sigue el patrón de `RegisterFormNotifier`: Controllers, validación con debouncer, errores, flags de completitud.
+  - **NUNCA** uses `setState` para lógica de formularios complejos. Solo para UI local simple (toggle, selección simple).
+  - Ejemplo: `CreateBranchFormNotifier`, `IssuePointsFormNotifier` deben extender `ChangeNotifier`.
+  - Beneficios: Separación de responsabilidades (SRP), testabilidad, mantenibilidad, consistencia.
+- SOLID Principles:
+  - **SRP**: Cada clase debe tener una sola razón para cambiar. Mappers, Use Cases, Repositories deben ser específicos.
+  - **OCP**: Usa Strategy Pattern para validadores, Factory Pattern para configuraciones.
+  - **LSP**: Implementaciones deben ser sustituibles por sus interfaces.
+  - **ISP**: Interfaces específicas, no "gordas". Separa Datasource, Repository, UseCase.
+  - **DIP**: Depende de abstracciones (interfaces), no de implementaciones concretas. Usa GetIt para inyección.
+- Patrones de Diseño:
+  - **Strategy Pattern**: Para validadores (RucStrategy, DocValidatorStrategy).
+  - **Factory Pattern**: Para configuraciones dinámicas (RucConfigFactory, DocConfigFactory).
+  - **Repository Pattern**: Para acceso a datos (siempre usar interfaces).
+  - **Observer Pattern**: ChangeNotifier para formularios y estado local.
+  - **Dependency Injection**: GetIt para todas las dependencias.
+- UI y Rendimiento (Pencil → Flutter):
+  - Ver regla **flutter_ui_pencil**: mapeo diseño .pen/Tailwind → widgets Flutter, cuándo usar ListView vs Column/Row, y mejores prácticas de rendimiento (const, DecoratedBox, listas lazy, opacidad, build cost). Aplicar al traducir diseños o escribir pantallas/widgets.
+- Archivos barril (Barrel files):
+  - Ver regla **barrel_files**: usar archivos barril por capa (domain/domain.dart, data/data.dart, presentation/presentation.dart) en cada feature, y por área en core (routes/routes.dart, utils/utils.dart, widgets/widgets.dart, etc.). Importar desde el barril en lugar del archivo concreto cuando exista.

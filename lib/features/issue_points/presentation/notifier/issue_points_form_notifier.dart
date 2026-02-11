@@ -51,11 +51,13 @@ class IssuePointsFormNotifier extends ChangeNotifier {
   String? get pointsError => _pointsError;
   String? get descriptionError => _descriptionError;
 
-  // Getter para saber si el formulario está completo
+  // Getter para saber si el formulario está completo (incluye comprobante subido)
   bool get isFormComplete {
     return voucherAmountController.text.isNotEmpty &&
            pointsController.text.isNotEmpty &&
            descriptionController.text.isNotEmpty &&
+           _imagePath != null &&
+           _imagePath!.isNotEmpty &&
            _voucherAmountError == null &&
            _pointsError == null &&
            _descriptionError == null;

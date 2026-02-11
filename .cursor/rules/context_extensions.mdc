@@ -1,0 +1,42 @@
+---
+name: context_extensions
+description: Uso obligatorio de las extensiones de contexto (colores, tema, texto) y de espaciado (spaceh, spacew). Reducen boilerplate y centralizan colores en el Theme.
+globs: lib/**/*.dart
+---
+
+# Extensiones de contexto y espaciado
+
+- **Objetivo**: Usar las extensiones definidas en `core/extension/` para colores, tema, tipografía y espaciado. Importar desde el barril: `import 'package:partners/core/extension/extension.dart';`
+
+## 1. Colores y tema (BuildContext)
+
+- **Colores**: Usar `context.appColor` (que expone `Theme.of(context).colorScheme`) en lugar de colores hardcodeados o `Theme.of(context).colorScheme` directo.
+  - Ejemplos: `context.appColor.primary`, `context.appColor.surface`, `context.appColor.onSurface`, `context.appColor.primaryContainer`, `context.appColor.error`, `context.appColor.surfaceContainerHighest`, `context.appColor.onSurfaceVariant`, etc.
+  - Para transparencia: `context.appColor.primary.withValues(alpha: 0.84)` (nunca `withOpacity`).
+- **Tema completo**: Usar `context.theme` cuando se necesite `ThemeData`.
+- **Tipografía**: Usar `context.appTextTheme` para estilos de texto del tema (en lugar de construir `TextStyle` manualmente cuando coincida con el tema).
+- **Tamaño de pantalla**: Usar `context.screenWidth`, `context.screenHeight` o `context.size` cuando se necesite el tamaño del viewport.
+
+## 2. Espaciado (num → SizedBox)
+
+- **Espacio vertical**: Usar `numero.spaceh` en lugar de `SizedBox(height: numero)`.
+  - Ejemplos: `8.spaceh`, `16.spaceh`, `24.spaceh`, `kToolbarHeight.spaceh`.
+- **Espacio horizontal**: Usar `numero.spacew` en lugar de `SizedBox(width: numero)`.
+  - Ejemplos: `12.spacew`, `20.spacew`.
+
+Los getters están definidos en `sizedbox_extension.dart` sobre `num` (int y double).
+
+## 3. Cuándo aplicar
+
+- **En toda la capa de presentación** (screens, widgets): preferir `context.appColor.*` en lugar de `Color(0xFF...)` o `Colors.xxx`, y `n.spaceh` / `n.spacew` en lugar de `SizedBox(height: n)` / `SizedBox(width: n)`.
+- Si un color no existe en `ColorScheme`, está definido en `AppColorsLigth` y usado en `AppTheme`; al usar el tema de la app, `context.appColor` ya incluye esos colores (primary, surface, etc.). No importar `AppColorsLigth` en widgets para pintar; usar el tema vía `context.appColor`.
+
+## 4. Resumen
+
+| Antes | Después |
+|-------|---------|
+| `Theme.of(context).colorScheme.primary` | `context.appColor.primary` |
+| `Color(0xFF051858)` | `context.appColor.primary` (si es el primary del tema) |
+| `SizedBox(height: 16)` | `16.spaceh` |
+| `SizedBox(width: 12)` | `12.spacew` |
+| `Theme.of(context).textTheme` | `context.appTextTheme` |

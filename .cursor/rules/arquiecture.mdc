@@ -36,6 +36,8 @@ description: This is a new rule
   - **NUNCA** uses `withOpacity()` (deprecated). Siempre usa `withValues(alpha: valor)` donde `valor` es un double entre 0.0 y 1.0.
   - Ejemplo: `Colors.black.withValues(alpha: 0.5)` en lugar de `Colors.black.withOpacity(0.5)`.
   - Esto evita pérdida de precisión y sigue las mejores prácticas de Flutter.
+- Extensiones de contexto y espaciado:
+  - Ver regla **context_extensions**: usar **context.appColor** (ej. `context.appColor.primary`, `context.appColor.surface`) en lugar de colores hardcodeados o `Theme.of(context).colorScheme`; usar **context.appTextTheme** para estilos de texto; usar **numero.spaceh** y **numero.spacew** en lugar de `SizedBox(height: n)` y `SizedBox(width: n)`. Importar desde `package:partners/core/extension/extension.dart`.
 - Performance y Optimización:
   - **Container vs DecoratedBox**: Usa `DecoratedBox` cuando solo necesitas decoration (color, border, borderRadius, gradient, etc.). Usa `Container` solo cuando necesitas: padding, margin, constraints, alignment, O decoration.
   - Ejemplo: `DecoratedBox(decoration: BoxDecoration(...), child: Widget())` en lugar de `Container(decoration: BoxDecoration(...), child: Widget())` cuando no hay padding/margin.
@@ -62,3 +64,15 @@ description: This is a new rule
   - Ver regla **flutter_ui_pencil**: mapeo diseño .pen/Tailwind → widgets Flutter, cuándo usar ListView vs Column/Row, y mejores prácticas de rendimiento (const, DecoratedBox, listas lazy, opacidad, build cost). Aplicar al traducir diseños o escribir pantallas/widgets.
 - Archivos barril (Barrel files):
   - Ver regla **barrel_files**: usar archivos barril por capa (domain/domain.dart, data/data.dart, presentation/presentation.dart) en cada feature, y por área en core (routes/routes.dart, utils/utils.dart, widgets/widgets.dart, etc.). Importar desde el barril en lugar del archivo concreto cuando exista.
+- Bloc/Cubit con AutoRoute:
+  - Cualquier pantalla que use **BlocProvider** (o **Cubit** inyectado) con **auto_route** debe implementar **AutoRouteWrapper**.
+  - En la pantalla: `class XxxScreen extends StatelessWidget implements AutoRouteWrapper`.
+  - Implementar `wrappedRoute(BuildContext context)`: crear el Cubit/Bloc (p. ej. con `getIt<XxxCubit>()`), llamar al método de carga inicial si aplica, y devolver `BlocProvider(create: (_) => cubit, child: this)`.
+  - No poner un segundo `BlocProvider` dentro de `build`; el provider queda solo en `wrappedRoute`. Así el scope del estado es la ruta y auto_route puede gestionar correctamente el ciclo de vida.
+- Listas, grids y scroll con datos remotos (onRefresh):
+  - En **toda** pantalla donde se **obtengan datos** (get, fetch, load desde use case/repository) y se muestren en **lista** (ListView, ListView.builder), **grid** (GridView, SliverGrid) o **scroll** (CustomScrollView, SingleChildScrollView con listado de ítems), el contenido desplazable debe ir dentro de un **RefreshIndicator**.
+  - **onRefresh**: debe llamar al método del Cubit/Bloc que recarga los datos (p. ej. `context.read<XxxCubit>().loadXxx()`) y devolver el `Future` que retorne ese método (si el método es `Future<void>`, devolverlo tal cual; si no retorna Future, usar `Future.value(null)` o hacer el método async).
+  - Objetivo: que el usuario pueda hacer **pull-to-refresh** para actualizar los datos. En estados de loading inicial, error o vacío se muestra el contenido actual (sin RefreshIndicator en ese árbol) o, si se quiere permitir pull-to-refresh también ahí, envolver en un scroll view mínimo.
+- Botones e iconos de recarga (Reintentar / Retry / reload):
+  - Donde exista un botón **"Reintentar"**, **"Retry"** o un **icono de recarga** (reload), debe ejecutar el **mismo método de carga** del Cubit/Bloc que obtiene los datos (p. ej. `context.read<XxxCubit>().loadXxx()`).
+  - No duplicar lógica: un solo método de carga (loadXxx) usado tanto por el RefreshIndicator (onRefresh) como por el botón/icono de reintentar. Así se cumple la regla en listas/grids (RefreshIndicator) y en pantallas de error (Reintentar/Retry).

@@ -77,6 +77,14 @@ import 'package:partners/features/productos/presentation/screens/productos_scree
     as _i28;
 import 'package:partners/features/promos/presentation/screens/promos_screen.dart'
     as _i30;
+import 'package:partners/features/promos/presentation/screens/promo_detail_screen.dart'
+    as _i50;
+import 'package:partners/features/promos/presentation/screens/create_basic_promo_screen.dart'
+    as _i51;
+import 'package:partners/features/promos/presentation/screens/create_segmented_promo_screen.dart'
+    as _i52;
+import 'package:partners/features/promos/presentation/screens/promo_map_screen.dart'
+    as _i53;
 import 'package:partners/features/qr/presentation/screens/qr_screen.dart'
     as _i33;
 import 'package:partners/features/qr_scan/presentation/screens/qr_scan_screen.dart'
@@ -619,6 +627,153 @@ class PromosShell extends _i47.PageRouteInfo<void> {
       return const _i31.PromosShell();
     },
   );
+}
+
+/// generated route for
+/// [_i50.PromoDetailScreen]
+class PromoDetailRoute extends _i47.PageRouteInfo<PromoDetailRouteArgs> {
+  PromoDetailRoute({
+    _i48.Key? key,
+    required String promoId,
+    List<_i47.PageRouteInfo>? children,
+  }) : super(
+         PromoDetailRoute.name,
+         args: PromoDetailRouteArgs(key: key, promoId: promoId),
+         initialChildren: children,
+       );
+
+  static const String name = 'PromoDetailRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<PromoDetailRouteArgs>();
+      return _i50.PromoDetailScreen(
+        key: args.key,
+        promoId: args.promoId,
+      );
+    },
+  );
+}
+
+class PromoDetailRouteArgs {
+  const PromoDetailRouteArgs({this.key, required this.promoId});
+
+  final _i48.Key? key;
+  final String promoId;
+
+  @override
+  String toString() => 'PromoDetailRouteArgs{key: $key, promoId: $promoId}';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PromoDetailRouteArgs) return false;
+    return key == other.key && promoId == other.promoId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ promoId.hashCode;
+}
+
+/// generated route for
+/// [_i51.CreateBasicPromoScreen]
+class CreateBasicPromoRoute extends _i47.PageRouteInfo<void> {
+  const CreateBasicPromoRoute({List<_i47.PageRouteInfo>? children})
+    : super(CreateBasicPromoRoute.name, initialChildren: children);
+
+  static const String name = 'CreateBasicPromoRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i51.CreateBasicPromoScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i52.CreateSegmentedPromoScreen]
+class CreateSegmentedPromoRoute extends _i47.PageRouteInfo<void> {
+  const CreateSegmentedPromoRoute({List<_i47.PageRouteInfo>? children})
+    : super(CreateSegmentedPromoRoute.name, initialChildren: children);
+
+  static const String name = 'CreateSegmentedPromoRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      return const _i52.CreateSegmentedPromoScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i53.PromoMapScreen]
+class PromoMapRoute extends _i47.PageRouteInfo<PromoMapRouteArgs> {
+  PromoMapRoute({
+    _i48.Key? key,
+    required int scopeCount,
+    double? centerLat,
+    double? centerLng,
+    List<_i47.PageRouteInfo>? children,
+  }) : super(
+         PromoMapRoute.name,
+         args: PromoMapRouteArgs(
+           key: key,
+           scopeCount: scopeCount,
+           centerLat: centerLat,
+           centerLng: centerLng,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'PromoMapRoute';
+
+  static _i47.PageInfo page = _i47.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<PromoMapRouteArgs>();
+      return _i53.PromoMapScreen(
+        key: args.key,
+        scopeCount: args.scopeCount,
+        centerLat: args.centerLat,
+        centerLng: args.centerLng,
+      );
+    },
+  );
+}
+
+class PromoMapRouteArgs {
+  const PromoMapRouteArgs({
+    this.key,
+    required this.scopeCount,
+    this.centerLat,
+    this.centerLng,
+  });
+
+  final _i48.Key? key;
+  final int scopeCount;
+  final double? centerLat;
+  final double? centerLng;
+
+  @override
+  String toString() =>
+      'PromoMapRouteArgs{key: $key, scopeCount: $scopeCount, centerLat: $centerLat, centerLng: $centerLng}';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PromoMapRouteArgs) return false;
+    return key == other.key &&
+        scopeCount == other.scopeCount &&
+        centerLat == other.centerLat &&
+        centerLng == other.centerLng;
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^ scopeCount.hashCode ^ centerLat.hashCode ^ centerLng.hashCode;
 }
 
 /// generated route for

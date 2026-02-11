@@ -54,5 +54,8 @@
 	<!-- Permisos para agregar fotos (iOS 11+) -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>La aplicación necesita permiso para guardar imágenes capturadas.</string>
+	<!-- Ubicación para calcular alcance de promociones (radar 3 km) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>La aplicación necesita tu ubicación para mostrar el alcance de la promoción en el mapa (radio de 3 km).</string>
 </dict>
 </plist>

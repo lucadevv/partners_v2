@@ -8,7 +8,10 @@ import 'package:partners/core/injection/home/home_injection.dart';
 import 'package:partners/core/injection/pagar/pagar_injection.dart';
 import 'package:partners/core/injection/para_ti/para_ti_injection.dart';
 import 'package:partners/core/injection/productos/productos_injection.dart';
+import 'package:partners/core/injection/promos/promos_injection.dart';
 import 'package:partners/core/injection/role_injection.dart';
+import 'package:partners/core/injection/transactions/transactions_injection.dart';
+import 'package:partners/core/injection/users/users_injection.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/managers/auth/auth_manager_impl.dart';
 import 'package:partners/core/managers/auth/storage/token_manager.dart';
@@ -17,6 +20,8 @@ import 'package:partners/core/services/database/flags/flags_factory.dart';
 import 'package:partners/core/services/database/flags/session_id_storage.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/network/dio_services_impl.dart';
+import 'package:partners/core/services/location/location_service.dart';
+import 'package:partners/core/services/location/location_service_impl.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
 import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
 
@@ -67,6 +72,11 @@ class AppInjection {
     if (!_getIt.isRegistered<AppRouter>()) {
       _getIt.registerLazySingleton<AppRouter>(() => AppRouter());
     }
+    if (!_getIt.isRegistered<LocationService>()) {
+      _getIt.registerLazySingleton<LocationService>(
+        () => LocationServiceImpl(),
+      );
+    }
 
     AuthInjection(getIt: _getIt);
     ValidationInjeciton(getIt: _getIt);
@@ -77,5 +87,8 @@ class AppInjection {
     ParaTiInjection(getIt: _getIt);
     HomeInjection(getIt: _getIt);
     BranchesInjection(getIt: _getIt);
+    TransactionsInjection(getIt: _getIt);
+    PromosInjection(getIt: _getIt);
+    UsersInjection(getIt: _getIt);
   }
 }

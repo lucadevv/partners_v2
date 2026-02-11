@@ -1,12 +1,18 @@
 import 'package:partners/core/models/permission.dart';
 import 'package:partners/core/models/user_role.dart';
 
-/// Clase que mapea roles a sus permisos correspondientes
-/// Sigue el principio de Single Responsibility (SOLID)
+/// Reglas de negocio por rol:
+///
+/// - **Dueño del negocio**: puede hacer todo (acceso completo).
+/// - **Administrador**: maneja solo su sucursal (no crea/elimina sucursales).
+/// - **Mesero/Cajera**: puede emitir puntos y operar pedidos en su ámbito.
+///
+/// Clase que mapea roles a sus permisos correspondientes.
+/// Sigue el principio de Single Responsibility (SOLID).
 class RolePermissions {
   /// Mapa estático que define los permisos para cada rol
   static const Map<UserRole, List<Permission>> rolePermissions = {
-    // Dueño del negocio - Acceso completo
+    // Dueño del negocio - puede hacer todo
     UserRole.businessOwner: [
       Permission.fullAccess,
       // Todos los permisos explícitos también
@@ -37,7 +43,7 @@ class RolePermissions {
       Permission.generateReports,
     ],
 
-    // Administrador - Maneja solo su sucursal
+    // Administrador - maneja solo su sucursal (no create/update/delete branches)
     UserRole.administrator: [
       // Productos - puede leer y actualizar
       Permission.readProducts,
@@ -65,25 +71,21 @@ class RolePermissions {
       Permission.generateReports,
     ],
 
-    // Mesero/Cajera - Permisos limitados
+    // Mesero/Cajera - puede emitir puntos y operar pedidos
     UserRole.waiterCashier: [
-      // Productos - solo lectura
       Permission.readProducts,
-      // Pedidos - puede crear y leer pedidos
       Permission.readOrders,
       Permission.createOrders,
       Permission.updateOrders,
-      // Puntos - puede emitir puntos (función principal)
       Permission.readPoints,
       Permission.emitPoints,
       Permission.redeemPoints,
-      // Usuarios - solo lectura
       Permission.readUsers,
     ],
   };
 
   /// Obtiene la lista de permisos para un rol específico
-  /// 
+  ///
   /// [role] El rol del usuario
   /// Retorna la lista de permisos asociados al rol
   static List<Permission> getPermissionsForRole(UserRole role) {
@@ -91,23 +93,23 @@ class RolePermissions {
   }
 
   /// Verifica si un rol tiene un permiso específico
-  /// 
+  ///
   /// [role] El rol del usuario
   /// [permission] El permiso a verificar
   /// Retorna true si el rol tiene el permiso, false en caso contrario
   static bool hasPermission(UserRole role, Permission permission) {
     final permissions = getPermissionsForRole(role);
-    
+
     // Si tiene fullAccess, tiene todos los permisos
     if (permissions.contains(Permission.fullAccess)) {
       return true;
     }
-    
+
     return permissions.contains(permission);
   }
 
   /// Verifica si un rol tiene alguno de los permisos especificados
-  /// 
+  ///
   /// [role] El rol del usuario
   /// [permissions] Lista de permisos a verificar
   /// Retorna true si el rol tiene al menos uno de los permisos
@@ -116,7 +118,7 @@ class RolePermissions {
   }
 
   /// Verifica si un rol tiene todos los permisos especificados
-  /// 
+  ///
   /// [role] El rol del usuario
   /// [permissions] Lista de permisos a verificar
   /// Retorna true si el rol tiene todos los permisos

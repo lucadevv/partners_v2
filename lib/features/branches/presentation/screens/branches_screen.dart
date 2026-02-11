@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/extension/extension.dart';
 import 'package:partners/core/models/models.dart';
 import 'package:partners/core/routes/routes.dart';
 import 'package:partners/core/services/services.dart';
@@ -9,34 +10,34 @@ import 'package:partners/features/branches/presentation/presentation.dart';
 import 'package:partners/main.dart';
 
 @RoutePage()
-class BranchesScreen extends StatelessWidget {
+class BranchesScreen extends StatelessWidget implements AutoRouteWrapper {
   const BranchesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final surfaceColor = theme.colorScheme.surface;
-
-    // Load branches when screen is built
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<BranchesCubit>();
+    cubit.loadBranches();
     return BlocProvider(
-      create: (context) {
-        final cubit = getIt<BranchesCubit>();
-        cubit.loadBranches();
-        return cubit;
-      },
-      child: Scaffold(
-      backgroundColor: surfaceColor,
+      create: (_) => cubit,
+      child: this,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F2B69)),
+          icon: Icon(Icons.arrow_back, color: context.appColor.primary),
           onPressed: () => context.router.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Mis sucursales',
           style: TextStyle(
-            color: Color(0xFF0F2B69),
+            color: context.appColor.primary,
             fontSize: 28,
             fontWeight: FontWeight.w600,
             fontFamily: 'Figtree',
@@ -47,9 +48,7 @@ class BranchesScreen extends StatelessWidget {
       body: BlocBuilder<BranchesCubit, BranchesState>(
         builder: (context, state) {
           if (state.status == BranchesStatus.loading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state.status == BranchesStatus.failure) {
@@ -59,9 +58,9 @@ class BranchesScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Error: ${state.errorMessage ?? "Error desconocido"}',
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: context.appColor.error),
                   ),
-                  const SizedBox(height: 16),
+                  16.spaceh,
                   ElevatedButton(
                     onPressed: () {
                       context.read<BranchesCubit>().loadBranches();
@@ -74,36 +73,36 @@ class BranchesScreen extends StatelessWidget {
           }
 
           if (state.branches.isEmpty) {
-            return const Center(
-              child: Text('No hay sucursales disponibles'),
-            );
+            return const Center(child: Text('No hay sucursales disponibles'));
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            itemCount: state.branches.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index < state.branches.length - 1 ? 20 : 100,
-                ),
-                child: _buildBranchCard(context, state.branches[index]),
-              );
-            },
+          return RefreshIndicator(
+            onRefresh: () => context.read<BranchesCubit>().loadBranches(),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: state.branches.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index < state.branches.length - 1 ? 20 : 100,
+                  ),
+                  child: _buildBranchCard(context, state.branches[index]),
+                );
+              },
+            ),
           );
         },
       ),
-        floatingActionButton: _buildFloatingActionButton(context),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      ),
+      floatingActionButton: _buildFloatingActionButton(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
   Widget _buildBranchCard(BuildContext context, BranchEntity branch) {
     final roleService = getIt<RoleService>();
     final canEdit = roleService.hasPermission(Permission.updateBranches);
-    
-    return Container(
+
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -156,16 +155,16 @@ class BranchesScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.edit,
-                            color: Color(0xFF00114A),
+                            color: context.appColor.primary,
                             size: 24,
                           ),
-                          const SizedBox(width: 10),
-                          const Text(
+                          10.spacew,
+                          Text(
                             'Editar',
                             style: TextStyle(
-                              color: Color(0xFF00114A),
+                              color: context.appColor.primary,
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
                               fontFamily: 'Figtree',
@@ -199,8 +198,8 @@ class BranchesScreen extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${branch.workers}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.appColor.onPrimary,
                         fontSize: 23,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Figtree',
@@ -221,8 +220,8 @@ class BranchesScreen extends StatelessWidget {
                   flex: 2,
                   child: Text(
                     branch.name,
-                    style: const TextStyle(
-                      color: Color(0xFF1C274C),
+                    style: TextStyle(
+                      color: context.appColor.onSurface,
                       fontSize: 23,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Figtree',
@@ -230,27 +229,26 @@ class BranchesScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(width: 20),
+                20.spacew,
                 Expanded(
                   flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Address
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.location_on,
                             size: 23,
-                            color: Color(0xFF1C274C),
+                            color: context.appColor.onSurface,
                           ),
-                          const SizedBox(width: 7),
+                          7.spacew,
                           Expanded(
                             child: Text(
                               branch.address,
-                              style: const TextStyle(
-                                color: Color(0xFF1C274C),
+                              style: TextStyle(
+                                color: context.appColor.onSurface,
                                 fontSize: 12,
                                 fontWeight: FontWeight.normal,
                                 fontFamily: 'Figtree',
@@ -259,20 +257,19 @@ class BranchesScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      // Phone
+                      12.spaceh,
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.phone,
                             size: 24,
-                            color: Color(0xFF1C274C),
+                            color: context.appColor.onSurface,
                           ),
-                          const SizedBox(width: 7),
+                          7.spacew,
                           Text(
                             branch.phone,
-                            style: const TextStyle(
-                              color: Color(0xFF1C274C),
+                            style: TextStyle(
+                              color: context.appColor.onSurface,
                               fontSize: 12,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'Figtree',
@@ -280,22 +277,21 @@ class BranchesScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      // Schedule
+                      12.spaceh,
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.access_time,
                             size: 21,
-                            color: Color(0xFF1C274C),
+                            color: context.appColor.onSurface,
                           ),
-                          const SizedBox(width: 7),
+                          7.spacew,
                           Expanded(
                             child: Text(
                               branch.schedule,
-                              style: const TextStyle(
-                                color: Color(0xFF1C274C),
+                              style: TextStyle(
+                                color: context.appColor.onSurface,
                                 fontSize: 12,
                                 fontWeight: FontWeight.normal,
                                 fontFamily: 'Figtree',
@@ -317,62 +313,59 @@ class BranchesScreen extends StatelessWidget {
 
   Widget _buildFloatingActionButton(BuildContext context) {
     final roleService = getIt<RoleService>();
-    
-    // Verificar permisos antes de mostrar el botón
     if (!roleService.hasPermission(Permission.createBranches)) {
       return const SizedBox.shrink();
     }
 
-    return Container(
+    return SizedBox(
       width: 109,
       height: 109,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0EA5E9),
-        borderRadius: BorderRadius.circular(70.5),
-        border: Border.all(color: const Color(0xFF0EA5E9), width: 2),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Verificar permisos nuevamente antes de navegar
-            if (roleService.hasPermission(Permission.createBranches)) {
-              context.router.push(const CreateBranchRoute());
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('No tiene permisos para crear sucursales'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
+      child: DecoratedBox(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(70.5),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 37,
-                height: 37,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0A2B7A),
-                  borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: context.appColor.secondary, width: 2),
+          color: context.appColor.secondary,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.router.push(const CreateBranchRoute()),
+            borderRadius: BorderRadius.circular(70.5),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: context.appColor.primary,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: SizedBox(
+                      width: 37,
+                      height: 37,
+                      child: Icon(
+                        Icons.add,
+                        color: context.appColor.onPrimary,
+                        size: 17,
+                      ),
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 17),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Nueva sucursal',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal,
-                  fontFamily: 'Figtree',
+                10.spaceh,
+                Text(
+                  'Nueva sucursal',
+                  style: TextStyle(
+                    color: context.appColor.onPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'Figtree',
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -11,59 +11,65 @@ import 'package:partners/features/home/presentation/widgets/smart_card_widget.da
 import 'package:partners/main.dart';
 
 @RoutePage()
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatelessWidget implements AutoRouteWrapper {
   const HomeScreen({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<HomeCubit>();
+    cubit.loadHomeData();
+    return BlocProvider(
+      create: (_) => cubit,
+      child: this,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaceColor = theme.colorScheme.surface;
 
-    return BlocProvider(
-      create: (context) {
-        final cubit = getIt<HomeCubit>();
-        cubit.loadHomeData();
-        return cubit;
-      },
-      child: Scaffold(
-        backgroundColor: surfaceColor, // Celeste from ThemeData
-        body: BlocBuilder<HomeCubit, HomeState>(
-          builder: (context, state) {
-            if (state.status == HomeStatus.loading) {
-              return const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              );
-            }
+    return Scaffold(
+      backgroundColor: surfaceColor,
+      body: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          if (state.status == HomeStatus.loading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
 
-            if (state.status == HomeStatus.failure) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.errorMessage ?? 'Error loading data',
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<HomeCubit>().loadHomeData();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
+          if (state.status == HomeStatus.failure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.errorMessage ?? 'Error loading data',
+                    style: const TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<HomeCubit>().loadHomeData();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-            return CustomScrollView(
+          return RefreshIndicator(
+            onRefresh: () => context.read<HomeCubit>().loadHomeData(),
+            child: CustomScrollView(
               slivers: [
                 // Header + Tools Grid section with oval behind both
                 SliverToBoxAdapter(
@@ -108,9 +114,9 @@ class HomeScreen extends StatelessWidget {
                 // Bottom spacing for navbar
                 const SliverToBoxAdapter(child: SizedBox(height: 120)),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

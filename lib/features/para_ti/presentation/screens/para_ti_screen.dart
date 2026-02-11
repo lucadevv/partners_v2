@@ -7,46 +7,59 @@ import 'package:partners/features/para_ti/presentation/cubit/para_ti_state.dart'
 import 'package:partners/main.dart';
 
 @RoutePage()
-class ParaTiScreen extends StatelessWidget {
+class ParaTiScreen extends StatelessWidget implements AutoRouteWrapper {
   const ParaTiScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<ParaTiCubit>();
+    cubit.loadRecomendaciones();
     return BlocProvider(
-      create: (context) {
-        final cubit = getIt<ParaTiCubit>();
-        cubit.loadRecomendaciones();
-        return cubit;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Para Ti'),
-        ),
-        body: BlocBuilder<ParaTiCubit, ParaTiState>(
-          builder: (context, state) {
-            if (state.status == ParaTiStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      create: (_) => cubit,
+      child: this,
+    );
+  }
 
-            if (state.status == ParaTiStatus.failure) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline,
-                        size: 64, color: context.appColor.error),
-                    const SizedBox(height: 16),
-                    Text(state.errorMessage ?? 'Error al cargar'),
-                  ],
-                ),
-              );
-            }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Para Ti'),
+      ),
+      body: BlocBuilder<ParaTiCubit, ParaTiState>(
+        builder: (context, state) {
+          if (state.status == ParaTiStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            if (state.recomendaciones.isEmpty) {
-              return const Center(child: Text('No hay recomendaciones'));
-            }
+          if (state.status == ParaTiStatus.failure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline,
+                      size: 64, color: context.appColor.error),
+                  const SizedBox(height: 16),
+                  Text(state.errorMessage ?? 'Error al cargar'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<ParaTiCubit>().loadRecomendaciones();
+                    },
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-            return ListView.builder(
+          if (state.recomendaciones.isEmpty) {
+            return const Center(child: Text('No hay recomendaciones'));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => context.read<ParaTiCubit>().loadRecomendaciones(),
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: state.recomendaciones.length,
               itemBuilder: (context, index) {
@@ -64,9 +77,9 @@ class ParaTiScreen extends StatelessWidget {
                   ),
                 );
               },
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

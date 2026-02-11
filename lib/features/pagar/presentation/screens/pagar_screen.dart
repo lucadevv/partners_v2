@@ -7,8 +7,18 @@ import 'package:partners/features/pagar/presentation/presentation.dart';
 import 'package:partners/main.dart';
 
 @RoutePage()
-class PagarScreen extends StatefulWidget {
+class PagarScreen extends StatefulWidget implements AutoRouteWrapper {
   const PagarScreen({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<PagarCubit>();
+    cubit.loadHistorialPagos();
+    return BlocProvider(
+      create: (_) => cubit,
+      child: this,
+    );
+  }
 
   @override
   State<PagarScreen> createState() => _PagarScreenState();
@@ -28,19 +38,15 @@ class _PagarScreenState extends State<PagarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final cubit = getIt<PagarCubit>();
-        cubit.loadHistorialPagos();
-        return cubit;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Pagar'),
-        ),
-        body: BlocBuilder<PagarCubit, PagarState>(
-          builder: (context, state) {
-            return SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pagar'),
+      ),
+      body: BlocBuilder<PagarCubit, PagarState>(
+        builder: (context, state) {
+          return RefreshIndicator(
+            onRefresh: () => context.read<PagarCubit>().loadHistorialPagos(),
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,9 +149,9 @@ class _PagarScreenState extends State<PagarScreen> {
                         )),
                 ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

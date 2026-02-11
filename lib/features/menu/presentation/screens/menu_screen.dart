@@ -1,7 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:partners/core/utils/icon_paths.dart';
-import 'package:partners/core/widgets/svg_icon_widget.dart';
+import 'package:partners/core/extension/extension.dart';
+import 'package:partners/core/utils/utils.dart';
+import 'package:partners/core/widgets/widgets.dart';
 
 @RoutePage()
 class MenuScreen extends StatelessWidget {
@@ -10,16 +11,15 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F2B69), // Azul oscuro según diseño
+      backgroundColor: context.appColor.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Herramientas Smart',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
+          style: context.appTextTheme.titleLarge?.copyWith(
+            color: context.appColor.onPrimary,
             fontWeight: FontWeight.w600,
             fontFamily: 'Figtree',
           ),
@@ -28,40 +28,46 @@ class MenuScreen extends StatelessWidget {
       ),
       body: GridView.count(
         crossAxisCount: 2,
-        padding: const EdgeInsets.all(20),
-        crossAxisSpacing: 20,
         mainAxisSpacing: 20,
+        crossAxisSpacing: 20,
+        padding: const EdgeInsets.all(20),
+        childAspectRatio: 0.98,
         children: [
           _buildMenuCard(
-            iconPath: IconPaths.survey,
+            context,
+            iconPath: IconPaths.h1,
             title: 'Encuestas\nSmart',
             onTap: () {
               // TODO: Navigate to surveys
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.promotion,
+            context,
+            iconPath: IconPaths.h2,
             title: 'Promociones\nSmart',
             onTap: () {
               // TODO: Navigate to promotions
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.marketStudy,
+            context,
+            iconPath: IconPaths.h3,
             title: 'Estudios de\nMercado\nSmart',
             onTap: () {
               // TODO: Navigate to market studies
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.dashboard,
+            context,
+            iconPath: IconPaths.h4,
             title: 'Ir a mi\nDashboard',
             onTap: () {
               // TODO: Navigate to dashboard
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.store,
+            context,
+            iconPath: IconPaths.h5,
             title: 'Sucursales',
             onTap: () {
               // Navigate to branches - route will be available after build_runner
@@ -69,14 +75,16 @@ class MenuScreen extends StatelessWidget {
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.receipt,
+            context,
+            iconPath: IconPaths.h6,
             title: 'Recibos\nSmart',
             onTap: () {
               // TODO: Navigate to receipts
             },
           ),
           _buildMenuCard(
-            iconPath: IconPaths.analytics,
+            context,
+            iconPath: IconPaths.h7,
             title: 'Estadísticas',
             onTap: () {
               // TODO: Navigate to statistics
@@ -87,46 +95,51 @@ class MenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard({
+  Widget _buildMenuCard(
+    BuildContext context, {
     required String iconPath,
     required String title,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appColor.onPrimary,
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgIconWidget(
-              assetPath: iconPath,
-              width: 55,
-              height: 55,
-              color: const Color(0xFF0F2B69),
-            ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF0F2B69),
-                  fontSize: 23,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Figtree',
-                  height: 1.3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              SvgIconWidget(
+                assetPath: iconPath,
+                width: 44,
+                height: 44,
+                color: context.appColor.primary,
+              ),
+              8.spaceh,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.appTextTheme.titleSmall?.copyWith(
+                    color: context.appColor.primary,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Figtree',
+                    fontSize: 20,
+                    height: 1.3,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

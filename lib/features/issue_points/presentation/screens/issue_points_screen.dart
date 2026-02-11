@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:partners/core/extension/extension.dart';
+import 'package:partners/core/routes/routes.dart';
 import 'package:partners/features/issue_points/presentation/presentation.dart';
 
 @RoutePage()
@@ -12,6 +17,7 @@ class IssuePointsScreen extends StatefulWidget {
 
 class _IssuePointsScreenState extends State<IssuePointsScreen> {
   late IssuePointsFormNotifier _formNotifier;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -27,24 +33,32 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImageFromCamera() async {
+    final XFile? file = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (!mounted) return;
+    if (file != null && file.path.isNotEmpty) {
+      _formNotifier.setImagePath(file.path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final surfaceColor = theme.colorScheme.surface;
-
     return Scaffold(
-      backgroundColor: surfaceColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0A2B7A)),
+          icon: Icon(Icons.arrow_back, color: context.appColor.primary),
           onPressed: () => context.router.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Emitir puntos',
           style: TextStyle(
-            color: Color(0xFF0A2B7A),
+            color: context.appColor.primary,
             fontSize: 28,
             fontWeight: FontWeight.w600,
             fontFamily: 'Figtree',
@@ -60,13 +74,11 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // User name field (read-only)
                 IssuePointsFieldWidget(
                   field: _formNotifier.userNameField,
                   value: _formNotifier.userName,
                 ),
-                const SizedBox(height: 20),
-                // Amount fields row
+                20.spaceh,
                 Row(
                   children: [
                     Expanded(
@@ -77,7 +89,7 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    20.spacew,
                     Expanded(
                       child: IssuePointsFieldWidget(
                         field: _formNotifier.pointsField,
@@ -88,22 +100,18 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                // Description field
+                20.spaceh,
                 IssuePointsFieldWidget(
                   field: _formNotifier.descriptionField,
                   controller: _formNotifier.descriptionController,
                   errorText: _formNotifier.descriptionError,
                 ),
-                const SizedBox(height: 20),
-                // Upload receipt button
-                _buildUploadButton(),
-                const SizedBox(height: 20),
-                // Image preview if uploaded
-                if (_formNotifier.imagePath != null) _buildImagePreview(),
-                const SizedBox(height: 40),
-                // Submit button
-                _buildSubmitButton(),
+                20.spaceh,
+                _buildUploadButton(context),
+                20.spaceh,
+                if (_formNotifier.imagePath != null) _buildImagePreview(context),
+                40.spaceh,
+                _buildSubmitButton(context),
               ],
             ),
           );
@@ -112,32 +120,29 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     );
   }
 
-  Widget _buildUploadButton() {
+  Widget _buildUploadButton(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Implement image picker
-        _formNotifier.setImagePath('placeholder');
-      },
+      onTap: _pickImageFromCamera,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFD3F0FE),
+          color: context.appColor.surface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.add_a_photo_outlined,
-                color: Color(0xFF00114A),
+                color: context.appColor.primary,
                 size: 35,
               ),
-              const SizedBox(width: 10),
-              const Text(
+              10.spacew,
+              Text(
                 'Subir comprobante',
                 style: TextStyle(
-                  color: Color(0xFF00114A),
+                  color: context.appColor.primary,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Figtree',
@@ -150,7 +155,8 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget _buildImagePreview(BuildContext context) {
+    final path = _formNotifier.imagePath!;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: const Color(0xFFE5E7EB),
@@ -160,25 +166,31 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const SizedBox(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
                 width: 330,
                 height: 440,
-                child: Center(child: Icon(Icons.image, size: 50)),
+                child: File(path).existsSync()
+                    ? Image.file(
+                        File(path),
+                        fit: BoxFit.cover,
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 50,
+                          color: context.appColor.onSurfaceVariant,
+                        ),
+                      ),
               ),
             ),
-            const SizedBox(height: 20),
+            20.spaceh,
             GestureDetector(
-              onTap: () {
-                _formNotifier.clearImage();
-              },
+              onTap: _pickImageFromCamera,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD3F0FE),
+                  color: context.appColor.surface,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Padding(
@@ -189,16 +201,16 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.add_a_photo_outlined,
-                        color: Color(0xFF00114A),
+                        color: context.appColor.primary,
                         size: 35,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      10.spacew,
+                      Text(
                         'Tomar nuevamente',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: context.appColor.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'Figtree',
@@ -215,39 +227,46 @@ class _IssuePointsScreenState extends State<IssuePointsScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(BuildContext context) {
+    final enabled = _formNotifier.isFormComplete;
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _formNotifier.isFormComplete
-            ? () {
-                // TODO: Navigate to success screen
-                // context.router.push(const IssuePointsSuccessRoute());
-                // Navigate to success screen - route will be available after build_runner
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF66CFFF),
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
+      height: 60,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: enabled ? context.appColor.secondary : context.appColor.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(50),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.arrow_back, color: Color(0xFF051858), size: 20),
-            const SizedBox(width: 10),
-            const Text(
-              'Emitir puntos',
-              style: TextStyle(
-                color: Color(0xFF051858),
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Figtree',
-              ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled
+                ? () {
+                    context.router.push(const IssuePointsSuccessRoute());
+                  }
+                : null,
+            borderRadius: BorderRadius.circular(50),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.arrow_forward,
+                  color: enabled ? context.appColor.primary : context.appColor.onSurfaceVariant,
+                  size: 20,
+                ),
+                10.spacew,
+                Text(
+                  'Emitir puntos',
+                  style: TextStyle(
+                    color: enabled ? context.appColor.primary : context.appColor.onSurfaceVariant,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Figtree',
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -26,4 +26,13 @@ class IconPaths {
   static const String marketStudy = 'assets/icons/market_study_icon.svg';
   static const String dashboard = 'assets/icons/dashboard_icon.svg';
   static const String receipt = 'assets/icons/receipt_icon.svg';
+
+  // Menu grid (h1 a h7)
+  static const String h1 = 'assets/svg/h1.svg';
+  static const String h2 = 'assets/svg/h2.svg';
+  static const String h3 = 'assets/svg/h3.svg';
+  static const String h4 = 'assets/svg/h4.svg';
+  static const String h5 = 'assets/svg/h5.svg';
+  static const String h6 = 'assets/svg/h6.svg';
+  static const String h7 = 'assets/svg/h7.svg';
 }

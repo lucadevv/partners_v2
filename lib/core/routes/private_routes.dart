@@ -57,7 +57,16 @@ class PrivateRoutes {
           page: PromosShell.page,
           children: [
             AutoRoute(initial: true, path: '', page: PromosRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Promos
+            AutoRoute(path: 'promo-detail', page: PromoDetailRoute.page),
+            AutoRoute(
+              path: 'create-basic-promo',
+              page: CreateBasicPromoRoute.page,
+            ),
+            AutoRoute(
+              path: 'create-segmented-promo',
+              page: CreateSegmentedPromoRoute.page,
+            ),
+            AutoRoute(path: 'promo-map', page: PromoMapRoute.page),
           ],
         ),
         AutoRoute(
@@ -75,7 +84,6 @@ class PrivateRoutes {
           page: UsersShell.page,
           children: [
             AutoRoute(initial: true, path: '', page: UsersRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Usuarios
           ],
         ),
         AutoRoute(

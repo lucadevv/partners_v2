@@ -1,68 +1,22 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:partners/core/routes/app_routes.gr.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/extension/extension.dart';
+import 'package:partners/core/routes/routes.dart';
+import 'package:partners/features/transactions/domain/domain.dart';
+import 'package:partners/features/transactions/presentation/presentation.dart';
+import 'package:partners/main.dart';
 
 @RoutePage()
-class TransactionsScreen extends StatelessWidget {
+class TransactionsScreen extends StatelessWidget implements AutoRouteWrapper {
   const TransactionsScreen({super.key});
 
-  final List<Map<String, String>> _transactions = const [
-    {
-      'name': 'Karylin Moscol',
-      'date': '25 Jul 2025 - 16:54',
-      'points': '5 puntos',
-    },
-    {
-      'name': 'Alan Paerson',
-      'date': '25 Jul 2025 - 16:54',
-      'points': '5 puntos',
-    },
-    {
-      'name': 'Mariano Suquillan..',
-      'date': '26 Jul 2025 - 09:30',
-      'points': '3 puntos',
-    },
-    {'name': 'Grace Lee', 'date': '26 Jul 2025 - 09:30', 'points': '3 puntos'},
-    {
-      'name': 'Jasper Fenn',
-      'date': '26 Jul 2025 - 09:12',
-      'points': '4 puntos',
-    },
-    {
-      'name': 'Isolde Tran',
-      'date': '27 Jul 2025 - 11:30',
-      'points': '-3 puntos',
-    },
-    {'name': 'Ravi Mehta', 'date': '28 Jul 2025 - 14:45', 'points': '5 puntos'},
-    {
-      'name': 'Elena Rodriguez',
-      'date': '29 Jul 2025 - 08:20',
-      'points': '-4 puntos',
-    },
-    {
-      'name': 'Marcus Lang',
-      'date': '30 Jul 2025 - 10:05',
-      'points': '-2 puntos',
-    },
-    {
-      'name': 'Aisha Patel',
-      'date': '31 Jul 2025 - 15:00',
-      'points': '-5 puntos',
-    },
-    {'name': 'Theo Chen', 'date': '01 Mar 2025 - 17:30', 'points': '-3 puntos'},
-    {
-      'name': 'Nia Johnson',
-      'date': '02 Ene 2025 - 12:15',
-      'points': '4 puntos',
-    },
-    {
-      'name': "Liam O'Reilly",
-      'date': '03 Abri 2025 - 19:45',
-      'points': '-10 puntos',
-    },
-    {'name': 'Sofia Kim', 'date': '04 Ago 2025 - 13:10', 'points': '5 puntos'},
-    {'name': 'Victor Hu', 'date': '05 Jun 2025 - 16:00', 'points': '4 puntos'},
-  ];
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<TransactionsCubit>();
+    cubit.loadTransactions();
+    return BlocProvider(create: (_) => cubit, child: this);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +26,13 @@ class TransactionsScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF0A2B7A)),
+          icon: Icon(Icons.arrow_back_ios, color: context.appColor.primary),
           onPressed: () => context.router.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Transacciones',
           style: TextStyle(
-            color: Color(0xFF0A2B7A),
+            color: context.appColor.primary,
             fontSize: 28,
             fontWeight: FontWeight.w600,
             fontFamily: 'Figtree',
@@ -87,27 +41,68 @@ class TransactionsScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Color(0xFF0A2B7A)),
+            icon: Icon(Icons.filter_list, color: context.appColor.primary),
             onPressed: () {
               _showFilterBottomSheet(context);
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: _transactions.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: index < _transactions.length - 1 ? 10 : 0,
-            ),
-            child: _buildTransactionItem(
-              context,
-              _transactions[index]['name']!,
-              _transactions[index]['date']!,
-              _transactions[index]['points']!,
-              const Color(0XFFf4f4f7),
+      body: BlocBuilder<TransactionsCubit, TransactionsState>(
+        builder: (context, state) {
+          if (state.status == TransactionsStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state.status == TransactionsStatus.failure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error: ${state.errorMessage ?? "Error desconocido"}',
+                    style: TextStyle(color: context.appColor.error),
+                    textAlign: TextAlign.center,
+                  ),
+                  16.spaceh,
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<TransactionsCubit>().loadTransactions();
+                    },
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (state.transactions.isEmpty) {
+            return Center(
+              child: Text(
+                'No hay transacciones',
+                style: TextStyle(
+                  color: context.appColor.onSurface,
+                  fontSize: 18,
+                  fontFamily: 'Figtree',
+                ),
+              ),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () =>
+                context.read<TransactionsCubit>().loadTransactions(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: state.transactions.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index < state.transactions.length - 1 ? 10 : 0,
+                  ),
+                  child: _buildTransactionItem(
+                    context,
+                    state.transactions[index],
+                  ),
+                );
+              },
             ),
           );
         },
@@ -117,76 +112,84 @@ class TransactionsScreen extends StatelessWidget {
 
   Widget _buildTransactionItem(
     BuildContext context,
-    String name,
-    String date,
-    String points,
-    Color backgroundColor,
+    TransactionEntity transaction,
   ) {
-    return Container(
-      height: 80,
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: const Color(0xFFE5E7EB),
         borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.visibility_outlined, size: 30),
-            color: const Color(0xFF051858),
-            onPressed: () {
+      child: SizedBox(
+        height: 80,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
               context.router.push(
                 TransactionDetailRoute(
-                  transactionName: name,
-                  transactionDate: date,
-                  transactionPoints: points,
+                  transactionName: transaction.name,
+                  transactionDate: transaction.date,
+                  transactionPoints: transaction.pointsLabel,
                 ),
               );
             },
-          ),
-          const SizedBox(width: 10),
-          Text(
-            points,
-            style: const TextStyle(
-              color: Color(0xFF051858),
-              fontSize: 23,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Figtree',
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 19),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.visibility_outlined,
+                    size: 30,
+                    color: context.appColor.primary,
+                  ),
+                  10.spacew,
+                  Text(
+                    transaction.pointsLabel,
+                    style: TextStyle(
+                      color: context.appColor.primary,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Figtree',
+                    ),
+                  ),
+                  20.spacew,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          transaction.name,
+                          style: TextStyle(
+                            color: context.appColor.primary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Figtree',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        8.spaceh,
+                        Text(
+                          transaction.date,
+                          style: TextStyle(
+                            color: context.appColor.onSurfaceVariant,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                            fontFamily: 'Figtree',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Color(0xFF051858),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Figtree',
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  date,
-                  style: const TextStyle(
-                    color: Color(0xFF757575),
-                    fontSize: 18,
-                    fontWeight: FontWeight.normal,
-                    fontFamily: 'Figtree',
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -195,7 +198,7 @@ class TransactionsScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (ctx) => DecoratedBox(
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -203,75 +206,84 @@ class TransactionsScreen extends StatelessWidget {
             topRight: Radius.circular(50),
           ),
         ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 35,
-                  height: 35,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD3F0FE),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color(0xFF0F2B69),
-                    size: 20,
-                  ),
-                ),
-                const Expanded(
-                  child: Text(
-                    'Filtrar por',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Figtree',
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: ctx.appColor.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SizedBox(
+                      width: 35,
+                      height: 35,
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: ctx.appColor.primary,
+                        size: 20,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 35),
-              ],
-            ),
-            const SizedBox(height: 30),
-            _buildFilterOption('Solo hoy', true),
-            const SizedBox(height: 20),
-            _buildFilterOption('Últimos 07 días', false),
-            const SizedBox(height: 20),
-            _buildFilterOption('Últimos 15 días', false),
-            const SizedBox(height: 20),
-            _buildFilterOption('Últimos 30 días', false),
-            const SizedBox(height: 20),
-          ],
+                  Expanded(
+                    child: Text(
+                      'Filtrar por',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ctx.appColor.onSurface,
+                        fontSize: 23,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Figtree',
+                      ),
+                    ),
+                  ),
+                  35.spacew,
+                ],
+              ),
+              30.spaceh,
+              _buildFilterOption(ctx, 'Solo hoy', true),
+              20.spaceh,
+              _buildFilterOption(ctx, 'Últimos 07 días', false),
+              20.spaceh,
+              _buildFilterOption(ctx, 'Últimos 15 días', false),
+              20.spaceh,
+              _buildFilterOption(ctx, 'Últimos 30 días', false),
+              20.spaceh,
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFilterOption(String title, bool isSelected) {
+  Widget _buildFilterOption(
+    BuildContext context,
+    String title,
+    bool isSelected,
+  ) {
     return Row(
       children: [
-        Container(
-          width: 24,
-          height: 24,
+        DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isSelected ? const Color(0xFF051858) : Colors.transparent,
+            color: isSelected ? context.appColor.primary : Colors.transparent,
             border: Border.all(
-              color: isSelected ? const Color(0xFF051858) : Colors.black,
+              color: isSelected
+                  ? context.appColor.primary
+                  : context.appColor.onSurface,
               width: 1,
             ),
           ),
+          child: const SizedBox(width: 24, height: 24),
         ),
-        const SizedBox(width: 20),
+        20.spacew,
         Text(
           title,
           style: TextStyle(
-            color: Colors.black,
+            color: context.appColor.onSurface,
             fontSize: 23,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             fontFamily: 'Figtree',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:partners/core/extension/extension.dart';
 import 'package:partners/core/utils/utils.dart';
 import 'package:partners/features/issue_points/domain/domain.dart';
 
@@ -29,11 +30,11 @@ class IssuePointsFieldWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isReadOnly = field.readOnly || value != null;
     final backgroundColor = isActive && !isReadOnly
-        ? Colors.white.withValues(alpha: 0.64)
-        : const Color(0xFFE5E7EB);
+        ? context.appColor.surface.withValues(alpha: 0.64)
+        : context.appColor.surfaceContainerHighest;
     final textColor = isActive && !isReadOnly
-        ? const Color(0xFF00114A)
-        : const Color(0xFF696969);
+        ? context.appColor.primary
+        : context.appColor.onSurfaceVariant;
 
     return Padding(
       padding: EdgeInsets.only(bottom: errorText != null ? 4 : 0),
@@ -42,7 +43,7 @@ class IssuePointsFieldWidget extends StatelessWidget {
           color: backgroundColor,
           borderRadius: BorderRadius.circular(10),
           border: isActive && !isReadOnly
-              ? Border.all(color: const Color(0xFF0A2B7A), width: 1)
+              ? Border.all(color: context.appColor.primary, width: 1)
               : null,
         ),
         child: Padding(
@@ -53,14 +54,14 @@ class IssuePointsFieldWidget extends StatelessWidget {
               Text(
                 field.label,
                 textAlign: textAlign,
-                style: const TextStyle(
-                  color: Color(0xFFC6C6C6),
+                style: TextStyle(
+                  color: context.appColor.onSurfaceVariant.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
                   fontFamily: 'Figtree',
                 ),
               ),
-              const SizedBox(height: 8),
+              8.spaceh,
               if (isReadOnly && value != null)
                 Text(
                   value!,
@@ -91,8 +92,8 @@ class IssuePointsFieldWidget extends StatelessWidget {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: field.placeholder,
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF9CA3AF),
+                    hintStyle: TextStyle(
+                      color: context.appColor.onSurfaceVariant.withValues(alpha: 0.6),
                       fontSize: 18,
                     ),
                     counterText: '',
@@ -104,8 +105,8 @@ class IssuePointsFieldWidget extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     errorText!,
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color: context.appColor.error,
                       fontSize: 12,
                     ),
                   ),

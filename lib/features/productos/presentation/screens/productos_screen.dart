@@ -11,8 +11,18 @@ import 'package:partners/features/productos/presentation/widgets/productos_desta
 import 'package:partners/main.dart';
 
 @RoutePage()
-class ProductosScreen extends StatefulWidget {
+class ProductosScreen extends StatefulWidget implements AutoRouteWrapper {
   const ProductosScreen({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    final cubit = getIt<ProductosCubit>();
+    cubit.loadProductos();
+    return BlocProvider(
+      create: (_) => cubit,
+      child: this,
+    );
+  }
 
   @override
   State<ProductosScreen> createState() => _ProductosScreenState();
@@ -29,13 +39,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final cubit = getIt<ProductosCubit>();
-        cubit.loadProductos();
-        return cubit;
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('Productos'),
         ),
@@ -77,8 +81,10 @@ class _ProductosScreenState extends State<ProductosScreen> {
               );
             }
 
-            return CustomScrollView(
-              slivers: [
+            return RefreshIndicator(
+              onRefresh: () => context.read<ProductosCubit>().loadProductos(),
+              child: CustomScrollView(
+                slivers: [
                 // Barra de búsqueda
                 SliverToBoxAdapter(
                   child: Padding(
@@ -186,12 +192,12 @@ class _ProductosScreenState extends State<ProductosScreen> {
                       ),
                     ),
                   ),
-              ],
+                ],
+              ),
             );
           },
         ),
-      ),
-    );
+      );
   }
 
   IconData _getIconForCategory(String icono) {

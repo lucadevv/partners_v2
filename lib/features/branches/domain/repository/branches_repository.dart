@@ -1,9 +1,27 @@
 import 'package:dartz/dartz.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/features/branches/domain/entities/branch_entity.dart';
+import 'package:partners/features/branches/domain/entities/category_entity.dart';
+import 'package:partners/features/branches/domain/entities/create_branch_params.dart';
+import 'package:partners/features/branches/domain/entities/paginated_result.dart';
+import 'package:partners/features/branches/domain/entities/subcategory_entity.dart';
 
-/// Repository interface for Branches feature (Domain Layer)
-/// Follows Dependency Inversion Principle (DIP)
+/// Repositorio del feature branches (Domain Layer).
+/// Un repositorio por feature: getBranches, getCategories, getSubcategories, createBranch.
 abstract class BranchesRepository {
   Future<Either<AppException, List<BranchEntity>>> getBranches();
+
+  Future<Either<AppException, PaginatedResult<CategoryEntity>>> getCategories(
+    int page, {
+    String? keyword,
+  });
+
+  Future<Either<AppException, PaginatedResult<SubcategoryEntity>>> getSubcategories(
+    String categoryId,
+    int page, {
+    String? keyword,
+  });
+
+  /// Crea una sucursal. El backend retorna { "message": "..." }; se devuelve ese mensaje.
+  Future<Either<AppException, String>> createBranch(CreateBranchParams params);
 }

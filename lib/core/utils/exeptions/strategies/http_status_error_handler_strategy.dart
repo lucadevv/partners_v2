@@ -66,7 +66,7 @@ class HttpStatusErrorHandlerStrategy implements ErrorHandlerStrategy {
         return ServerException(
           _getErrorMessage(data, 'Error del servidor'),
           code: statusCode,
-          details: _getErrorDetails(data),
+          details: _getFullResponseBody(data),
         );
 
       default:
@@ -87,8 +87,20 @@ class HttpStatusErrorHandlerStrategy implements ErrorHandlerStrategy {
 
   String? _getErrorDetails(dynamic data) {
     if (data is Map<String, dynamic>) {
-      return data['details'] ?? data['description'];
+      return data['details'] ?? data['description'] ?? data['message'];
+    }
+    if (data != null) {
+      return data.toString();
     }
     return null;
+  }
+
+  /// Para 5xx: incluir body completo en details para diagnosticar (errors, stack, etc.).
+  String? _getFullResponseBody(dynamic data) {
+    if (data == null) return null;
+    if (data is Map<String, dynamic>) {
+      return data.toString();
+    }
+    return data.toString();
   }
 }

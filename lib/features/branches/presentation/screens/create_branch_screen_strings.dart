@@ -19,7 +19,9 @@ abstract final class CreateBranchScreenStrings {
 
   // Bottom sheets
   static const String chooseCategoryTitle = 'Elija o busque la categoría';
+  static const String categorySearchHint = 'Buscar categoría...';
   static const String chooseSubCategoryTitle = 'Elija o busque la subcategoría';
+  static const String subcategorySearchHint = 'Buscar subcategoría...';
   static const String configureScheduleTitle = 'Configure el horario';
   static const String chooseOptionTitle = 'Elige una opción';
 
@@ -29,6 +31,9 @@ abstract final class CreateBranchScreenStrings {
 
   // Botón principal
   static const String createBranchButton = 'Crear nueva sucursal';
+
+  // Feedback creación
+  static const String createSuccessMessage = 'Sucursal creada correctamente';
 
   // Horarios predefinidos
   static const String scheduleMonSat = 'Lunes a Sábado: 9:00 a 21:00';
@@ -66,6 +71,8 @@ abstract final class CreateBranchScreenStrings {
   static const String scheduleModalStartLabel = 'Inicio de hora';
   static const String scheduleModalEndLabel = 'Fin de hora';
   static const String scheduleModalConfirm = 'Aplicar horario';
+  static const String scheduleModalSelectAtLeastOneDay =
+      'Seleccione al menos un día';
   static const List<String> scheduleModalDays = [
     'Lunes',
     'Martes',

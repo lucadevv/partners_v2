@@ -17,6 +17,7 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
+  static const Key _kUsersMapKey = ValueKey<String>('users_map');
   static const double _defaultLng = -77.0428;
   static const double _defaultLat = -12.0464;
   static const double _radiusKm = 3.0;
@@ -193,7 +194,7 @@ class _UsersScreenState extends State<UsersScreen> {
             )
           else
             MapWidget(
-              key: ValueKey('users_map_${_effectiveLat}_$_effectiveLng'),
+              key: _kUsersMapKey,
               cameraOptions: cameraOptions,
               styleUri: MapboxStyles.MAPBOX_STREETS,
               onMapCreated: _onMapCreated,

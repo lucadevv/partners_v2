@@ -14,6 +14,19 @@ metadata:
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, WebFetch, WebSearch, Task
 ---
 
+## Reglas obligatorias (convención del proyecto)
+
+1. **Un datasource y un repositorio por feature**: En cada feature hay **una sola** interfaz `FeatureDatasource` y **una sola** interfaz `FeatureRepository` (en domain). Todos los métodos de acceso a datos de ese feature van dentro: por ejemplo `BranchesDatasource` tiene `getBranches()` y `getCategories(int page)`; `BranchesRepository` tiene los mismos métodos devolviendo entidades. **No** crear `CategoryDatasource` / `CategoryRepository` separados si las categorías pertenecen al feature branches.
+2. **Datasource de red (API): patrón try-catch como login**: La implementación que llama a la API debe seguir **exactamente** el mismo patrón que `NtwLoginDatasourceImpl` (referencia: `lib/features/auth/login/data/datasource/ntw/ntw_login_datasource_impl.dart`):
+   - `try { response = await _services.get/post(...); data = response.data; if (data == null) return Left(UnknownException(...)); map = data is Map<String, dynamic> ? data : null; if (map == null) return Left(UnknownException(...)); model = XxxModel.fromJson(map); return Right(model); }`
+   - `catch (e) { appException = ExceptionHandler.handleException(e); ExceptionHandler.logException(appException, tag: 'nombre_feature'); return Left(appException); }`
+   - **Un solo** `catch (e)`; no usar `on DioException` por separado. Usar siempre `ExceptionHandler.handleException` y `ExceptionHandler.logException`.
+3. **Repository impl**: Llama al datasource, convierte Model → Entity con mapper (o inline si es un solo tipo) y retorna `Either`. No hace `fold`; el fold es solo en Cubit.
+
+Referencia de código: `lib/features/branches/data/datasource/ntw/ntw_branches_datasource_impl.dart`, `lib/features/auth/login/data/datasource/ntw/ntw_login_datasource_impl.dart`.
+
+---
+
 ## File Conventions
 
 ```
@@ -70,6 +83,8 @@ Convert between domain entities and data models.
 Concrete implementations of domain repository interfaces.
 
 ## Data Source Patterns
+
+En Partners, los datasources de red siguen el patrón de **Reglas obligatorias** (try → response.data → fromJson → Right; catch (e) → ExceptionHandler + logException → Left). Los ejemplos genéricos siguientes pueden usar otras convenciones; preferir siempre el patrón de auth/login y branches.
 
 ### Base Data Source Interface
 ```dart

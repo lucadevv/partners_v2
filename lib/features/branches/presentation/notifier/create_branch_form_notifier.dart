@@ -2,6 +2,8 @@
 // Sigue el mismo patrón que RegisterFormNotifier
 
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/features/branches/domain/domain.dart';
 
@@ -14,11 +16,20 @@ class CreateBranchFormNotifier extends ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
 
-  // Estados
-  String? _selectedCategory;
-  String? _selectedSubCategory;
+  // Estados (categoría/subcategoría desde backend)
+  CategoryEntity? _selectedCategory;
+  SubcategoryEntity? _selectedSubCategory;
   String? _selectedSchedule;
   String? _imagePath;
+
+  // Ubicación (mapa)
+  double? _latitude;
+  double? _longitude;
+
+  // Horario estructurado para API (días UI: Lunes, Martes...; start/end ej. 09:00)
+  List<String> _scheduleDays = const [];
+  String? _scheduleStartTime;
+  String? _scheduleEndTime;
 
   // Errores
   String? _nameError;
@@ -50,23 +61,52 @@ class CreateBranchFormNotifier extends ChangeNotifier {
   BranchFieldDefinition get phoneField => _config.phoneField;
   BranchFieldDefinition get addressField => _config.addressField;
 
-  // Getters de estado
-  String? get selectedCategory => _selectedCategory;
-  String? get selectedSubCategory => _selectedSubCategory;
+  // Getters de estado (nombre para mostrar en UI; entidad para subcategorías e ID)
+  String? get selectedCategory => _selectedCategory?.name;
+  String? get selectedSubCategory => _selectedSubCategory?.name;
+  CategoryEntity? get selectedCategoryEntity => _selectedCategory;
+  SubcategoryEntity? get selectedSubcategoryEntity => _selectedSubCategory;
+  /// Subcategorías para la categoría seleccionada. Vacío si el backend no las envía (ej. /options/categories solo devuelve id/name).
+  List<SubcategoryEntity> get subcategoriesForSelectedCategory =>
+      const <SubcategoryEntity>[];
   String? get selectedSchedule => _selectedSchedule;
   String? get imagePath => _imagePath;
+  double? get latitude => _latitude;
+  double? get longitude => _longitude;
+  List<String> get scheduleDays => List.unmodifiable(_scheduleDays);
+  String? get scheduleStartTime => _scheduleStartTime;
+  String? get scheduleEndTime => _scheduleEndTime;
   String? get nameError => _nameError;
   String? get phoneError => _phoneError;
   String? get addressError => _addressError;
 
-  // Getter para saber si el formulario está completo
+  /// Indica si hay horario configurado (días + inicio/fin) para enviar al backend.
+  bool get hasScheduleData =>
+      _scheduleDays.isNotEmpty &&
+      _scheduleStartTime != null &&
+      _scheduleStartTime!.isNotEmpty &&
+      _scheduleEndTime != null &&
+      _scheduleEndTime!.isNotEmpty;
+
+  /// Imagen de banner seleccionada (obligatoria para enviar).
+  bool get hasValidImage =>
+      _imagePath != null &&
+      _imagePath!.isNotEmpty &&
+      _imagePath != 'placeholder';
+
+  // Getter para saber si el formulario está completo y sin errores
   bool get isFormComplete {
-    return nameController.text.isNotEmpty &&
-        phoneController.text.isNotEmpty &&
-        addressController.text.isNotEmpty &&
+    final hasSubcategories = subcategoriesForSelectedCategory.isNotEmpty;
+    return nameController.text.trim().isNotEmpty &&
+        phoneController.text.trim().isNotEmpty &&
+        addressController.text.trim().isNotEmpty &&
         _selectedCategory != null &&
-        _selectedSubCategory != null &&
+        (!hasSubcategories || _selectedSubCategory != null) &&
         _selectedSchedule != null &&
+        hasScheduleData &&
+        hasValidImage &&
+        _latitude != null &&
+        _longitude != null &&
         _nameError == null &&
         _phoneError == null &&
         _addressError == null;
@@ -139,19 +179,34 @@ class CreateBranchFormNotifier extends ChangeNotifier {
     });
   }
 
-  // Setters para selecciones
-  void setCategory(String? category) {
+  // Setters para selecciones (desde bottom sheet API)
+  void setCategory(CategoryEntity? category) {
     _selectedCategory = category;
+    _selectedSubCategory = null;
     notifyListeners();
   }
 
-  void setSubCategory(String? subCategory) {
+  void setSubCategory(SubcategoryEntity? subCategory) {
     _selectedSubCategory = subCategory;
     notifyListeners();
   }
 
   void setSchedule(String? schedule) {
     _selectedSchedule = schedule;
+    notifyListeners();
+  }
+
+  /// Guarda el horario estructurado (días de la UI + hora inicio/fin) para el API.
+  void setScheduleData(List<String> days, String startTime, String endTime) {
+    _scheduleDays = List.from(days);
+    _scheduleStartTime = startTime;
+    _scheduleEndTime = endTime;
+    notifyListeners();
+  }
+
+  void setLatLng(double? lat, double? lng) {
+    _latitude = lat;
+    _longitude = lng;
     notifyListeners();
   }
 
@@ -164,6 +219,68 @@ class CreateBranchFormNotifier extends ChangeNotifier {
   void clearImage() {
     _imagePath = null;
     notifyListeners();
+  }
+
+  /// Limpia todo el formulario (campos, selecciones, imagen, ubicación, horario, errores).
+  /// Se llama tras crear sucursal con éxito para poder crear otra.
+  void reset() {
+    _nameDebounce?.cancel();
+    _phoneDebounce?.cancel();
+    _addressDebounce?.cancel();
+    nameController.clear();
+    phoneController.clear();
+    addressController.clear();
+    _selectedCategory = null;
+    _selectedSubCategory = null;
+    _selectedSchedule = null;
+    _scheduleDays = [];
+    _scheduleStartTime = null;
+    _scheduleEndTime = null;
+    _imagePath = null;
+    _latitude = null;
+    _longitude = null;
+    _nameError = null;
+    _phoneError = null;
+    _addressError = null;
+    notifyListeners();
+  }
+
+  /// Ejecuta todas las validaciones de inmediato (sin debounce). Útil al enviar.
+  void validateAll() {
+    _nameDebounce?.cancel();
+    _phoneDebounce?.cancel();
+    _addressDebounce?.cancel();
+    _runNameValidation(nameController.text);
+    _runPhoneValidation(phoneController.text);
+    _runAddressValidation(addressController.text);
+    notifyListeners();
+  }
+
+  void _runNameValidation(String value) {
+    if (value.trim().isEmpty) {
+      _nameError = null;
+      return;
+    }
+    final validator = BranchConfigFactory.getNameValidator();
+    _nameError = validator.validate(value) ? null : validator.getErrorMessage();
+  }
+
+  void _runPhoneValidation(String value) {
+    if (value.trim().isEmpty) {
+      _phoneError = null;
+      return;
+    }
+    final validator = BranchConfigFactory.getPhoneValidator();
+    _phoneError = validator.validate(value) ? null : validator.getErrorMessage();
+  }
+
+  void _runAddressValidation(String value) {
+    if (value.trim().isEmpty) {
+      _addressError = null;
+      return;
+    }
+    final validator = BranchConfigFactory.getAddressValidator();
+    _addressError = validator.validate(value) ? null : validator.getErrorMessage();
   }
 
   @override

@@ -26,6 +26,7 @@ class PromoMapScreen extends StatefulWidget {
 }
 
 class _PromoMapScreenState extends State<PromoMapScreen> {
+  static const Key _kPromoMapKey = ValueKey<String>('promo_map');
   static const double _defaultLng = -77.0428;
   static const double _defaultLat = -12.0464;
   static const double _radiusKm = 3.0;
@@ -212,7 +213,7 @@ class _PromoMapScreenState extends State<PromoMapScreen> {
             )
           else
             MapWidget(
-              key: ValueKey('promo_map_${_effectiveLat}_$_effectiveLng'),
+              key: _kPromoMapKey,
               cameraOptions: cameraOptions,
               styleUri: MapboxStyles.MAPBOX_STREETS,
               onMapCreated: _onMapCreated,

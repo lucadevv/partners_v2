@@ -14,6 +14,16 @@ metadata:
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, WebFetch, WebSearch, Task
 ---
 
+## Reglas obligatorias (convención del proyecto)
+
+1. **Un repositorio por feature con todos sus métodos**: En cada feature hay **una sola** interfaz de repositorio (ej. `BranchesRepository`) con **todos** los métodos de lectura/escritura de ese dominio: `getBranches()`, `getCategories(int page)`, etc. **No** crear repositorios separados por entidad (ej. `CategoryRepository`) dentro del mismo feature; se añaden métodos al repositorio del feature.
+2. **UseCase**: Un caso de uso por acción; puede validar y retornar `Left`; llama al repositorio y retorna su `Either`. **Nunca** hace `fold` ni `emit`; el fold solo en Cubit.
+3. **Repository (interfaz)**: Métodos que devuelven `Future<Either<AppException, T>>`. La implementación está en data; un solo `FeatureRepositoryImpl` por feature.
+
+Referencia: `lib/features/branches/domain/repository/branches_repository.dart` (getBranches + getCategories).
+
+---
+
 ## File Conventions
 
 ```

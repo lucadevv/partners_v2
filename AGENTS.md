@@ -115,6 +115,11 @@ Partners is a Flutter commerce app with a smart points system (Clean Architectur
 
 Feature layout: `domain/` (entities, repository, use_case), `data/` (datasources, models, mappers, repositories), `presentation/` (cubit, screens, notifier, widgets).
 
+### Un repositorio y un datasource por feature
+
+- **Domain**: Un solo contrato de repositorio por feature (ej. `BranchesRepository`) con **todos** los métodos de ese dominio (getBranches, getCategories, …). No crear `CategoryRepository` aparte si las categorías son del feature branches; añadir `getCategories(page)` al repositorio del feature. Ver **partners-domain**.
+- **Data**: Una sola interfaz de datasource por feature (ej. `BranchesDatasource`) con los mismos métodos que necesite la capa data. La implementación de red debe seguir el **mismo patrón try-catch que login**: `try { response; data = response.data; fromJson; return Right(model); } catch (e) { ExceptionHandler.handleException(e); ExceptionHandler.logException(..., tag: '...'); return Left(appException); }`. Un solo `catch (e)`, sin `on DioException` separado. Ver **partners-data**.
+
 **Auth** (`lib/features/auth/`): Prefer a single layer (login + register in one feature). Use `auth/domain/`, `auth/data/`, `auth/presentation/`; orchestrator cubit in `auth/presentation/cubit/`. Do not add `auth/login/` or `auth/register/` with their own domain/data/presentation. Subfeatures (validation, document_scan, forgot_password, otp, registration_success) may keep their own layers. For DNI/CE/RUC, RBAC, tokens: use `partners-auth` skill.
 
 ---
@@ -167,6 +172,7 @@ Para detalles y ejemplos (cafetería, pagos, bebidas), leer [solid.md](solid.md)
 - **Pantallas con Cubit/Bloc y AutoRoute**: Implementar `AutoRouteWrapper` en la pantalla y poner el `BlocProvider` en `wrappedRoute`, no dentro de `build`.
 - **Listas con datos remotos**: Envolver contenido desplazable en `RefreshIndicator` con `onRefresh` que llame al método de carga del Cubit. Botón "Reintentar"/"Retry" debe usar el mismo método de carga.
 - **Naming**: Files snake_case, classes PascalCase, variables camelCase, constants UPPER_SNAKE_CASE.
+- **Tamaño de pantallas**: Mantener cada `*_screen.dart` en **~200 líneas como máximo**; el resto extraer a widgets, modales, bottom sheets, helpers o listeners (ver skill **partners-ui**).
 
 ---
 

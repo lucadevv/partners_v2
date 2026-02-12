@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.partners"
-    // permission_handler requiere compileSdk >= 33
-    compileSdk = 35
+    // Plugins y androidx requieren compileSdk >= 36 (camera_android_camerax, activity-ktx, core-ktx, etc.)
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

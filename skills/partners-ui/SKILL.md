@@ -45,8 +45,18 @@ Al crear o modificar pantallas y widgets en Partners, aplicar siempre:
 | **Imports** | Agrupar: 1) Flutter, 2) third-party, 3) proyecto. Usar barrel exports cuando existan (`package:partners/features/.../presentation.dart`). |
 | **Nombres** | Archivos y carpetas: `snake_case`. Clases: `PascalCase`. Variables y parámetros: `camelCase`. Constantes: `UPPER_SNAKE_CASE`. |
 | **Calidad** | Antes de PR: `flutter analyze`, `dart format .`, `flutter test`. |
+| **Tamaño de pantalla** | **Máximo ~200 líneas** por archivo de pantalla (`*_screen.dart`). El resto se extrae a widgets, modales, bottom sheets, list items, helpers o listeners en `presentation/widgets/` (o equivalente). Ver sección "Tamaño de pantallas". |
 
 Extensiones del proyecto: **obligatorio** usar `context.appColor`, `context.appTextTheme`, `n.spaceh` y `n.spacew` desde `package:partners/core/extension/extension.dart`. Regla completa: `.cursor/rules/context_extensions.mdc`.
+
+### Tamaño de pantallas (~200 líneas máx.)
+
+- Un archivo de pantalla (`*_screen.dart`) no debe superar **aproximadamente 200 líneas**.
+- Si la pantalla crece, extraer:
+  - **Widgets**: barras (AppBar), formularios (FormBody), secciones (mapa, dirección), botones de acción, campos reutilizables.
+  - **Modales / bottom sheets**: selectores (categoría, subcategoría, horario), origen de imagen (cámara/galería).
+  - **Helpers / listeners**: lógica de debounce, geocodificación, búsqueda; clases que encapsulan `addListener` + `dispose` (p. ej. `XxxAddressSearchHelper`).
+- Los widgets y helpers viven en `lib/features/<feature>/presentation/widgets/`; las pantallas solo orquestan estado, rutas y composición.
 
 ### ListView vs Column/Row (referencia: .cursor/rules/flutter_ui_pencil.mdc)
 

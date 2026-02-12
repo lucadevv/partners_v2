@@ -87,7 +87,7 @@ class AppInjection {
           ? AppConfig.getValidatedBaseUrl()
           : _baseUrl;
       _getIt.registerLazySingleton<ApiServices>(
-        () => DioApiServicesImpl(validatedUrl),
+        () => DioApiServicesImpl(validatedUrl, _getIt<AuthManager>()),
       );
     }
     if (!_getIt.isRegistered<AppRouter>()) {

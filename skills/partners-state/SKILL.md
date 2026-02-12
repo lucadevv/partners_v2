@@ -91,6 +91,14 @@ Future<void> sendRuc({required String ruc, required RucType type}) async {
 - En pantallas con **lista/grid/scroll** de datos obtenidos por UseCase/Cubit: el contenido desplazable debe ir dentro de **RefreshIndicator**. `onRefresh` debe llamar al método del Cubit que recarga (p. ej. `context.read<XxxCubit>().loadXxx()`) y devolver el `Future` de ese método.
 - Botón **"Reintentar"** / **"Retry"** o icono de recarga: debe ejecutar el **mismo método de carga** del Cubit (un solo método usado por RefreshIndicator y por Reintentar).
 
+## Búsqueda: filtrar primero en state, luego UseCase (ahorro de recursos)
+
+- En **casos de búsqueda** (listas paginadas con filtro por texto, ej. bottom sheet de categorías): **primero filtrar por la lista que ya tiene el state** (datos ya cargados en memoria).
+- **Si hay coincidencias locales**: mostrar esa lista filtrada y **no llamar al UseCase** (evita peticiones innecesarias).
+- **Si no hay coincidencias locales**: entonces sí llamar al UseCase (API) con el keyword para búsqueda en servidor.
+- Mantener un flag (ej. `_searchResultFromApi`) cuando los resultados vienen de API, para saber si la paginación aplica (infinite scroll con keyword) o solo se muestra el filtro local sin más páginas.
+- Referencia: `create_branch_screen.dart` → `_CategoryBottomSheetContentState` (getter `_displayList`, `_onSearchChanged` con filtro local primero).
+
 ## Resumen
 
 | Qué | Dónde | Regla |
@@ -101,3 +109,4 @@ Future<void> sendRuc({required String ruc, required RucType type}) async {
 | UI | partners-ui | Solo `context.read<Cubit>().method()` y estado; nunca fold ni UseCase |
 | Pantalla con Cubit + AutoRoute | Pantalla | Implementar AutoRouteWrapper, BlocProvider en wrappedRoute |
 | Lista con datos remotos | Pantalla | RefreshIndicator + mismo método para Reintentar |
+| Búsqueda en listas (Cubit/State) | Presentación | Primero filtrar lista del state; si no hay resultados, llamar UseCase |

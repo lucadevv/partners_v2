@@ -13,6 +13,9 @@ flutter test integration_test/login_flow_test.dart
 
 # Solo flujo Login → Register
 flutter test integration_test/register_flow_test.dart
+
+# Solo flujo Crear sucursal (requiere sesión para navegar Home → Sucursales → Nueva sucursal)
+flutter test integration_test/create_branch_flow_test.dart
 ```
 
 Si la app requiere variables de entorno o `dart-define`:
@@ -40,6 +43,10 @@ flutter test integration_test/register_flow_test.dart \
 - RUC inválido (ej. "123") → mensaje de validación en UI
 - Cambiar RUC 20 → RUC 10 → campo documento desaparece
 - RUC con formato válido (10123456789) → llamada a backend (pantalla sigue visible)
+
+### create_branch_flow_test.dart
+- La app arranca y muestra login o home
+- Si hay sesión: Home → "Ver mis sucursales" → "Nueva sucursal" → pantalla Crear sucursal con título y botón Crear deshabilitado
 
 ## Notas
 

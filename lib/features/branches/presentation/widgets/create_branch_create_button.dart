@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:partners/core/extension/extension.dart';
 import 'package:partners/features/branches/presentation/notifier/create_branch_form_notifier.dart';
+import 'package:partners/features/branches/presentation/screens/create_branch_screen_keys.dart';
 import 'package:partners/features/branches/presentation/screens/create_branch_screen_strings.dart';
 
 /// Botón fijo inferior "Crear nueva sucursal".
@@ -21,6 +22,7 @@ class CreateBranchCreateButton extends StatelessWidget {
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
+        key: const Key(CreateBranchScreenKeys.createButton),
         onPressed: enabled ? onPressed : null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -6,24 +6,47 @@ import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/core/utils/exeptions/exception_handler.dart';
 import 'package:partners/features/branches/data/datasource/branches_datasource.dart';
-import 'package:partners/features/branches/data/datasource/provider_memory/mock_branches_datasource_impl.dart';
 import 'package:partners/features/branches/data/models/branch_model.dart';
 import 'package:partners/features/branches/data/models/category_response_model.dart';
 import 'package:partners/features/branches/data/models/subcategory_response_model.dart';
 import 'package:partners/features/branches/domain/entities/create_branch_params.dart';
 
-/// Implementación de [BranchesDatasource] que usa API para categorías/subcategorías y mock para sucursales.
-/// Mismo patrón que login: try → response.data → fromJson → Right(model); catch → ExceptionHandler + logException → Left.
+/// Implementación de [BranchesDatasource]: GET /branch para lista, API para categorías/subcategorías y POST para crear.
 class NtwBranchesDatasourceImpl implements BranchesDatasource {
   final ApiServices _services;
-  final MockBranchesDatasourceImpl _mock = MockBranchesDatasourceImpl();
 
   NtwBranchesDatasourceImpl({required ApiServices services})
-    : _services = services;
+      : _services = services;
 
   @override
   Future<Either<AppException, List<BranchModel>>> getBranches() async {
-    return _mock.getBranches();
+    try {
+      final response = await _services.get('/branch');
+      final data = response.data;
+      if (data == null) {
+        return Left(
+          UnknownException(
+            'Respuesta de sucursales vacía',
+            details: 'data is null',
+          ),
+        );
+      }
+      final map = data is Map<String, dynamic> ? data : null;
+      if (map == null) {
+        return Left(
+          UnknownException(
+            'Formato de respuesta de sucursales inválido',
+            details: data.runtimeType.toString(),
+          ),
+        );
+      }
+      final list = BranchModel.listFromJson(map);
+      return Right(list);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'branches_get');
+      return Left(appException);
+    }
   }
 
   @override

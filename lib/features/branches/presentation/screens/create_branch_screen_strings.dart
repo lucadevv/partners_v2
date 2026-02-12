@@ -35,6 +35,12 @@ abstract final class CreateBranchScreenStrings {
   // Feedback creación
   static const String createSuccessMessage = 'Sucursal creada correctamente';
 
+  // Ubicación
+  static const String locationDisabledMessage =
+      'Activa la ubicación en ajustes del dispositivo y acepta el permiso para ir a tu posición.';
+  static const String locationPriorityMessage =
+      'La ubicación del mapa o búsqueda tiene prioridad. Usa el mapa o el campo de dirección para cambiarla.';
+
   // Horarios predefinidos
   static const String scheduleMonSat = 'Lunes a Sábado: 9:00 a 21:00';
   static const String scheduleMonFri = 'Lunes a Viernes: 8:00 a 18:00';

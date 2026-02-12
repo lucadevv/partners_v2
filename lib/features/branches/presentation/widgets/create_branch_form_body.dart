@@ -22,6 +22,8 @@ class CreateBranchFormBody extends StatelessWidget {
   final VoidCallback onShowImageSource;
   final void Function(double lng, double lat) onMapTapped;
   final void Function(MapboxMap mapboxMap) onMapCreated;
+  final ValueNotifier<bool>? mapInteractionNotifier;
+  final VoidCallback? onMyLocationRequested;
 
   const CreateBranchFormBody({
     super.key,
@@ -37,6 +39,8 @@ class CreateBranchFormBody extends StatelessWidget {
     required this.onShowImageSource,
     required this.onMapTapped,
     required this.onMapCreated,
+    this.mapInteractionNotifier,
+    this.onMyLocationRequested,
   });
 
   @override
@@ -102,6 +106,8 @@ class CreateBranchFormBody extends StatelessWidget {
           mapZoom: mapZoom,
           onMapTapped: onMapTapped,
           onMapCreated: onMapCreated,
+          mapInteractionNotifier: mapInteractionNotifier,
+          onMyLocationRequested: onMyLocationRequested,
         ),
         100.spaceh,
       ],

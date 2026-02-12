@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:partners/core/services/location/location_service.dart';
 import 'package:partners/core/services/mapbox/mapbox_geocoding_service.dart';
 import 'package:partners/features/branches/presentation/cubit/create_branch_cubit.dart';
 import 'package:partners/features/branches/presentation/cubit/create_branch_state.dart';
@@ -9,6 +10,7 @@ import 'package:partners/features/branches/presentation/screens/create_branch_sc
 import 'package:partners/features/branches/presentation/widgets/category_bottom_sheet.dart';
 import 'package:partners/features/branches/presentation/widgets/create_branch_address_map_section.dart';
 import 'package:partners/features/branches/presentation/widgets/create_branch_address_search_helper.dart';
+import 'package:partners/main.dart';
 import 'package:partners/features/branches/presentation/widgets/create_branch_create_button.dart';
 import 'package:partners/features/branches/presentation/widgets/create_branch_form_body.dart';
 import 'package:partners/features/branches/presentation/widgets/create_branch_image_picker_handler.dart';
@@ -16,7 +18,6 @@ import 'package:partners/features/branches/presentation/widgets/create_branch_im
 import 'package:partners/features/branches/presentation/widgets/create_branch_screen_app_bar.dart';
 import 'package:partners/features/branches/presentation/widgets/schedule_bottom_sheet.dart';
 import 'package:partners/features/branches/presentation/widgets/subcategory_bottom_sheet.dart';
-import 'package:partners/main.dart';
 
 @RoutePage()
 class CreateBranchScreen extends StatefulWidget implements AutoRouteWrapper {
@@ -34,18 +35,77 @@ class CreateBranchScreen extends StatefulWidget implements AutoRouteWrapper {
   }
 }
 
+/// Origen de la ubicación seleccionada. Prioridad: mapTap > search > gps.
+enum _LocationSource { mapTap, search, gps }
+
 class _CreateBranchScreenState extends State<CreateBranchScreen> {
   late CreateBranchFormNotifier _formNotifier;
   CreateBranchAddressSearchHelper? _addressSearchHelper;
+  final ValueNotifier<bool> _mapInteractionNotifier = ValueNotifier<bool>(
+    false,
+  );
   static const double _defaultLng = -77.0428;
   static const double _defaultLat = -12.0464;
-  static const double _defaultZoom = 12.0;
-  static const double _zoomWhenLocated = 15.0;
+  static const double _defaultZoom = 14.0;
+  static const double _zoomWhenLocated = 16.0;
   double _mapCenterLng = _defaultLng;
   double _mapCenterLat = _defaultLat;
   double? _markerLng;
   double? _markerLat;
   double _mapZoom = _defaultZoom;
+  _LocationSource? _lastLocationSource;
+
+  void _onLocationFound(double lng, double lat, _LocationSource source) {
+    if (!mounted) return;
+    _formNotifier.setLatLng(lat, lng);
+    setState(() {
+      _mapCenterLng = lng;
+      _mapCenterLat = lat;
+      _markerLng = lng;
+      _markerLat = lat;
+      _mapZoom = _zoomWhenLocated;
+      _lastLocationSource = source;
+    });
+  }
+
+  Future<void> _goToMyLocation() async {
+    if (_lastLocationSource == _LocationSource.mapTap ||
+        _lastLocationSource == _LocationSource.search) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(CreateBranchScreenStrings.locationPriorityMessage),
+          backgroundColor: Colors.orange.shade800,
+        ),
+      );
+      return;
+    }
+    final result = await getIt<LocationService>()
+        .requestPermissionAndGetCurrentPosition();
+    if (!mounted) return;
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(CreateBranchScreenStrings.locationDisabledMessage),
+          backgroundColor: Colors.orange.shade800,
+        ),
+      );
+      return;
+    }
+    final lng = result.longitude;
+    final lat = result.latitude;
+    _onLocationFound(lng, lat, _LocationSource.gps);
+    final display = await getIt<MapboxGeocodingService>().reverseGeocode(
+      lng,
+      lat,
+    );
+    if (!mounted) return;
+    if (display != null) {
+      _formNotifier.addressController.text = display.displayName;
+      _formNotifier.addressController.selection = TextSelection.fromPosition(
+        TextPosition(offset: display.displayName.length),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -55,16 +115,10 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
       formNotifier: _formNotifier,
       geocodingService: getIt<MapboxGeocodingService>(),
       onLocationFound: (lng, lat) {
-        if (mounted) {
-          _formNotifier.setLatLng(lat, lng);
-          setState(() {
-            _mapCenterLng = lng;
-            _mapCenterLat = lat;
-            _markerLng = lng;
-            _markerLat = lat;
-            _mapZoom = _zoomWhenLocated;
-          });
-        }
+        if (!mounted) return;
+        // Prioridad: no sobrescribir con búsqueda si el usuario eligió en el mapa (tap/long press).
+        if (_lastLocationSource == _LocationSource.mapTap) return;
+        _onLocationFound(lng, lat, _LocationSource.search);
       },
     );
     _addressSearchHelper!.start();
@@ -72,6 +126,7 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
 
   @override
   void dispose() {
+    _mapInteractionNotifier.dispose();
     _addressSearchHelper?.dispose();
     _formNotifier.dispose();
     super.dispose();
@@ -147,6 +202,8 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
         _mapCenterLat = lat;
         _markerLng = lng;
         _markerLat = lat;
+        _mapZoom = _zoomWhenLocated;
+        _lastLocationSource = _LocationSource.mapTap;
       }),
     );
   }
@@ -156,11 +213,12 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
     return BlocListener<CreateBranchCubit, CreateBranchState>(
       listener: (context, state) {
         if (state.status == CreateBranchStatus.success) {
-          final message = state.successMessage ??
+          final message =
+              state.successMessage ??
               CreateBranchScreenStrings.createSuccessMessage;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
           _formNotifier.reset();
           setState(() {
             _mapCenterLng = _defaultLng;
@@ -168,6 +226,7 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
             _markerLng = null;
             _markerLat = null;
             _mapZoom = _defaultZoom;
+            _lastLocationSource = null;
           });
           context.read<CreateBranchCubit>().reset();
         }
@@ -188,26 +247,37 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
           listenable: _formNotifier,
           builder: (context, _) => Stack(
             children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: CreateBranchFormBody(
-                  formNotifier: _formNotifier,
-                  mapCenterLng: _mapCenterLng,
-                  mapCenterLat: _mapCenterLat,
-                  markerLng: _markerLng,
-                  markerLat: _markerLat,
-                  mapZoom: _mapZoom,
-                  onShowCategory: _showCategoryBottomSheet,
-                  onShowSubcategory: _showSubCategoryBottomSheet,
-                  onShowSchedule: _showScheduleBottomSheet,
-                  onShowImageSource: _showImageSourceBottomSheet,
-                  onMapTapped: _onMapTapped,
-                  onMapCreated: (map) => CreateBranchMapCallbacks.onMapCreated(
-                    map,
-                    _markerLng,
-                    _markerLat,
-                  ),
-                ),
+              ListenableBuilder(
+                listenable: _mapInteractionNotifier,
+                builder: (context, _) {
+                  final blockScroll = _mapInteractionNotifier.value;
+                  return ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      physics: blockScroll
+                          ? const NeverScrollableScrollPhysics()
+                          : null,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: CreateBranchFormBody(
+                        formNotifier: _formNotifier,
+                        mapCenterLng: _mapCenterLng,
+                        mapCenterLat: _mapCenterLat,
+                        markerLng: _markerLng,
+                        markerLat: _markerLat,
+                        mapZoom: _mapZoom,
+                        onShowCategory: _showCategoryBottomSheet,
+                        onShowSubcategory: _showSubCategoryBottomSheet,
+                        onShowSchedule: _showScheduleBottomSheet,
+                        onShowImageSource: _showImageSourceBottomSheet,
+                        onMapTapped: _onMapTapped,
+                        onMapCreated: (_) {},
+                        mapInteractionNotifier: _mapInteractionNotifier,
+                        onMyLocationRequested: _goToMyLocation,
+                      ),
+                    ),
+                  );
+                },
               ),
               Positioned(
                 left: 20,
@@ -221,8 +291,8 @@ class _CreateBranchScreenState extends State<CreateBranchScreen> {
                       onPressed: state.status == CreateBranchStatus.loading
                           ? null
                           : () => context
-                              .read<CreateBranchCubit>()
-                              .createBranch(_formNotifier),
+                                .read<CreateBranchCubit>()
+                                .createBranch(_formNotifier),
                     ),
                   ),
                 ),

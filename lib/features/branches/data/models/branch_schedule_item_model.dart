@@ -1,5 +1,6 @@
 /// Modelo para un ítem de branchschedules en la respuesta GET /branch.
 class BranchScheduleItemModel {
+  final String id;
   final bool monday;
   final bool tuesday;
   final bool wednesday;
@@ -11,6 +12,7 @@ class BranchScheduleItemModel {
   final String endTime;
 
   const BranchScheduleItemModel({
+    this.id = '',
     required this.monday,
     required this.tuesday,
     required this.wednesday,
@@ -26,6 +28,7 @@ class BranchScheduleItemModel {
     final startRaw = json['start_time'] as String? ?? '';
     final endRaw = json['end_time'] as String? ?? '';
     return BranchScheduleItemModel(
+      id: json['id'] as String? ?? '',
       monday: json['monday'] as bool? ?? false,
       tuesday: json['tuesday'] as bool? ?? false,
       wednesday: json['wednesday'] as bool? ?? false,

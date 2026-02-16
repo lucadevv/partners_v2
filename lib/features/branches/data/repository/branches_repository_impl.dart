@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/features/branches/data/datasource/branches_datasource.dart';
 import 'package:partners/features/branches/data/mappers/branch_mapper.dart';
+import 'package:partners/features/branches/domain/entities/branch_detail_entity.dart';
 import 'package:partners/features/branches/domain/entities/branch_entity.dart';
 import 'package:partners/features/branches/domain/entities/category_entity.dart';
 import 'package:partners/features/branches/domain/entities/create_branch_params.dart';
@@ -21,6 +22,12 @@ class BranchesRepositoryImpl implements BranchesRepository {
   Future<Either<AppException, List<BranchEntity>>> getBranches() async {
     final result = await _datasource.getBranches();
     return result.map((models) => BranchMapper.modelsToEntities(models));
+  }
+
+  @override
+  Future<Either<AppException, BranchDetailEntity>> getBranchById(String id) async {
+    final result = await _datasource.getBranchById(id);
+    return result.map((model) => model.toEntity());
   }
 
   @override

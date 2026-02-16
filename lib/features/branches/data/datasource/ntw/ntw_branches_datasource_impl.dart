@@ -6,6 +6,7 @@ import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/core/utils/exeptions/exception_handler.dart';
 import 'package:partners/features/branches/data/datasource/branches_datasource.dart';
+import 'package:partners/features/branches/data/models/branch_detail_model.dart';
 import 'package:partners/features/branches/data/models/branch_model.dart';
 import 'package:partners/features/branches/data/models/category_response_model.dart';
 import 'package:partners/features/branches/data/models/subcategory_response_model.dart';
@@ -45,6 +46,41 @@ class NtwBranchesDatasourceImpl implements BranchesDatasource {
     } catch (e) {
       final appException = ExceptionHandler.handleException(e);
       ExceptionHandler.logException(appException, tag: 'branches_get');
+      return Left(appException);
+    }
+  }
+
+  @override
+  Future<Either<AppException, BranchDetailModel>> getBranchById(String id) async {
+    try {
+      final response = await _services.get('/branch/$id');
+      final data = response.data;
+      if (data == null) {
+        return Left(
+          UnknownException(
+            'Respuesta de detalle de sucursal vacía',
+            details: 'data is null',
+          ),
+        );
+      }
+      final map = data is Map<String, dynamic> ? data : null;
+      if (map == null) {
+        return Left(
+          UnknownException(
+            'Formato de respuesta de detalle inválido',
+            details: data.runtimeType.toString(),
+          ),
+        );
+      }
+      // Backend puede devolver { "data": { id, name, ... } } o el objeto en la raíz
+      final body = map['data'] is Map<String, dynamic>
+          ? map['data'] as Map<String, dynamic>
+          : map;
+      final model = BranchDetailModel.fromJson(body);
+      return Right(model);
+    } catch (e) {
+      final appException = ExceptionHandler.handleException(e);
+      ExceptionHandler.logException(appException, tag: 'branches_get_by_id');
       return Left(appException);
     }
   }

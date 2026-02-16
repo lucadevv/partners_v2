@@ -4,6 +4,7 @@ import 'package:partners/core/injection/auth/auth_injection.dart';
 import 'package:partners/core/injection/auth/document_injection.dart';
 import 'package:partners/core/injection/auth/validation_injeciton.dart';
 import 'package:partners/core/injection/branches/branches_injection.dart';
+import 'package:partners/core/injection/employees/employees_injection.dart';
 import 'package:partners/core/injection/home/home_injection.dart';
 import 'package:partners/core/injection/pagar/pagar_injection.dart';
 import 'package:partners/core/injection/para_ti/para_ti_injection.dart';
@@ -113,6 +114,7 @@ class AppInjection {
     ParaTiInjection(getIt: _getIt);
     HomeInjection(getIt: _getIt);
     BranchesInjection(getIt: _getIt);
+    EmployeesInjection(getIt: _getIt);
     TransactionsInjection(getIt: _getIt);
     PromosInjection(getIt: _getIt);
     UsersInjection(getIt: _getIt);

@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
+import 'package:partners/features/branches/domain/entities/branch_detail_entity.dart';
 import 'package:partners/features/branches/domain/entities/branch_entity.dart';
 import 'package:partners/features/branches/domain/entities/category_entity.dart';
 import 'package:partners/features/branches/domain/entities/create_branch_params.dart';
@@ -7,9 +8,10 @@ import 'package:partners/features/branches/domain/entities/paginated_result.dart
 import 'package:partners/features/branches/domain/entities/subcategory_entity.dart';
 
 /// Repositorio del feature branches (Domain Layer).
-/// Un repositorio por feature: getBranches, getCategories, getSubcategories, createBranch.
 abstract class BranchesRepository {
   Future<Either<AppException, List<BranchEntity>>> getBranches();
+
+  Future<Either<AppException, BranchDetailEntity>> getBranchById(String id);
 
   Future<Either<AppException, PaginatedResult<CategoryEntity>>> getCategories(
     int page, {

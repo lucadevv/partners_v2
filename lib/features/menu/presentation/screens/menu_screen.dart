@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/extension/extension.dart';
+import 'package:partners/core/routes/routes.dart';
 import 'package:partners/core/managers/auth/auth_manager.dart';
 import 'package:partners/core/utils/utils.dart';
 import 'package:partners/core/widgets/widgets.dart';
@@ -108,7 +109,7 @@ class MenuScreen extends StatelessWidget {
               iconPath: IconPaths.promos,
               title: 'Gestion de Usuarios',
               onTap: () {
-                // TODO: Navigate to statistics
+                context.router.push(const EmployeesListRoute());
               },
             ),
           ],

@@ -2,7 +2,7 @@ import 'package:partners/features/branches/data/models/branch_schedule_item_mode
 import 'package:partners/features/branches/domain/entities/branch_entity.dart';
 
 /// Data model for Branch (Data Layer).
-/// Parsea la respuesta GET /branch: data[].id, name, logo, address, phone_contacts, branchschedules.
+/// Parsea la respuesta GET /branch: data[].id, name, logo, address, phone_contacts, branchschedules, employees, status.
 class BranchModel extends BranchEntity {
   const BranchModel({
     required super.id,
@@ -12,6 +12,7 @@ class BranchModel extends BranchEntity {
     required super.schedule,
     required super.workers,
     super.imageUrl,
+    super.status,
   });
 
   /// Desde un ítem del array data de la respuesta GET /branch.
@@ -22,6 +23,8 @@ class BranchModel extends BranchEntity {
     final address = json['address'] as String? ?? '';
     final phoneContacts = json['phone_contacts'] as String? ?? '';
     final branchschedules = json['branchschedules'] as List<dynamic>?;
+    final employees = (json['employees'] as num?)?.toInt() ?? 0;
+    final status = json['status'] as String? ?? 'active';
 
     String schedule = '';
     if (branchschedules != null && branchschedules.isNotEmpty) {
@@ -38,8 +41,9 @@ class BranchModel extends BranchEntity {
       address: address,
       phone: phoneContacts,
       schedule: schedule,
-      workers: 0,
+      workers: employees,
       imageUrl: logo,
+      status: status,
     );
   }
 
@@ -74,6 +78,7 @@ class BranchModel extends BranchEntity {
       schedule: schedule,
       workers: workers,
       imageUrl: imageUrl,
+      status: status,
     );
   }
 }

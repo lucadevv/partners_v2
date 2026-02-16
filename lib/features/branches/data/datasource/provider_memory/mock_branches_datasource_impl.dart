@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/features/branches/data/datasource/branches_datasource.dart';
+import 'package:partners/features/branches/data/models/branch_detail_model.dart';
 import 'package:partners/features/branches/data/models/branch_model.dart';
 import 'package:partners/features/branches/data/models/category_response_model.dart';
 import 'package:partners/features/branches/data/models/subcategory_response_model.dart';
@@ -101,5 +102,11 @@ class MockBranchesDatasourceImpl implements BranchesDatasource {
   ) async {
     await Future.delayed(const Duration(milliseconds: 500));
     return const Right('Sucursal creada con éxito');
+  }
+
+  @override
+  Future<Either<AppException, BranchDetailModel>> getBranchById(String id) {
+    // TODO: implement getBranchById
+    throw UnimplementedError();
   }
 }

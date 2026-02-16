@@ -22,6 +22,10 @@ class PrivateRoutes {
             AutoRoute(initial: true, path: '', page: HomeRoute.page),
             // Rutas hijas de Home - herramientas smart
             AutoRoute(path: 'branches', page: BranchesRoute.page),
+            AutoRoute(
+              path: 'branch-detail',
+              page: BranchDetailRoute.page,
+            ),
             AutoRoute(path: 'create-branch', page: CreateBranchRoute.page),
             AutoRoute(path: 'add-workers', page: AddWorkersRoute.page),
             AutoRoute(path: 'buy-points', page: BuyPointsRoute.page),
@@ -81,7 +85,16 @@ class PrivateRoutes {
           page: MenuShell.page,
           children: [
             AutoRoute(initial: true, path: '', page: MenuRoute.page),
-            // Aquí se pueden agregar más rutas hijas de Menu
+            AutoRoute(path: 'employees', page: EmployeesListRoute.page),
+            AutoRoute(path: 'employees/create', page: CreateEmployeeRoute.page),
+            AutoRoute(
+              path: 'employees/detail',
+              page: EmployeeDetailRoute.page,
+            ),
+            AutoRoute(
+              path: 'employees/edit',
+              page: EditEmployeeRoute.page,
+            ),
           ],
         ),
         // AutoRoute(

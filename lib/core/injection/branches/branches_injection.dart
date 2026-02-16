@@ -5,6 +5,7 @@ import 'package:partners/features/branches/data/datasource/ntw/ntw_branches_data
 import 'package:partners/features/branches/data/repository/branches_repository_impl.dart';
 import 'package:partners/features/branches/domain/repository/branches_repository.dart';
 import 'package:partners/features/branches/domain/use_case/create_branch_usecase.dart';
+import 'package:partners/features/branches/domain/use_case/get_branch_by_id_usecase.dart';
 import 'package:partners/features/branches/domain/use_case/get_branches_usecase.dart';
 import 'package:partners/features/branches/domain/use_case/get_categories_usecase.dart';
 import 'package:partners/features/branches/domain/use_case/get_subcategories_usecase.dart';
@@ -35,6 +36,13 @@ class BranchesInjection {
     if (!_getIt.isRegistered<GetBranchesUsecase>()) {
       _getIt.registerLazySingleton<GetBranchesUsecase>(
         () => GetBranchesUsecase(
+          repository: _getIt<BranchesRepository>(),
+        ),
+      );
+    }
+    if (!_getIt.isRegistered<GetBranchByIdUsecase>()) {
+      _getIt.registerLazySingleton<GetBranchByIdUsecase>(
+        () => GetBranchByIdUsecase(
           repository: _getIt<BranchesRepository>(),
         ),
       );

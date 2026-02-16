@@ -1,13 +1,15 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:partners/core/extension/extension.dart';
 import 'package:partners/core/models/models.dart';
+import 'package:partners/core/routes/routes.dart';
 import 'package:partners/core/services/services.dart';
 import 'package:partners/features/branches/domain/domain.dart';
 import 'package:partners/features/branches/presentation/screens/branches_screen_strings.dart';
 import 'package:partners/main.dart';
 
-/// Card de una sucursal en la lista (imagen, nombre, dirección, teléfono, horario).
-/// Muestra botón Editar solo si el usuario tiene permiso updateBranches.
+/// Card de una sucursal en la lista (imagen, nombre, dirección, teléfono, horario, trabajadores).
+/// Si la sucursal no está activa se muestra con estilo desactivado. Tap navega al detalle.
 class BranchCardWidget extends StatelessWidget {
   const BranchCardWidget({super.key, required this.branch});
 
@@ -20,11 +22,18 @@ class BranchCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final roleService = getIt<RoleService>();
     final canEdit = roleService.hasPermission(Permission.updateBranches);
+    final isActive = branch.isActive;
 
-    return DecoratedBox(
+    final card = DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(_cardRadius),
+        border: isActive
+            ? null
+            : Border.all(
+                color: context.appColor.outline.withValues(alpha: 0.4),
+                width: 1,
+              ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,6 +41,18 @@ class BranchCardWidget extends StatelessWidget {
           _buildImageSection(context, canEdit),
           _buildContentSection(context),
         ],
+      ),
+    );
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.router.push(BranchDetailRoute(branchId: branch.id)),
+        borderRadius: BorderRadius.circular(_cardRadius),
+        child: Opacity(
+          opacity: isActive ? 1.0 : 0.75,
+          child: card,
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Domain entity representing a Branch
+/// Domain entity representing a Branch (lista).
 class BranchEntity extends Equatable {
   final String id;
   final String name;
@@ -10,6 +10,9 @@ class BranchEntity extends Equatable {
   final int workers;
   final String? imageUrl;
 
+  /// "active" | "inactive" | otro; del backend.
+  final String status;
+
   const BranchEntity({
     required this.id,
     required this.name,
@@ -18,16 +21,20 @@ class BranchEntity extends Equatable {
     required this.schedule,
     required this.workers,
     this.imageUrl,
+    this.status = 'active',
   });
+
+  bool get isActive => status == 'active';
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        address,
-        phone,
-        schedule,
-        workers,
-        imageUrl,
-      ];
+    id,
+    name,
+    address,
+    phone,
+    schedule,
+    workers,
+    imageUrl,
+    status,
+  ];
 }

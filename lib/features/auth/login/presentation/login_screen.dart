@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
-import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/core/utils/widgets/custom_text_field_widget.dart';
 import 'package:partners/features/auth/cubit/orquestor_auth_cubit.dart';
 import 'package:partners/features/auth/login/presentation/login_screen_keys.dart';
@@ -38,9 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  static final RegExp _emailRegex = RegExp(
-    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-  );
+  static final RegExp _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   void _handleLogin() {
     final email = _emailController.text.trim();
@@ -74,9 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
             state.loginState.errorMessage != null &&
             state.loginState.errorMessage!.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.loginState.errorMessage!),
-            ),
+            SnackBar(content: Text(state.loginState.errorMessage!)),
           );
           return;
         }
@@ -212,7 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       LoginStatus.loading;
                                   return ElevatedButton(
                                     key: const Key(
-                                        LoginScreenKeys.continueButton),
+                                      LoginScreenKeys.continueButton,
+                                    ),
                                     onPressed: isLoading ? null : _handleLogin,
                                     child: isLoading
                                         ? const SizedBox(
@@ -238,7 +234,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 Icons.arrow_right_alt_outlined,
                                               ),
                                               Text(
-                                                LoginScreenStrings.continueButton,
+                                                LoginScreenStrings
+                                                    .continueButton,
                                                 style: TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.w400,

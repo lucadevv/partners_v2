@@ -73,9 +73,7 @@ class PrivateRoutes {
           path: 'users',
           guards: [CompleteDataGuard()],
           page: UsersShell.page,
-          children: [
-            AutoRoute(initial: true, path: '', page: UsersRoute.page),
-          ],
+          children: [AutoRoute(initial: true, path: '', page: UsersRoute.page)],
         ),
         AutoRoute(
           path: 'menu',

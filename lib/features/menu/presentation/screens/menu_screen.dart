@@ -37,71 +37,82 @@ class MenuScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 20,
-        crossAxisSpacing: 20,
-        padding: const EdgeInsets.all(20),
-        childAspectRatio: 0.98,
-        children: [
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h1,
-            title: 'Encuestas\nSmart',
-            onTap: () {
-              // TODO: Navigate to surveys
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h2,
-            title: 'Promociones\nSmart',
-            onTap: () {
-              // TODO: Navigate to promotions
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h3,
-            title: 'Estudios de\nMercado\nSmart',
-            onTap: () {
-              // TODO: Navigate to market studies
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h4,
-            title: 'Ir a mi\nDashboard',
-            onTap: () {
-              // TODO: Navigate to dashboard
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h5,
-            title: 'Sucursales',
-            onTap: () {
-              // Navigate to branches - route will be available after build_runner
-              // context.router.push(const BranchesRoute());
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h6,
-            title: 'Recibos\nSmart',
-            onTap: () {
-              // TODO: Navigate to receipts
-            },
-          ),
-          _buildMenuCard(
-            context,
-            iconPath: IconPaths.h7,
-            title: 'Estadísticas',
-            onTap: () {
-              // TODO: Navigate to statistics
-            },
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: kBottomNavigationBarHeight + 46),
+        child: GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 20,
+          padding: const EdgeInsets.all(20),
+          childAspectRatio: 0.98,
+          children: [
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h1,
+              title: 'Encuestas\nSmart',
+              onTap: () {
+                // TODO: Navigate to surveys
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h2,
+              title: 'Promociones\nSmart',
+              onTap: () {
+                // TODO: Navigate to promotions
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h3,
+              title: 'Estudios de\nMercado\nSmart',
+              onTap: () {
+                // TODO: Navigate to market studies
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h4,
+              title: 'Ir a mi\nDashboard',
+              onTap: () {
+                // TODO: Navigate to dashboard
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h5,
+              title: 'Sucursales',
+              onTap: () {
+                // Navigate to branches - route will be available after build_runner
+                // context.router.push(const BranchesRoute());
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h6,
+              title: 'Recibos\nSmart',
+              onTap: () {
+                // TODO: Navigate to receipts
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.h7,
+              title: 'Estadísticas',
+              onTap: () {
+                // TODO: Navigate to statistics
+              },
+            ),
+            _buildMenuCard(
+              context,
+              iconPath: IconPaths.promos,
+              title: 'Gestion de Usuarios',
+              onTap: () {
+                // TODO: Navigate to statistics
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

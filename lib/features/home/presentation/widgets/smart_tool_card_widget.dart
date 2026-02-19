@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:partners/core/extension/extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/icon_paths.dart';
 import 'package:partners/core/widgets/svg_icon_widget.dart';
@@ -36,14 +37,14 @@ class SmartToolCardWidget extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          4.spaceh,
           Flexible(
             child: Text(
               tool.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.normal,
                 fontFamily: 'Figtree',
                 height: 1.2, // Mejorar espaciado para textos con \n

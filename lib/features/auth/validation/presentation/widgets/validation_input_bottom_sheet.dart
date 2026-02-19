@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/utils/validations/phone_validator.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 
@@ -249,7 +249,8 @@ class _ValidationInputBottomSheetState
             ElevatedButton(
               onPressed: _handleContinue,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF66CFFF),
+                backgroundColor: context.appColor.primary,
+                foregroundColor: context.appColor.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),
                 ),
@@ -263,7 +264,7 @@ class _ValidationInputBottomSheetState
                 children: [
                   Icon(
                     Icons.arrow_forward,
-                    color: const Color(0xFF051858),
+                    color: context.appColor.onPrimary,
                     size: 20,
                   ),
                   Text(
@@ -271,7 +272,7 @@ class _ValidationInputBottomSheetState
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF051858),
+                      color: context.appColor.onPrimary,
                     ),
                   ),
                 ],

@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/enums/enums.dart';
@@ -65,6 +64,7 @@ class _ValidationScreenState extends State<ValidationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: RegisterHeaderWidget(),
       body: SafeArea(
         child: ListenableBuilder(
@@ -142,7 +142,7 @@ class _ValidationScreenState extends State<ValidationScreen>
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: context.appColor.surface,
+            color: Colors.white,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(30),
               topRight: Radius.circular(30),

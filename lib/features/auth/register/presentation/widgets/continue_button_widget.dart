@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:partners/core/extension/context_extension.dart';
 
 class ContinueButtonWidget extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -7,8 +8,13 @@ class ContinueButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColor;
     return ElevatedButton(
       onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: colors.primary,
+        foregroundColor: colors.onPrimary,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,

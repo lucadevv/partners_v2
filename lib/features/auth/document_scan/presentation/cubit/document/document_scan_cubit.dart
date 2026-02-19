@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
@@ -6,6 +7,7 @@ import 'package:equatable/equatable.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/features/auth/document_scan/data/models/document_scan_result.dart';
+import 'package:partners/core/utils/models/ce.dart';
 import 'package:partners/core/utils/models/dni.dart';
 import 'package:partners/features/auth/document_scan/domain/parser/dni_parser.dart';
 import 'package:partners/features/auth/document_scan/domain/parser/ce_parser.dart';
@@ -26,6 +28,9 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
   Timer? _errorResetTimer;
   int _retryCount = 0;
   static const int _maxRetries = 10;
+
+  /// Acumula campos CE entre frames: no sobrescribe con null.
+  DocumentScanResult? _accumulatedCeResult;
 
   DocumentScanCubit({
     required OcrUsecase ocrUsecase,
@@ -60,6 +65,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
 
     stopRealtimeMonitoring();
     _retryCount = 0;
+    _accumulatedCeResult = null;
 
     if (!isClosed) {
       emit(state.copyWith(status: DocumentScanStatus.cameraReady));
@@ -93,11 +99,18 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
                 }
               },
               (detectedText) {
-                final textUpperCase = detectedText.toUpperCase();
-
-                if (_parsers.isEmpty) {
-                  return;
+                final isCeFlow =
+                    _parsers.isNotEmpty && _parsers.any((p) => p is CeParser);
+                // Debug: texto crudo que ve la cámara (realtime OCR, antes del parse).
+                if (isCeFlow) {
+                  debugPrint(
+                    'lucadev [CE] REALTIME OCR camera raw (${detectedText.length} chars): $detectedText',
+                  );
                 }
+
+                if (_parsers.isEmpty) return;
+
+                final textUpperCase = detectedText.toUpperCase();
 
                 DocumentScanResult? parsedResult;
                 for (final parser in _parsers) {
@@ -107,39 +120,46 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
                   }
                 }
 
+                if (parsedResult != null &&
+                    parsedResult.document is Ce &&
+                    isCeFlow) {
+                  _accumulatedCeResult = _accumulatedCeResult != null
+                      ? _smartMergeCe(_accumulatedCeResult!, parsedResult)
+                      : parsedResult;
+                  parsedResult = _accumulatedCeResult!;
+                  final ce = parsedResult.document as Ce;
+                  debugPrint(
+                    'lucadev [CE] accumulated: number=${ce.number} surnames=${parsedResult.extractedLastName} names=${parsedResult.extractedName} dob=${parsedResult.extractedBirthDate} expiry=${ce.expiryDate}',
+                  );
+                }
+
                 if (parsedResult != null) {
                   final isComplete = _isDocumentComplete(parsedResult);
+                  if (parsedResult.document is Ce && isCeFlow) {
+                    debugPrint('lucadev [CE] isComplete=$isComplete');
+                  }
 
                   if (isComplete) {
                     stopRealtimeMonitoring();
                     _retryCount = 0;
 
-                    if (parsedResult.document is Dni) {
-                      final dni = parsedResult.document as Dni;
-
-                      if (dni.expiryDate != null &&
-                          dni.expiryDate!.isNotEmpty) {
-                        final isExpired = dni.isExpired();
-
-                        if (isExpired) {
-                          if (!isClosed) {
-                            stopRealtimeMonitoring();
-                            emit(
-                              state.copyWith(
-                                status: DocumentScanStatus.failure,
-                                errorMessage:
-                                    'El documento está vencido. Por favor, utiliza un documento vigente.',
-                                ocrResult: parsedResult,
-                              ),
-                            );
-
-                            _startErrorResetTimer();
-                          }
-                          return;
-                        }
-                      } else {}
+                    final expired = _isDocumentExpired(parsedResult);
+                    if (expired) {
+                      if (!isClosed) {
+                        emit(
+                          state.copyWith(
+                            status: DocumentScanStatus.failure,
+                            errorMessage:
+                                'El documento está vencido. Por favor, utiliza un documento vigente.',
+                            ocrResult: parsedResult,
+                          ),
+                        );
+                        _startErrorResetTimer();
+                      }
+                      return;
                     }
 
+                    _accumulatedCeResult = null;
                     _uploadIdentityToBackend(parsedResult);
                     return;
                   } else {
@@ -257,28 +277,19 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
       (scanResult) {
         final isComplete = _isDocumentComplete(scanResult);
         if (isComplete) {
-          if (scanResult.document is Dni) {
-            final dni = scanResult.document as Dni;
-
-            if (dni.expiryDate != null && dni.expiryDate!.isNotEmpty) {
-              final isExpired = dni.isExpired();
-
-              if (isExpired) {
-                if (!isClosed) {
-                  emit(
-                    state.copyWith(
-                      status: DocumentScanStatus.failure,
-                      errorMessage:
-                          'El documento está vencido. Por favor, utiliza un documento vigente.',
-                      ocrResult: scanResult,
-                    ),
-                  );
-
-                  _startErrorResetTimer();
-                }
-                return;
-              }
-            } else {}
+          if (_isDocumentExpired(scanResult)) {
+            if (!isClosed) {
+              emit(
+                state.copyWith(
+                  status: DocumentScanStatus.failure,
+                  errorMessage:
+                      'El documento está vencido. Por favor, utiliza un documento vigente.',
+                  ocrResult: scanResult,
+                ),
+              );
+              _startErrorResetTimer();
+            }
+            return;
           }
 
           _uploadIdentityToBackend(scanResult);
@@ -344,6 +355,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     stopRealtimeMonitoring();
     _errorResetTimer?.cancel();
     _errorResetTimer = null;
+    _accumulatedCeResult = null;
     emit(const DocumentScanState());
   }
 
@@ -351,6 +363,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     _errorResetTimer?.cancel();
     _errorResetTimer = null;
     _retryCount = 0;
+    _accumulatedCeResult = null;
     emit(
       state.copyWith(
         status: DocumentScanStatus.cameraReady,
@@ -360,6 +373,64 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
         uploadStatus: UploadIdentityStatus.initial,
       ),
     );
+  }
+
+  /// Merge CE: no sobrescribe datos buenos con basura OCR; prefiere fecha de caducidad posterior.
+  DocumentScanResult _smartMergeCe(
+    DocumentScanResult accumulated,
+    DocumentScanResult other,
+  ) {
+    final accCe = accumulated.document as Ce;
+    final otherCe = other.document as Ce;
+
+    // Expiry: preferir la fecha con año mayor (Caducidad > Emisión).
+    String? bestExpiry = otherCe.expiryDate ?? accCe.expiryDate;
+    if (accCe.expiryDate != null && otherCe.expiryDate != null) {
+      final accYear = _yearFromDateStr(accCe.expiryDate!);
+      final otherYear = _yearFromDateStr(otherCe.expiryDate!);
+      bestExpiry = accYear >= otherYear ? accCe.expiryDate : otherCe.expiryDate;
+    }
+
+    // Nombres/apellidos: solo aceptar nuevo valor si parece válido; si no, conservar acumulado.
+    // No aceptar nombres que sean iguales a apellidos en este frame (OCR a veces repite apellidos en nombres).
+    final mergedLastName =
+        CeParser.looksLikeValidPersonName(other.extractedLastName)
+        ? (other.extractedLastName ?? accumulated.extractedLastName)
+        : accumulated.extractedLastName;
+    final otherName = other.extractedName;
+    final nameEqualsLastNameInFrame = otherName != null &&
+        other.extractedLastName != null &&
+        otherName.trim().toUpperCase() == other.extractedLastName!.trim().toUpperCase();
+    final mergedName = !nameEqualsLastNameInFrame &&
+            CeParser.looksLikeValidPersonName(otherName)
+        ? (otherName ?? accumulated.extractedName)
+        : accumulated.extractedName;
+
+    final mergedDoc = Ce(
+      number: otherCe.number,
+      type: DocumentType.ce,
+      expiryDate: bestExpiry,
+    );
+
+    return DocumentScanResult(
+      document: mergedDoc,
+      extractedName: mergedName,
+      extractedLastName: mergedLastName,
+      extractedBirthDate:
+          other.extractedBirthDate ?? accumulated.extractedBirthDate,
+      extractedGender: other.extractedGender ?? accumulated.extractedGender,
+      extractedExpiryDate: bestExpiry,
+      rawText: other.rawText,
+      confidence: other.confidence,
+    );
+  }
+
+  int _yearFromDateStr(String ddMmYyyy) {
+    final parts = ddMmYyyy.split('/');
+    if (parts.length >= 3) {
+      return int.tryParse(parts[2]) ?? 0;
+    }
+    return 0;
   }
 
   bool _isDocumentComplete(DocumentScanResult result) {
@@ -376,7 +447,30 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     final hasGender =
         result.extractedGender != null && result.extractedGender!.isNotEmpty;
 
+    if (result.document is Ce) {
+      // CE: requiere número, apellidos, nombres, fecha nacimiento y caducidad. Género opcional.
+      final ce = result.document as Ce;
+      final hasExpiry = ce.expiryDate != null && ce.expiryDate!.isNotEmpty;
+      return hasName && hasLastName && hasBirthDate && hasExpiry;
+    }
+
     return hasName && hasLastName && hasBirthDate && hasGender;
+  }
+
+  bool _isDocumentExpired(DocumentScanResult result) {
+    if (result.document is Dni) {
+      final dni = result.document as Dni;
+      return dni.expiryDate != null &&
+          dni.expiryDate!.isNotEmpty &&
+          dni.isExpired();
+    }
+    if (result.document is Ce) {
+      final ce = result.document as Ce;
+      return ce.expiryDate != null &&
+          ce.expiryDate!.isNotEmpty &&
+          ce.isExpired();
+    }
+    return false;
   }
 
   @override

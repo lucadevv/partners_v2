@@ -1,14 +1,18 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
 import 'package:partners/core/services/database/flags/flags_factory.dart';
 import 'package:partners/core/services/database/flags/session_id_flug.dart';
 import 'package:partners/core/services/network/api_services.dart';
 import 'package:partners/core/services/ocr/ocr_service.dart';
 import 'package:partners/core/services/ocr/realtime_ocr_service.dart';
+import 'package:partners/core/utils/enums/enums.dart';
 import 'package:partners/core/utils/exeptions/app_exceptions.dart';
 import 'package:partners/core/utils/exeptions/exception_handler.dart';
+import 'package:partners/core/utils/models/ce.dart';
+import 'package:partners/core/utils/models/dni.dart';
 import 'package:partners/features/auth/document_scan/data/datasource/document_scan_datasource.dart';
 import 'package:partners/features/auth/document_scan/data/models/document_scan_result.dart';
 
@@ -42,7 +46,7 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
   @override
   Stream<Either<AppException, String>> watchDocumentRealtime({
     required CameraController cameraController,
-    Duration interval = const Duration(seconds: 3),
+    Duration interval = const Duration(seconds: 2),
   }) {
     final controller = StreamController<Either<AppException, String>>();
 
@@ -87,9 +91,46 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
 
       final doc = scanResult.document;
 
+      // Solo campos esenciales para validación backend
+      final payload = <String, dynamic>{
+        'session_id': sessionId,
+        'document_type': doc.type == DocumentType.ce ? 'CE' : 'DNI',
+        'number': doc.number,
+      };
+
+      if (scanResult.extractedLastName != null &&
+          scanResult.extractedLastName!.isNotEmpty) {
+        payload['surnames'] = scanResult.extractedLastName;
+      }
+      if (scanResult.extractedName != null &&
+          scanResult.extractedName!.isNotEmpty) {
+        payload['names'] = scanResult.extractedName;
+      }
+      if (scanResult.extractedBirthDate != null &&
+          scanResult.extractedBirthDate!.isNotEmpty) {
+        payload['date_of_birth'] = scanResult.extractedBirthDate;
+      }
+
+      if (doc is Dni) {
+        if (doc.securityCode.isNotEmpty) {
+          payload['security_code'] = doc.securityCode;
+        }
+        if (doc.expiryDate != null && doc.expiryDate!.isNotEmpty) {
+          payload['date_of_expiry'] = doc.expiryDate;
+        }
+      } else if (doc is Ce) {
+        if (doc.expiryDate != null && doc.expiryDate!.isNotEmpty) {
+          payload['date_of_expiry'] = doc.expiryDate;
+        }
+      }
+
+      if (doc is Ce) {
+        debugPrint('lucadev [CE] payload to backend: $payload');
+      }
+
       final response = await _services.post(
         '/onboarding/upload-identity',
-        data: {'session_id': sessionId, 'number': doc.number},
+        data: payload,
       );
 
       final responseData = response.data;

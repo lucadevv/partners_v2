@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/core/routes/app_routes.gr.dart';
 import 'package:partners/core/utils/enums/enums.dart';
@@ -163,7 +164,9 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
   }
 
   void _showDocumentScan() async {
-    final result = await context.router.push(DocumentScanRoute(rucType: RucType.ruc20));
+    final result = await context.router.push(
+      DocumentScanRoute(rucType: RucType.ruc20),
+    );
 
     // Solo completar el step si el documento fue validado exitosamente
     if (result == true) {
@@ -224,6 +227,7 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: RegisterHeaderWidget(
         onBackPressed: () {
           if (_notifier.currentStep != BusinessValidationStep.email) {
@@ -314,7 +318,8 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _pickAndUploadFile,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF66cfff),
+        backgroundColor: context.appColor.primary,
+        foregroundColor: context.appColor.onPrimary,
         disabledBackgroundColor: const Color(0xFFD1D5DB),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -335,7 +340,7 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
               children: [
                 Icon(
                   Icons.arrow_forward,
-                  color: const Color(0xFF051858),
+                  color: context.appColor.onPrimary,
                   size: 21,
                 ),
                 const SizedBox(width: 20),
@@ -344,7 +349,7 @@ class _BusinessValidationScreenState extends State<BusinessValidationScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.normal,
-                    color: const Color(0xFF051858),
+                    color: context.appColor.onPrimary,
                     fontFamily: 'Figtree',
                     height: 1.22,
                   ),

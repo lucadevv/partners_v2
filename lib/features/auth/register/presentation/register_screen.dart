@@ -61,6 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: RegisterHeaderWidget(),
         body: BlocConsumer<RegisterCubit, RegisterStateX>(
           listenWhen: (previous, current) =>

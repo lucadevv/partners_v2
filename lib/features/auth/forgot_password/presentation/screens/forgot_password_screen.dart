@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:partners/core/extension/context_extension.dart';
 import 'package:partners/core/extension/sizedbox_extension.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_field_widget.dart';
 import 'package:partners/features/auth/register/presentation/widgets/register_header_widget.dart';
@@ -24,6 +25,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: RegisterHeaderWidget(),
       body: Stack(
         children: [
@@ -71,7 +73,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Send recovery code
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF66CFFF),
+                backgroundColor: context.appColor.primary,
+                foregroundColor: context.appColor.onPrimary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                 padding: EdgeInsets.symmetric(vertical: 18),
                 minimumSize: Size(double.infinity, 56),
@@ -80,13 +83,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 spacing: 12,
                 children: [
-                  Icon(Icons.arrow_forward, color: const Color(0xFF051858), size: 20),
+                  Icon(Icons.arrow_forward, color: context.appColor.onPrimary, size: 20),
                   Text(
                     'Enviar código',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF051858),
+                      color: context.appColor.onPrimary,
                     ),
                   ),
                 ],

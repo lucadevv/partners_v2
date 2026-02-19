@@ -83,6 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset:
             false, // Evitar que el Scaffold se ajuste cuando aparece el teclado
         body: SizedBox.expand(

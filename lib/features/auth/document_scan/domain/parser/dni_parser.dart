@@ -82,13 +82,13 @@ class DniParser implements DocumentParser {
       return null;
     }
 
-    final name = _extractName(cleanText);
     final lastName = _extractLastName(cleanText);
+    final name = _extractName(cleanText, lastName);
     final dob = _extractBirthDate(cleanText);
     final gender = _extractGender(cleanText);
     final expiryDate = _extractExpiryDate(cleanText);
 
-    return DocumentScanResult(
+    final result = DocumentScanResult(
       document: Dni(
         number: number,
         type: DocumentType.dni,
@@ -102,6 +102,11 @@ class DniParser implements DocumentParser {
       rawText: text,
       confidence: 0.9,
     );
+    print(
+      'lucadev [DNI] parsed frame: number=$number-$securityCode '
+      'surnames=$lastName names=$name dob=$dob expiry=$expiryDate gender=$gender',
+    );
+    return result;
   }
 
   /// Verifica si el texto parece legible antes de intentar parsear
@@ -429,92 +434,135 @@ class DniParser implements DocumentParser {
         result.extractedBirthDate!.isNotEmpty;
   }
 
-  String? _extractName(String text) {
-    // Limpiar prefijos de debug si existen
+  String? _extractName(String text, String? extractedLastName) {
     final cleanText = text.replaceAll(RegExp(r'lucadev\d+\s*'), '');
 
-    // Patrón 1: Nombre ANTES de "PRE NOMBRES" o "PRENOMBRES" (con salto de línea o espacio)
+    String? rejectIfSameAsLastName(String? candidate) {
+      if (candidate == null || candidate.isEmpty) return null;
+      if (extractedLastName == null || extractedLastName.isEmpty)
+        return candidate;
+      if (candidate.trim().toUpperCase() ==
+          extractedLastName.trim().toUpperCase())
+        return null;
+      return candidate;
+    }
+
+    const labelPattern =
+        r'PRE\s*NOMBRES|PRENOMBRES|Prenombres|Pre\s+Nombres|Pre\s+Nonbres|Prenombre|PREHOMBRES|PREMOMBRES';
+    const namePattern = r'([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,}){1,3})';
+
+    // 1. Label y valor en la misma línea: "Prenombres LUIS IVAN"
     var match = RegExp(
-      r'([A-ZÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ]+)*)\s*(?:\n|\r\n|\s+)(?:PRE\s*NOMBRES|PRENOMBRES|Prenombres|Pre\s+Nombres|Pre\s+Nonbres)',
+      '(?:$labelPattern)\\s+$namePattern(?:\\s|\$|\n)',
       caseSensitive: false,
     ).firstMatch(cleanText);
     if (match != null) {
       final name = match.group(1)?.trim();
-      if (name != null && name.isNotEmpty) {
+      if (name != null && name.length >= 5) {
         final cleaned = _cleanName(name);
-        if (cleaned.isNotEmpty && cleaned.length > 2) {
-          return cleaned;
+        if (cleaned.isNotEmpty && !_cleanNameIsLabelOrGarbage(cleaned)) {
+          final result = rejectIfSameAsLastName(cleaned);
+          if (result != null) return result;
         }
       }
     }
 
-    // Patrón 2: Nombre DESPUÉS de "PRE NOMBRES" o "PRENOMBRES" (más flexible)
+    // 2. Valor DESPUÉS del label (línea siguiente): "Prenombres\nLUIS IVAN"
     match = RegExp(
-      r'(?:PRE\s*NOMBRES|PRENOMBRES|Prenombres|Pre\s+Nombres|Pre\s+Nonbres)\s*(?:\n|\r\n|\s+)([A-ZÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ]+)*)',
+      '(?:$labelPattern)\\s*(?:\\n|\\r\\n|\\s{2,})($namePattern)',
       caseSensitive: false,
     ).firstMatch(cleanText);
     if (match != null) {
       final name = match.group(1)?.trim();
-      if (name != null && name.isNotEmpty) {
+      if (name != null && name.length >= 5) {
         final cleaned = _cleanName(name);
-        if (cleaned.isNotEmpty && cleaned.length > 2) {
-          return cleaned;
+        if (cleaned.isNotEmpty && !_cleanNameIsLabelOrGarbage(cleaned)) {
+          final result = rejectIfSameAsLastName(cleaned);
+          if (result != null) return result;
         }
       }
     }
 
-    // Patrón 3: Buscar "LUIS IVAN" o nombres similares cerca de "Pre Nombres"
-    // Buscar todas las líneas y encontrar la que está cerca de "Pre Nombres"
+    // 3. Valor ANTES del label (línea anterior): "LUIS IVAN\nPrenombres"
+    match = RegExp(
+      '($namePattern)\\s*(?:\\n|\\r\\n)(?:$labelPattern)',
+      caseSensitive: false,
+    ).firstMatch(cleanText);
+    if (match != null) {
+      final name = match.group(1)?.trim();
+      if (name != null && name.length >= 5) {
+        final cleaned = _cleanName(name);
+        if (cleaned.isNotEmpty && !_cleanNameIsLabelOrGarbage(cleaned)) {
+          final result = rejectIfSameAsLastName(cleaned);
+          if (result != null) return result;
+        }
+      }
+    }
+
+    // 4. Por líneas: buscar label y tomar línea anterior o siguiente
     final lines = cleanText.split(RegExp(r'[\n\r]+'));
     for (int i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
-      if (RegExp(
-        r'PRE\s*NOMBRES|PRENOMBRES|Prenombres|Pre\s+Nombres',
-        caseSensitive: false,
-      ).hasMatch(line)) {
-        // Buscar en la línea anterior
-        if (i > 0) {
-          final prevLine = lines[i - 1].trim();
-          if (RegExp(
-            r'^[A-ZÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ]+)+$',
-          ).hasMatch(prevLine)) {
-            final cleaned = _cleanName(prevLine);
-            if (cleaned.isNotEmpty && cleaned.length > 2) {
-              return cleaned;
-            }
-          }
-        }
-        // Buscar en la línea siguiente
-        if (i < lines.length - 1) {
-          final nextLine = lines[i + 1].trim();
-          if (RegExp(
-            r'^[A-ZÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ]+)+$',
-          ).hasMatch(nextLine)) {
-            final cleaned = _cleanName(nextLine);
-            if (cleaned.isNotEmpty && cleaned.length > 2) {
-              return cleaned;
-            }
-          }
+      if (!RegExp(labelPattern, caseSensitive: false).hasMatch(lines[i])) {
+        continue;
+      }
+      for (final candidate in [
+        if (i > 0) lines[i - 1].trim(),
+        if (i < lines.length - 1) lines[i + 1].trim(),
+      ]) {
+        if (candidate.isEmpty || candidate.length < 5) continue;
+        if (!RegExp(r'^[A-ZÁÉÍÓÚÑ\s]+$').hasMatch(candidate)) continue;
+        if (RegExp(r'\d').hasMatch(candidate)) continue;
+        final cleaned = _cleanName(candidate);
+        if (cleaned.isNotEmpty &&
+            cleaned.length >= 5 &&
+            !_cleanNameIsLabelOrGarbage(cleaned)) {
+          final result = rejectIfSameAsLastName(cleaned);
+          if (result != null) return result;
         }
       }
     }
 
-    // Patrón 4: Buscar nombres genéricos con formato "NOMBRES: ..."
+    // 5. Fallback: "NOMBRES: LUIS IVAN"
     match = RegExp(
-      r'(?:NOMBRES|Nombres)\s*:\s*([A-ZÁÉÍÓÚÑ\s]+)',
+      r'(?:NOMBRES|Nombres)\s*:\s*([A-ZÁÉÍÓÚÑ\s]+?)(?:\s{2,}|\n|$)',
       caseSensitive: false,
     ).firstMatch(cleanText);
     if (match != null) {
       final name = match.group(1)?.trim();
-      if (name != null && name.isNotEmpty) {
+      if (name != null && name.length >= 5) {
         final cleaned = _cleanName(name);
-        if (cleaned.isNotEmpty && cleaned.length > 2) {
-          return cleaned;
+        if (cleaned.isNotEmpty && !_cleanNameIsLabelOrGarbage(cleaned)) {
+          final result = rejectIfSameAsLastName(cleaned);
+          if (result != null) return result;
         }
       }
     }
 
     return null;
+  }
+
+  bool _cleanNameIsLabelOrGarbage(String s) {
+    final upper = s.toUpperCase();
+    // Evitar labels del DNI o apellidos que se cuelan en la línea de Prenombres
+    const garbage = [
+      'APELLIDO',
+      'PRIMER',
+      'SEGUNDO',
+      'PRENOMBRES',
+      'NOMBRES',
+      'SEXO',
+      'NACIMIENTO',
+      'PER',
+      'CUI',
+      'TARJETA',
+      'ESTADO',
+      'CIVIL',
+    ];
+    final words = upper.split(RegExp(r'\s+'));
+    for (final g in garbage) {
+      if (words.any((w) => w == g || w.startsWith(g))) return true;
+    }
+    return false;
   }
 
   String? _extractLastName(String text) {
@@ -790,107 +838,59 @@ class DniParser implements DocumentParser {
     try {
       final parts = date.split('/');
       if (parts.length != 3) return false;
+      final day = int.tryParse(parts[0]);
+      final month = int.tryParse(parts[1]);
       final year = int.tryParse(parts[2]);
-      if (year == null) return false;
-
+      if (day == null || month == null || year == null) return false;
+      if (day < 1 || day > 31) return false;
+      if (month < 1 || month > 12) return false;
       return year >= 1900 && year <= 2010;
     } catch (e) {
       return false;
     }
   }
 
+  /// Extrae la fecha de caducidad SOLO de la zona "Fecha de Caducidad".
+  /// La fecha puede estar antes o después del label (misma línea o saltos de línea).
+  /// Emisión (2025) está arriba; Caducidad (2033) está abajo. Tomar la más cercana
+  /// al label y, si hay varias, la de año mayor.
   String? _extractExpiryDate(String text) {
-    // Limpiar prefijos de debug
     final cleanText = text.replaceAll(RegExp(r'lucadev\d+\s*'), '');
+    const label = r'FECHA\s+DE\s+CADUCIDAD';
+    final pos = RegExp(label, caseSensitive: false).firstMatch(cleanText);
+    if (pos == null) return null;
 
-    // Patrón 1: "Fecha Caducidad" o "CADUCIDAD" seguido de fecha (pueden estar en líneas separadas)
-    var match = RegExp(
-      r'(?:FECHA\s*)?(?:CADUCIDAD|Caducidad)\s*(?:\n|\r\n|\s)*(\d{2}[\s/]\d{2}[\s/]\d{4})',
-      caseSensitive: false,
-    ).firstMatch(cleanText);
+    final labelEnd = pos.end;
 
-    if (match != null) {
-      final date = _normalizeDate(match.group(1)!);
-      return date;
+    // Ventana ANTES (80 chars) y DESPUÉS (80 chars) del label
+    // Caducidad está debajo; puede haber salto de línea. Emisión está arriba.
+    final beforeStart = (pos.start - 80).clamp(0, cleanText.length);
+    final afterEnd = (labelEnd + 80).clamp(0, cleanText.length);
+    final windowBefore = cleanText.substring(beforeStart, pos.start);
+    final windowAfter = cleanText.substring(labelEnd, afterEnd);
+
+    // Combinar ventanas antes y después; tomar la de AÑO MAYOR (Caducidad 2033 > Emisión 2025)
+    final allDates = [
+      ..._extractAllValidDates(windowBefore),
+      ..._extractAllValidDates(windowAfter),
+    ];
+    if (allDates.isEmpty) return null;
+    return allDates.reduce((a, b) => a.$2 > b.$2 ? a : b).$1;
+  }
+
+  List<(String, int)> _extractAllValidDates(String sub) {
+    final matches = RegExp(r'(\d{2})[\s/](\d{2})[\s/](\d{4})').allMatches(sub);
+    final result = <(String, int)>[];
+    for (final m in matches) {
+      final d = int.tryParse(m.group(1) ?? '');
+      final mo = int.tryParse(m.group(2) ?? '');
+      final y = int.tryParse(m.group(3) ?? '');
+      if (d == null || mo == null || y == null) continue;
+      if (d < 1 || d > 31 || mo < 1 || mo > 12) continue;
+      if (y < 2020 || y > 2100) continue;
+      result.add(('${m.group(1)}/${m.group(2)}/${m.group(3)}', y));
     }
-
-    // Patrón 2: Fecha seguida de "Fecha Caducidad" o "CADUCIDAD" (pueden estar en líneas separadas)
-    // Ejemplo: "05 02 2024\nFecha Caducidad" o "02 02 2026\nFecha Caducidad"
-    // Usar modo multiline para que coincida con saltos de línea entre la fecha y el texto
-    match = RegExp(
-      r'(\d{2}[\s/]\d{2}[\s/]\d{4})\s*(?:\n|\r\n|\s)+(?:FECHA\s*)?(?:CADUCIDAD|Caducidad)',
-      caseSensitive: false,
-      multiLine: true,
-    ).firstMatch(cleanText);
-
-    if (match != null) {
-      final date = _normalizeDate(match.group(1)!);
-      return date;
-    }
-
-    // Patrón 2b: Fecha seguida de "Fecha" en una línea y "Caducidad" en otra
-    match = RegExp(
-      r'(\d{2}[\s/]\d{2}[\s/]\d{4})\s*(?:\n|\r\n|\s)+FECHA\s*(?:\n|\r\n|\s)+CADUCIDAD',
-      caseSensitive: false,
-      multiLine: true,
-    ).firstMatch(cleanText);
-
-    if (match != null) {
-      final date = _normalizeDate(match.group(1)!);
-      return date;
-    }
-
-    // Patrón 3: "EXPEDICIÓN" seguido de fecha (formato alternativo)
-    match = RegExp(
-      r'(?:EXPEDICIÓN|Expedición)\s*(?:\n|\r\n)?\s*(\d{2}[\s/]\d{2}[\s/]\d{4})',
-      caseSensitive: false,
-    ).firstMatch(cleanText);
-
-    if (match != null) {
-      return _normalizeDate(match.group(1)!);
-    }
-
-    // Patrón 4: Buscar fecha cerca de palabras clave relacionadas
-    // Buscar todas las fechas y verificar el contexto
-    final allDates = RegExp(
-      r'(\d{2}[\s/]\d{2}[\s/]\d{4})',
-    ).allMatches(cleanText);
-    for (final dateMatch in allDates) {
-      final dateStr = dateMatch.group(1)!;
-      final startPos = dateMatch.start;
-      final endPos = dateMatch.end;
-
-      // Buscar contexto antes y después de la fecha
-      final contextBefore = cleanText
-          .substring(startPos > 100 ? startPos - 100 : 0, startPos)
-          .toUpperCase();
-      final contextAfter = cleanText
-          .substring(
-            endPos,
-            endPos + 100 < cleanText.length ? endPos + 100 : cleanText.length,
-          )
-          .toUpperCase();
-
-      // Si el contexto contiene "CADUCIDAD" o "FECHA CADUCIDAD", es la fecha de caducidad
-      if (contextBefore.contains('CADUCIDAD') ||
-          contextAfter.contains('CADUCIDAD') ||
-          contextBefore.contains('FECHA CADUCIDAD') ||
-          contextAfter.contains('FECHA CADUCIDAD')) {
-        // Verificar que no sea fecha de nacimiento o emisión
-        if (!contextBefore.contains('NACIMIENTO') &&
-            !contextAfter.contains('NACIMIENTO') &&
-            !contextBefore.contains('EMISIÓN') &&
-            !contextAfter.contains('EMISIÓN') &&
-            !contextBefore.contains('FECHA DE EMISIÓN') &&
-            !contextAfter.contains('FECHA DE EMISIÓN') &&
-            !contextBefore.contains('INSCRIPCIÓN') &&
-            !contextAfter.contains('INSCRIPCIÓN')) {
-          return _normalizeDate(dateStr);
-        }
-      }
-    }
-
-    return null;
+    return result;
   }
 
   String? _extractGender(String text) {

@@ -459,10 +459,11 @@ class CeParser implements DocumentParser {
     if (s.length < 7 || s.length > 55) return false;
     if (RegExp(r'\d').hasMatch(s)) return false;
     final upper = s.toUpperCase();
-    // Rechazar si empieza con fragmentos típicos (DEL PERU, PER MANZOL, etc.)
+    // Rechazar si empieza con fragmentos típicos (DEL PERU, PER MANZOL, ER de NUMBER, etc.)
     if (upper.startsWith('DEL ') ||
         upper.startsWith('PER ') ||
-        upper.startsWith('PERU ')) {
+        upper.startsWith('PERU ') ||
+        upper.startsWith('ER ')) {
       return false;
     }
     return !_staticContainsInvalid(upper);
@@ -517,6 +518,17 @@ class CeParser implements DocumentParser {
       'AFIO',
       'EXTRANJER',
       'GRVEN',
+      'OCR',
+      'CAMERA',
+      'RAW',
+      'NACIMIENT',
+      'FRAME',
+      'LUCADEV',
+      'PARSED',
+      'ACCUMULATED',
+      'ACCUMU',
+      'LATED',
+      'ISCOMPLETE',
     ];
     return invalid.any((x) => upper.contains(x));
   }

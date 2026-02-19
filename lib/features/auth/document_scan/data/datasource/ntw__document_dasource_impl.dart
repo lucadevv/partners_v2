@@ -15,6 +15,7 @@ import 'package:partners/core/utils/models/ce.dart';
 import 'package:partners/core/utils/models/dni.dart';
 import 'package:partners/features/auth/document_scan/data/datasource/document_scan_datasource.dart';
 import 'package:partners/features/auth/document_scan/data/models/document_scan_result.dart';
+import 'package:partners/features/auth/document_scan/domain/parser/ce_parser.dart';
 
 class NtwDocumentDasourceImpl implements DocumentScanDatasource {
   final ApiServices _services;
@@ -99,33 +100,43 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
       };
 
       if (scanResult.extractedLastName != null &&
-          scanResult.extractedLastName!.isNotEmpty) {
+          scanResult.extractedLastName!.isNotEmpty &&
+          CeParser.looksLikeValidPersonName(scanResult.extractedLastName)) {
         payload['surnames'] = scanResult.extractedLastName;
       }
       if (scanResult.extractedName != null &&
-          scanResult.extractedName!.isNotEmpty) {
+          scanResult.extractedName!.isNotEmpty &&
+          CeParser.looksLikeValidPersonName(scanResult.extractedName)) {
         payload['names'] = scanResult.extractedName;
       }
-      if (scanResult.extractedBirthDate != null &&
-          scanResult.extractedBirthDate!.isNotEmpty) {
-        payload['date_of_birth'] = scanResult.extractedBirthDate;
+      final dob = scanResult.extractedBirthDate;
+      if (dob != null && dob.isNotEmpty && _isValidDobFormat(dob)) {
+        payload['date_of_birth'] = dob;
       }
 
       if (doc is Dni) {
         if (doc.securityCode.isNotEmpty) {
           payload['security_code'] = doc.securityCode;
         }
-        if (doc.expiryDate != null && doc.expiryDate!.isNotEmpty) {
-          payload['date_of_expiry'] = doc.expiryDate;
+        final expiry = doc.expiryDate;
+        if (expiry != null &&
+            expiry.isNotEmpty &&
+            _isValidExpiryFormat(expiry)) {
+          payload['date_of_expiry'] = expiry;
         }
       } else if (doc is Ce) {
-        if (doc.expiryDate != null && doc.expiryDate!.isNotEmpty) {
-          payload['date_of_expiry'] = doc.expiryDate;
+        final expiry = doc.expiryDate;
+        if (expiry != null &&
+            expiry.isNotEmpty &&
+            _isValidExpiryFormat(expiry)) {
+          payload['date_of_expiry'] = expiry;
         }
       }
 
       if (doc is Ce) {
         debugPrint('lucadev [CE] payload to backend: $payload');
+      } else if (doc is Dni) {
+        debugPrint('lucadev [DNI] payload to backend: $payload');
       }
 
       final response = await _services.post(
@@ -144,6 +155,28 @@ class NtwDocumentDasourceImpl implements DocumentScanDatasource {
       ExceptionHandler.logException(appException, tag: 'uploadIdentity');
       return Left(appException);
     }
+  }
+
+  bool _isValidDobFormat(String s) {
+    final parts = s.split('/');
+    if (parts.length != 3) return false;
+    final d = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final y = int.tryParse(parts[2]);
+    if (d == null || m == null || y == null) return false;
+    if (d < 1 || d > 31 || m < 1 || m > 12) return false;
+    return y >= 1900 && y <= 2010;
+  }
+
+  bool _isValidExpiryFormat(String s) {
+    final parts = s.split('/');
+    if (parts.length != 3) return false;
+    final d = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final y = int.tryParse(parts[2]);
+    if (d == null || m == null || y == null) return false;
+    if (d < 1 || d > 31 || m < 1 || m > 12) return false;
+    return y >= 1990 && y <= 2100;
   }
 
   void dispose() {

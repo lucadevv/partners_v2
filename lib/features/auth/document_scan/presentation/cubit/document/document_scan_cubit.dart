@@ -32,6 +32,9 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
   /// Acumula campos CE entre frames: no sobrescribe con null.
   DocumentScanResult? _accumulatedCeResult;
 
+  /// Acumula campos DNI entre frames: no sobrescribe con null.
+  DocumentScanResult? _accumulatedDniResult;
+
   DocumentScanCubit({
     required OcrUsecase ocrUsecase,
     required WatchDocumentRealtTimeUsecase watchDocumentRealtTimeUsecase,
@@ -66,6 +69,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     stopRealtimeMonitoring();
     _retryCount = 0;
     _accumulatedCeResult = null;
+    _accumulatedDniResult = null;
 
     if (!isClosed) {
       emit(state.copyWith(status: DocumentScanStatus.cameraReady));
@@ -101,10 +105,17 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
               (detectedText) {
                 final isCeFlow =
                     _parsers.isNotEmpty && _parsers.any((p) => p is CeParser);
+                final isDniFlow =
+                    _parsers.isNotEmpty && _parsers.any((p) => p is DniParser);
                 // Debug: texto crudo que ve la cámara (realtime OCR, antes del parse).
                 if (isCeFlow) {
                   debugPrint(
                     'lucadev [CE] REALTIME OCR camera raw (${detectedText.length} chars): $detectedText',
+                  );
+                }
+                if (isDniFlow) {
+                  debugPrint(
+                    'lucadev [DNI] REALTIME OCR camera raw (${detectedText.length} chars): $detectedText',
                   );
                 }
 
@@ -133,10 +144,35 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
                   );
                 }
 
+                if (parsedResult != null &&
+                    parsedResult.document is Dni &&
+                    isDniFlow) {
+                  final otherDni = parsedResult.document as Dni;
+                  if (_accumulatedDniResult != null) {
+                    final accDni = _accumulatedDniResult!.document as Dni;
+                    if (accDni.number != otherDni.number) {
+                      _accumulatedDniResult = parsedResult;
+                    } else {
+                      _accumulatedDniResult =
+                          _smartMergeDni(_accumulatedDniResult!, parsedResult);
+                    }
+                  } else {
+                    _accumulatedDniResult = parsedResult;
+                  }
+                  parsedResult = _accumulatedDniResult!;
+                  final dni = parsedResult.document as Dni;
+                  debugPrint(
+                    'lucadev [DNI] accumulated: number=${dni.number}-${dni.securityCode} surnames=${parsedResult.extractedLastName} names=${parsedResult.extractedName} dob=${parsedResult.extractedBirthDate} expiry=${dni.expiryDate} gender=${parsedResult.extractedGender}',
+                  );
+                }
+
                 if (parsedResult != null) {
                   final isComplete = _isDocumentComplete(parsedResult);
                   if (parsedResult.document is Ce && isCeFlow) {
                     debugPrint('lucadev [CE] isComplete=$isComplete');
+                  }
+                  if (parsedResult.document is Dni && isDniFlow) {
+                    debugPrint('lucadev [DNI] isComplete=$isComplete');
                   }
 
                   if (isComplete) {
@@ -160,6 +196,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
                     }
 
                     _accumulatedCeResult = null;
+                    _accumulatedDniResult = null;
                     _uploadIdentityToBackend(parsedResult);
                     return;
                   } else {
@@ -425,6 +462,62 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
     );
   }
 
+  /// Merge DNI: no sobrescribe datos buenos con null; evita nombres = apellidos.
+  DocumentScanResult _smartMergeDni(
+    DocumentScanResult accumulated,
+    DocumentScanResult other,
+  ) {
+    final accDni = accumulated.document as Dni;
+    final otherDni = other.document as Dni;
+
+    final mergedLastName = CeParser.looksLikeValidPersonName(other.extractedLastName)
+        ? (other.extractedLastName ?? accumulated.extractedLastName)
+        : accumulated.extractedLastName;
+    final otherName = other.extractedName;
+    final nameEqualsLastNameInFrame = otherName != null &&
+        other.extractedLastName != null &&
+        otherName.trim().toUpperCase() == other.extractedLastName!.trim().toUpperCase();
+    final mergedName = !nameEqualsLastNameInFrame &&
+            CeParser.looksLikeValidPersonName(otherName)
+        ? (otherName ?? accumulated.extractedName)
+        : accumulated.extractedName;
+
+    final otherDob = other.extractedBirthDate;
+    final mergedDob = _isValidDobString(otherDob)
+        ? (otherDob ?? accumulated.extractedBirthDate)
+        : accumulated.extractedBirthDate;
+
+    final mergedDoc = Dni(
+      number: otherDni.number,
+      type: DocumentType.dni,
+      securityCode: otherDni.securityCode,
+      expiryDate: other.extractedExpiryDate ?? otherDni.expiryDate ?? accDni.expiryDate,
+    );
+
+    return DocumentScanResult(
+      document: mergedDoc,
+      extractedName: mergedName,
+      extractedLastName: mergedLastName,
+      extractedBirthDate: mergedDob,
+      extractedGender: other.extractedGender ?? accumulated.extractedGender,
+      extractedExpiryDate: mergedDoc.expiryDate,
+      rawText: other.rawText,
+      confidence: other.confidence,
+    );
+  }
+
+  bool _isValidDobString(String? s) {
+    if (s == null || s.isEmpty) return false;
+    final parts = s.split('/');
+    if (parts.length != 3) return false;
+    final d = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final y = int.tryParse(parts[2]);
+    if (d == null || m == null || y == null) return false;
+    if (d < 1 || d > 31 || m < 1 || m > 12) return false;
+    return y >= 1900 && y <= 2010;
+  }
+
   int _yearFromDateStr(String ddMmYyyy) {
     final parts = ddMmYyyy.split('/');
     if (parts.length >= 3) {
@@ -452,6 +545,18 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
       final ce = result.document as Ce;
       final hasExpiry = ce.expiryDate != null && ce.expiryDate!.isNotEmpty;
       return hasName && hasLastName && hasBirthDate && hasExpiry;
+    }
+
+    if (result.document is Dni) {
+      // DNI: requiere número, apellidos, nombres, fecha nacimiento, caducidad y género.
+      final dni = result.document as Dni;
+      final hasExpiry =
+          dni.expiryDate != null && dni.expiryDate!.isNotEmpty;
+      return hasName &&
+          hasLastName &&
+          hasBirthDate &&
+          hasGender &&
+          hasExpiry;
     }
 
     return hasName && hasLastName && hasBirthDate && hasGender;

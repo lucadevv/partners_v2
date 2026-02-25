@@ -84,11 +84,15 @@ class AppInjection {
       );
     }
     if (!_getIt.isRegistered<ApiServices>()) {
-      final validatedUrl = _baseUrl.isEmpty
-          ? AppConfig.getValidatedBaseUrl()
-          : _baseUrl;
+      // En release, si base_url no llegó por dart-define-from-file, no lanzar aquí
+      // para que la app no se quede en splash; las peticiones fallarán hasta tener URL.
+      final baseUrlToUse = _baseUrl.isNotEmpty
+          ? _baseUrl
+          : AppConfig.baseUrl.isNotEmpty
+              ? AppConfig.baseUrl
+              : 'https://placeholder.invalid';
       _getIt.registerLazySingleton<ApiServices>(
-        () => DioApiServicesImpl(validatedUrl, _getIt<AuthManager>()),
+        () => DioApiServicesImpl(baseUrlToUse, _getIt<AuthManager>()),
       );
     }
     if (!_getIt.isRegistered<AppRouter>()) {

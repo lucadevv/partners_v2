@@ -23,18 +23,28 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
-      
+
       final router = context.router;
       router.replace(const LoginRoute());
     } catch (e, stackTrace) {
-      AppLogger.error('Error en splash navigation', e, stackTrace, 'SplashScreen');
+      AppLogger.error(
+        'Error en splash navigation',
+        e,
+        stackTrace,
+        'SplashScreen',
+      );
       if (mounted) {
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           try {
             context.router.replace(const LoginRoute());
           } catch (e2, stackTrace2) {
-            AppLogger.error('Error al reintentar navegación', e2, stackTrace2, 'SplashScreen');
+            AppLogger.error(
+              'Error al reintentar navegación',
+              e2,
+              stackTrace2,
+              'SplashScreen',
+            );
           }
         }
       }
@@ -65,24 +75,41 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ],
               ),
-              child: SizedBox(height: 100, width: 100),
+              child: const SizedBox(height: 100, width: 100),
             ),
-            Text(
-              "Puntos\nSmart\nPartnes",
+            DefaultTextStyle(
               style: TextStyle(
                 fontFamily: "FREDOKA",
                 color: textColor,
                 fontSize: 30,
                 fontWeight: FontWeight.w400,
               ),
+              child: const Text("Puntos\nSmart\nPartnes"),
             ),
             Align(
               alignment: AlignmentGeometry.directional(0.3, 0.0),
-              child: SvgPicture.asset('assets/svg/logo.svg'),
+              child: _SafeSplashLogo(textColor: textColor),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Muestra el logo SVG o un fallback si falla la carga (p. ej. en release).
+class _SafeSplashLogo extends StatelessWidget {
+  final Color textColor;
+
+  const _SafeSplashLogo({required this.textColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      'assets/svg/logo.svg',
+      theme: SvgTheme(currentColor: textColor),
+      errorBuilder: (_, Object error, StackTrace? stackTrace) =>
+          Icon(Icons.store, size: 64, color: textColor),
     );
   }
 }

@@ -1,4 +1,4 @@
-package com.example.partners
+package com.marketrix.puntossmartcomercio
 
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
@@ -6,6 +6,5 @@ import io.flutter.embedding.android.FlutterActivity
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Asegurar que la actividad se inicialice correctamente
     }
 }
